@@ -321,7 +321,7 @@ $generated_at = date('d M Y, H:i T');
                     </td>
                     <td style="text-align:center; font-weight:800;"><?php echo (int)$b['quantity']; ?></td>
                     <td style="text-align:right; font-weight:800; color:#059669;">£<?php echo number_format((float)$b['total_amount'], 2); ?></td>
-                    <td style="text-align:center; text-transform:capitalize; font-size:0.78rem;"><?php echo str_replace('_', ' ', $b['payment_method']); ?></td>
+                    <td style="text-align:center; font-size:0.78rem; font-weight:600;"><?php echo ($b['payment_method'] === 'paypal') ? 'PayPal' : (($b['payment_method'] === 'bank_transfer') ? 'Bank Transfer' : escape_output(str_replace('_', ' ', $b['payment_method']))); ?></td>
                     <td style="text-align:center;">
                         <span class="<?php echo $is_paid ? 'badge-paid' : 'badge-pending'; ?>">
                             <?php echo $is_paid ? 'PAID' : 'PENDING VERIFY'; ?>

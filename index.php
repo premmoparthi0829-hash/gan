@@ -11,6 +11,8 @@ $settings        = get_all_settings();
 $unit_price      = (float)($settings['unit_price']      ?? 14.99);
 $shipping_charge = (float)($settings['shipping_charge'] ?? 3.99);
 $paypal_client_id = $settings['paypal_client_id'] ?? 'sb';
+$paypal_email     = escape_output($settings['paypal_email']    ?? 'payments@vklogistics.co.uk');
+$paypal_acc_name  = escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD');
 $csrf_token       = get_csrf_token();
 $phone            = escape_output($settings['support_phone'] ?? '+44 7700 900888');
 $bank_name        = escape_output($settings['bank_name']         ?? 'Barclays Bank UK');
@@ -85,10 +87,10 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                         </div>
                         <div class="hbc-price-row">
                             <div class="hbc-price-main">
-                                <span class="hbc-currency">&pound;</span>14.99
+                                <span class="hbc-currency">&pound;</span><span id="hbc-price-val" class="display-unit-price"><?php echo number_format($unit_price, 2); ?></span>
                             </div>
                             <div class="hbc-price-details">
-                                <div class="hbc-shipping">+ &pound;3.99 UK Shipping</div>
+                                <div class="hbc-shipping">+ &pound;<span id="hbc-shipping-val" class="display-shipping"><?php echo number_format($shipping_charge, 2); ?></span> UK Shipping</div>
                                 <div class="hbc-unit-sub">Complete Statue Package</div>
                             </div>
                         </div>
@@ -167,15 +169,11 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                         <img src="assets/images/ganesh_hero.png" alt="Ganesh Statue" class="bm-product-img">
                         <div class="bm-product-info">
                             <div class="bm-product-name">Ganesh Statue</div>
-                            <div class="bm-product-price">&pound;14.99 <span>+ shipping</span></div>
+                            <div class="bm-product-price">&pound;<span class="display-unit-price"><?php echo number_format($unit_price, 2); ?></span> <span>+ shipping</span></div>
                         </div>
                     </div>
 
                     <ul class="bm-trust-list">
-                        <li>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Secure PayPal &amp; Bank Transfer
-                        </li>
                         <li>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                             UK Doorstep Delivery
@@ -251,8 +249,8 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     <input type="number" id="quantity-input" class="bm-qty-input" value="1" min="1" max="20" readonly>
                                     <button type="button" class="qty-btn plus bm-qty-btn">&plus;</button>
                                     <div class="bm-price-pill">
-                                        <span id="calc-breakdown">1 &times; &pound;14.99</span>
-                                        <strong id="calc-grand-total">&pound;18.98</strong>
+                                        <span id="calc-breakdown">1 &times; &pound;<?php echo number_format($unit_price, 2); ?></span>
+                                        <strong id="calc-grand-total">&pound;<?php echo number_format($unit_price + $shipping_charge, 2); ?></strong>
                                     </div>
                                 </div>
                             </div>
@@ -269,14 +267,9 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     <label for="mobile">UK Mobile Number <span class="req">*</span></label>
                                     <div class="bm-phone-group">
                                         <div class="bm-country-box">
-                                            <span class="country-flag" id="selected-flag">🇬🇧</span>
-                                            <select id="country_code" aria-label="Country Code">
-                                                <option value="+44" data-flag="🇬🇧" selected>+44 (UK)</option>
-                                                <option value="+91" data-flag="🇮🇳">+91 (IN)</option>
-                                                <option value="+1" data-flag="🇺🇸">+1 (US)</option>
-                                                <option value="+33" data-flag="🇫🇷">+33 (FR)</option>
-                                                <option value="+49" data-flag="🇩🇪">+49 (DE)</option>
-                                            </select>
+                                            <span class="country-flag">🇬🇧</span>
+                                            <span style="font-size:0.9rem; font-weight:800; color:var(--color-maroon); padding-right:4px;">+44</span>
+                                            <input type="hidden" id="country_code" value="+44">
                                         </div>
                                         <div class="bm-input-wrap" style="flex:1;">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg>
@@ -380,15 +373,15 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                             <div class="bm-summary-card">
                                 <div class="bm-summary-row">
                                     <span>Ganesh Statue &times; <strong class="display-qty">1</strong></span>
-                                    <span class="display-subtotal">&pound;14.99</span>
+                                    <span class="display-subtotal">&pound;<?php echo number_format($unit_price, 2); ?></span>
                                 </div>
                                 <div class="bm-summary-row">
                                     <span>UK Shipping</span>
-                                    <span class="display-shipping">&pound;3.99</span>
+                                    <span class="display-shipping">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
                                 </div>
                                 <div class="bm-summary-row total">
                                     <span>Total Payable</span>
-                                    <span class="display-total">&pound;18.98</span>
+                                    <span class="display-total">&pound;<?php echo number_format($unit_price + $shipping_charge, 2); ?></span>
                                 </div>
                             </div>
 
@@ -457,8 +450,65 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                             <!-- PayPal Tab -->
                             <div class="bm-pay-panel" id="paypal-tab">
-                                <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:16px;">Complete your payment securely via PayPal.</p>
-                                <div id="paypal-button-container"></div>
+
+                                <!-- PayPal Info Box (mirrors Bank Transfer layout) -->
+                                <div class="bm-bank-box">
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">Payment Method</span>
+                                        <span class="bm-bank-val">PayPal Transfer</span>
+                                    </div>
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">Send Payment To</span>
+                                        <span class="bm-bank-val bm-mono" style="display:flex; align-items:center; gap:6px;">
+                                            <span id="paypal-email-display"><?php echo $paypal_email; ?></span>
+                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-email" title="Copy PayPal Email" style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            </button>
+                                        </span>
+                                    </div>
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">Account Name</span>
+                                        <span class="bm-bank-val" id="paypal-acc-name-display"><?php echo $paypal_acc_name; ?></span>
+                                    </div>
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">Currency</span>
+                                        <span class="bm-bank-val">GBP (£)</span>
+                                    </div>
+                                </div>
+
+                                <!-- PayPal Reference Field -->
+                                <div class="bm-field" style="margin-top:14px;">
+                                    <label for="paypal_reference">Your PayPal Transaction ID <span class="req">*</span></label>
+                                    <div class="bm-input-wrap">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                        <input type="text" id="paypal_reference" placeholder="PayPal transaction ID or reference">
+                                    </div>
+                                </div>
+
+                                <!-- PayPal Receipt Upload -->
+                                <div class="bm-field" style="margin-top:14px;">
+                                    <label for="paypal_proof_file">Upload PayPal Payment Screenshot <span class="req">*</span></label>
+                                    <div class="bm-upload-box" id="paypal-upload-zone">
+                                        <input type="file" id="paypal_proof_file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
+                                        <div class="upload-drop-content" id="paypal-upload-idle">
+                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                            <div class="upload-text"><strong>Click to select screenshot</strong> or drag &amp; drop here</div>
+                                            <div class="upload-sub">Supports Ultra HD JPG, PNG, WEBP (Up to 10MB)</div>
+                                        </div>
+                                        <div class="upload-preview-content" id="paypal-upload-preview" style="display:none;">
+                                            <img id="paypal-img-preview" src="" alt="PayPal Receipt Preview">
+                                            <div class="upload-file-info">
+                                                <span id="paypal-file-name">screenshot.jpg</span>
+                                                <button type="button" id="btn-remove-paypal-receipt" class="btn-remove-file">&times; Remove Photo</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="bm-submit-btn" id="btn-submit-paypal" style="margin-top:16px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    Confirm PayPal Payment Booking
+                                </button>
                             </div>
 
                             <button type="button" class="bm-back-btn" id="step3-back" style="margin-top:12px;">

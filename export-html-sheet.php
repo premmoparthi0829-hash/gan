@@ -266,7 +266,7 @@ foreach ($bookings as $b) {
                                 <td style="font-family:monospace; font-weight:700;"><?php echo escape_output($b['postcode']); ?></td>
                                 <td style="text-align:center; font-weight:800;"><?php echo (int)$b['quantity']; ?></td>
                                 <td style="text-align:right; font-weight:800; color:#059669;">£<?php echo number_format((float)$b['total_amount'], 2); ?></td>
-                                <td style="text-align:center; text-transform:capitalize;"><?php echo str_replace('_', ' ', $b['payment_method']); ?></td>
+                                <td style="text-align:center; font-weight:600;"><?php echo ($b['payment_method'] === 'paypal') ? 'PayPal' : (($b['payment_method'] === 'bank_transfer') ? 'Bank Transfer' : escape_output(str_replace('_', ' ', $b['payment_method']))); ?></td>
                                 <td style="text-align:center;">
                                     <span class="<?php echo $is_paid ? 'status-paid' : 'status-pending'; ?>">
                                         <?php echo $is_paid ? 'PAID' : 'PENDING VERIFY'; ?>

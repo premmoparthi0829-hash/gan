@@ -110,14 +110,17 @@ $(document).ready(function () {
         let subtotal = (qty * unitPrice).toFixed(2);
         let total = (parseFloat(subtotal) + shippingCharge).toFixed(2);
 
-        // Update UI displays
+        // Update UI displays across entire application
+        $('.display-unit-price').text(unitPrice.toFixed(2));
         $('.display-qty').text(qty);
         $('.display-subtotal').text(currencySymbol + subtotal);
         $('.display-shipping').text(currencySymbol + shippingCharge.toFixed(2));
         $('.display-total').text(currencySymbol + total);
         
-        // Update product showcase summary
-        $('#calc-breakdown').text(`${qty} × ${currencySymbol}${unitPrice.toFixed(2)} + ${currencySymbol}${shippingCharge.toFixed(2)} shipping`);
+        // Update hero card & breakdown elements
+        $('#hbc-price-val').text(unitPrice.toFixed(2));
+        $('#hbc-shipping-val').text(shippingCharge.toFixed(2));
+        $('#calc-breakdown').text(`${qty} × ${currencySymbol}${unitPrice.toFixed(2)}`);
         $('#calc-grand-total').text(currencySymbol + total);
     }
 
@@ -180,18 +183,8 @@ $(document).ready(function () {
         openBookingModal();
     });
 
-    // Close modal
+    // Close modal (ONLY via cross X button)
     $('#modal-close-btn').on('click', closeBookingModal);
-    $('#booking-modal-overlay').on('click', function (e) {
-        if ($(e.target).is('#booking-modal-overlay') || $(e.target).hasClass('bm-overlay')) closeBookingModal();
-    });
-
-    // Universal Escape key listener
-    $(document).on('keydown', function (e) {
-        if (e.key === 'Escape') {
-            closeBookingModal();
-        }
-    });
 
     // Step navigation
     $('#step1-next').on('click', function () {
@@ -299,7 +292,11 @@ $(document).ready(function () {
 
         let rawMobile = $('#mobile').val().trim();
         let countryCode = $('#country_code').val() || '+44';
-        let fullMobile = rawMobile.startsWith('+') ? rawMobile : (countryCode + ' ' + rawMobile);
+        let cleanRaw = rawMobile.replace(/[\s\-\(\)]/g, '');
+        if (cleanRaw.startsWith('0')) {
+            cleanRaw = cleanRaw.substring(1);
+        }
+        let fullMobile = rawMobile.startsWith('+') ? rawMobile : (countryCode + ' ' + cleanRaw);
 
         let formData = new FormData();
         formData.append('csrf_token', $('#csrf_token').val());
@@ -346,6 +343,157 @@ $(document).ready(function () {
         });
     });
 
+    // ===== PAYPAL UPLOAD ZONE HANDLERS =====
+    $(document).on('click', '#paypal-upload-idle', function() {
+        $('#paypal_proof_file').trigger('click');
+    });
+
+    $(document).on('change', '#paypal_proof_file', function() {
+        let file = this.files[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Image file size must be less than 10MB.', 'error');
+                $(this).val('');
+                return;
+            }
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                $('#paypal-img-preview').attr('src', evt.target.result);
+                $('#paypal-file-name').text(file.name);
+                $('#paypal-upload-idle').hide();
+                $('#paypal-upload-preview').show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $(document).on('click', '#btn-remove-paypal-receipt', function(e) {
+        e.stopPropagation();
+        $('#paypal_proof_file').val('');
+        $('#paypal-img-preview').attr('src', '');
+        $('#paypal-upload-preview').hide();
+        $('#paypal-upload-idle').show();
+    });
+
+    $(document).on('dragover dragenter', '#paypal-upload-zone', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('drag-active');
+    });
+
+    $(document).on('dragleave drop', '#paypal-upload-zone', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('drag-active');
+        if (e.type === 'drop' && e.originalEvent.dataTransfer.files.length > 0) {
+            let files = e.originalEvent.dataTransfer.files;
+            $('#paypal_proof_file')[0].files = files;
+            $('#paypal_proof_file').trigger('change');
+        }
+    });
+
+    // Copy PayPal Email to Clipboard
+    $(document).on('click', '#btn-copy-paypal-email', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let emailText = $('#paypal-email-display').text().trim();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(emailText).then(function() {
+                showToast('PayPal email copied to clipboard!', 'success');
+            }).catch(function() {
+                // Fallback if permission denied
+                fallbackCopy(emailText);
+            });
+        } else {
+            fallbackCopy(emailText);
+        }
+    });
+
+    function fallbackCopy(text) {
+        let temp = $('<input>');
+        $('body').append(temp);
+        temp.val(text).select();
+        try {
+            document.execCommand('copy');
+            showToast('PayPal email copied to clipboard!', 'success');
+        } catch (err) {
+            showToast('Could not copy email automatically. Please highlight and copy manually.', 'error');
+        }
+        temp.remove();
+    }
+
+    // PayPal Manual Payment Submit
+    $(document).on('click', '#btn-submit-paypal', function(e) {
+        e.preventDefault();
+
+        if (!validateBookingForm()) return;
+
+        let submitBtn = $(this);
+        let originalText = submitBtn.html();
+        let payRef = $('#paypal_reference').val().trim();
+
+        if (!payRef) {
+            showToast('Please enter your PayPal Transaction ID or reference.', 'error');
+            return;
+        }
+
+        let fileInput = $('#paypal_proof_file')[0];
+        if (!fileInput || fileInput.files.length === 0) {
+            showToast('Please upload your PayPal payment screenshot.', 'error');
+            return;
+        }
+
+        submitBtn.prop('disabled', true).html('Creating your booking...');
+
+        let rawMobile = $('#mobile').val().trim();
+        let countryCode = $('#country_code').val() || '+44';
+        let cleanRaw = rawMobile.replace(/[\s\-\(\)]/g, '');
+        if (cleanRaw.startsWith('0')) {
+            cleanRaw = cleanRaw.substring(1);
+        }
+        let fullMobile = rawMobile.startsWith('+') ? rawMobile : (countryCode + ' ' + cleanRaw);
+
+        let formData = new FormData();
+        formData.append('csrf_token', $('#csrf_token').val());
+        formData.append('customer_name', $('#customer_name').val().trim());
+        formData.append('mobile', fullMobile);
+        formData.append('email', $('#email').val().trim());
+        formData.append('address_line_1', $('#address_line_1').val().trim());
+        formData.append('address_line_2', $('#address_line_2').val().trim());
+        formData.append('city', $('#city').val().trim());
+        formData.append('county', $('#county').val().trim());
+        formData.append('postcode', $('#postcode').val().trim());
+        formData.append('quantity', $('#quantity-input').val());
+        formData.append('payment_method', 'paypal');
+        formData.append('payment_reference', payRef);
+        formData.append('payment_proof', fileInput.files[0]);
+
+        $.ajax({
+            url: 'ajax/create-booking.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    showToast('Booking created! Redirecting to confirmation...', 'success');
+                    setTimeout(function() {
+                        window.location.href = res.redirect_url;
+                    }, 1200);
+                } else {
+                    showToast(res.message || 'Error creating booking', 'error');
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr) {
+                let err = xhr.responseJSON ? xhr.responseJSON.message : 'Server error occurred.';
+                showToast(err, 'error');
+                submitBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
     // Helper: Form Validation
     function validateBookingForm() {
         let name = $('#customer_name').val().trim();
@@ -361,11 +509,19 @@ $(document).ready(function () {
             return false;
         }
 
-        // UK Mobile regex
-        let mobileRegex = /^(?:\+44|0)7\d{9}$/;
+        // UK Mobile validation (with prefix detection)
         let cleanMobile = mobile.replace(/[\s\-\(\)]/g, '');
-        if (!mobileRegex.test(cleanMobile)) {
-            showToast('Please enter a valid UK mobile number (+44 7... or 07...).', 'error');
+        let testMobile = cleanMobile;
+        let prefix = $('#country_code').val() || '+44';
+        if (!testMobile.startsWith('+') && !testMobile.startsWith('0')) {
+            testMobile = prefix + testMobile;
+        } else if (testMobile.startsWith('07')) {
+            testMobile = '+44' + testMobile.substring(1);
+        }
+        
+        let mobileRegex = /^\+447\d{9}$/;
+        if (!mobileRegex.test(testMobile)) {
+            showToast('Please enter a valid UK mobile number starting with 7 (e.g. 7700 900888).', 'error');
             $('#mobile').focus();
             return false;
         }
@@ -450,6 +606,12 @@ $(document).ready(function () {
                     currencySymbol = res.settings.currency_symbol || '£';
                     if (res.settings.csrf_token) {
                         $('#csrf_token').val(res.settings.csrf_token);
+                    }
+                    if (res.settings.paypal_email) {
+                        $('#paypal-email-display').text(res.settings.paypal_email);
+                    }
+                    if (res.settings.paypal_account_name) {
+                        $('#paypal-acc-name-display').text(res.settings.paypal_account_name);
                     }
                     recalculateTotals(parseInt($('#quantity-input').val()) || 1);
                 }

@@ -88,6 +88,8 @@ function get_setting($key, $default = '') {
         'bank_account_number' => '83920144',
         'paypal_client_id' => 'sb',
         'paypal_mode' => 'sandbox',
+        'paypal_email' => 'payments@vklogistics.co.uk',
+        'paypal_account_name' => 'VK LOGISTICS LTD',
         'support_phone' => '+44 7700 900888',
         'support_email' => 'bappa@vklogistics.co.uk'
     ];
@@ -103,7 +105,7 @@ function get_all_settings() {
         'product_name', 'unit_price', 'shipping_charge', 'currency_symbol',
         'currency_code', 'service_area', 'bank_account_name', 'bank_name',
         'bank_sort_code', 'bank_account_number', 'paypal_client_id', 'paypal_mode',
-        'support_phone', 'support_email'
+        'paypal_email', 'paypal_account_name', 'support_phone', 'support_email'
     ];
     $settings = [];
     foreach ($keys as $key) {

@@ -274,16 +274,14 @@ $settings     = get_all_settings();
                             <h3 class="settings-section-title">&#128179; PayPal & Contact Support</h3>
 
                             <div class="admin-field-group">
-                                <label for="setting_paypal_client_id">PayPal Client ID</label>
-                                <input type="text" id="setting_paypal_client_id" name="paypal_client_id" value="<?php echo escape_output($settings['paypal_client_id']); ?>">
+                                <label for="setting_paypal_email">PayPal Email Address (Receive Payments)</label>
+                                <input type="email" id="setting_paypal_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="your-paypal@email.com">
+                                <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">Customers will send PayPal payments to this email address (Friends &amp; Family)</small>
                             </div>
 
                             <div class="admin-field-group">
-                                <label for="setting_paypal_mode">PayPal Mode</label>
-                                <select id="setting_paypal_mode" name="paypal_mode">
-                                    <option value="sandbox" <?php echo ($settings['paypal_mode'] === 'sandbox') ? 'selected' : ''; ?>>Sandbox (Testing)</option>
-                                    <option value="live" <?php echo ($settings['paypal_mode'] === 'live') ? 'selected' : ''; ?>>Live Production</option>
-                                </select>
+                                <label for="setting_paypal_account_name">PayPal Account Holder Name</label>
+                                <input type="text" id="setting_paypal_account_name" name="paypal_account_name" value="<?php echo escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="Account holder name">
                             </div>
 
                             <div class="admin-field-group">
@@ -388,7 +386,7 @@ $settings     = get_all_settings();
                 </div>
 
                 <div class="admin-field-group">
-                    <label for="modal-payment-ref">Payment Txn / Bank Reference</label>
+                    <label for="modal-payment-ref" id="modal-payment-ref-label">Payment Txn / Bank Reference</label>
                     <input type="text" id="modal-payment-ref" name="payment_reference" placeholder="Enter bank reference or txn ID">
                 </div>
 
@@ -589,7 +587,9 @@ $settings     = get_all_settings();
                             <td style="text-align:center; white-space:nowrap;"><strong style="color:#0F172A; font-size:0.95rem;">${b.quantity}</strong></td>
                             <td style="text-align:right; white-space:nowrap;"><strong style="color:#0F172A; font-size:0.95rem;">&pound;${parseFloat(b.total_amount).toFixed(2)}</strong></td>
                             <td style="text-align:center; white-space:nowrap;">
-                                <div style="text-transform:capitalize; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:3px;">${(b.payment_method || '').replace('_', ' ')}</div>
+                                <div style="font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:3px;">
+                                    ${b.payment_method === 'paypal' ? 'PayPal' : (b.payment_method === 'bank_transfer' ? 'Bank Transfer' : escapeHtml(b.payment_method))}
+                                </div>
                                 ${payBadge}
                             </td>
                             <td style="text-align:center; white-space:nowrap;">${bBadge}</td>
@@ -600,6 +600,7 @@ $settings     = get_all_settings();
                                     data-ref="${b.booking_reference}" 
                                     data-pstat="${b.payment_status}" 
                                     data-bstat="${b.booking_status || 'CONFIRMED'}"
+                                    data-pmeth="${b.payment_method || 'bank_transfer'}"
                                     data-pref="${b.payment_reference || b.paypal_transaction_id || ''}">
                                     Edit &#9998;
                                 </button>
@@ -629,6 +630,7 @@ $settings     = get_all_settings();
                             const ref = this.getAttribute('data-ref');
                             const pstat = this.getAttribute('data-pstat');
                             const bstat = this.getAttribute('data-bstat');
+                            const pmeth = this.getAttribute('data-pmeth');
                             const pref = this.getAttribute('data-pref');
 
                             document.getElementById('modal-ref-title').textContent = 'Update Booking ' + ref;
@@ -636,6 +638,17 @@ $settings     = get_all_settings();
                             document.getElementById('modal-payment-status').value = pstat;
                             document.getElementById('modal-booking-status').value = bstat;
                             document.getElementById('modal-payment-ref').value = pref;
+
+                            // Adjust reference input label & placeholder dynamically
+                            const labelEl = document.getElementById('modal-payment-ref-label');
+                            const inputEl = document.getElementById('modal-payment-ref');
+                            if (pmeth === 'paypal') {
+                                labelEl.textContent = 'PayPal Transaction ID / Reference';
+                                inputEl.placeholder = 'Enter PayPal transaction ID';
+                            } else {
+                                labelEl.textContent = 'Bank Transfer Reference / Name';
+                                inputEl.placeholder = 'Enter bank reference or name';
+                            }
 
                             document.getElementById('update-status-modal').style.display = 'flex';
                         });
@@ -679,11 +692,6 @@ $settings     = get_all_settings();
             if (btnCloseHdModal && hdModalOverlay) {
                 btnCloseHdModal.addEventListener('click', function() {
                     hdModalOverlay.style.display = 'none';
-                });
-                hdModalOverlay.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.style.display = 'none';
-                    }
                 });
             }
             if (hdModalImg) {
