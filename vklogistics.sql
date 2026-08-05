@@ -62,6 +62,7 @@ CREATE TABLE `bookings` (
   `total_amount` DECIMAL(10,2) NOT NULL,
   `payment_method` ENUM('paypal', 'bank_transfer') NOT NULL,
   `payment_reference` VARCHAR(100) NULL COMMENT 'Bank Transfer User Reference or Txn Ref',
+  `payment_proof_image` VARCHAR(255) NULL COMMENT 'Uploaded Payment Receipt Image File Path',
   `paypal_order_id` VARCHAR(100) NULL COMMENT 'PayPal SDK Order ID',
   `paypal_transaction_id` VARCHAR(100) NULL COMMENT 'PayPal Capture / Txn ID',
   `payment_status` ENUM('PAID', 'PAYMENT VERIFICATION PENDING', 'FAILED', 'CANCELLED') NOT NULL DEFAULT 'PAYMENT VERIFICATION PENDING',

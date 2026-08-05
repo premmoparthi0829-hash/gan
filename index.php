@@ -266,10 +266,22 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     </div>
                                 </div>
                                 <div class="bm-field">
-                                    <label for="mobile">UK Mobile <span class="req">*</span></label>
-                                    <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg>
-                                        <input type="tel" id="mobile" placeholder="+44 7700 900000" required>
+                                    <label for="mobile">UK Mobile Number <span class="req">*</span></label>
+                                    <div class="bm-phone-group">
+                                        <div class="bm-country-box">
+                                            <span class="country-flag" id="selected-flag">🇬🇧</span>
+                                            <select id="country_code" aria-label="Country Code">
+                                                <option value="+44" data-flag="🇬🇧" selected>+44 (UK)</option>
+                                                <option value="+91" data-flag="🇮🇳">+91 (IN)</option>
+                                                <option value="+1" data-flag="🇺🇸">+1 (US)</option>
+                                                <option value="+33" data-flag="🇫🇷">+33 (FR)</option>
+                                                <option value="+49" data-flag="🇩🇪">+49 (DE)</option>
+                                            </select>
+                                        </div>
+                                        <div class="bm-input-wrap" style="flex:1;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg>
+                                            <input type="tel" id="mobile" placeholder="7700 900888" required>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="bm-field">

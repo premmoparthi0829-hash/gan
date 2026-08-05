@@ -11,6 +11,12 @@ $(document).ready(function () {
     // Fetch live settings on load
     fetchSettings();
 
+    // Country code flag switcher
+    $(document).on('change', '#country_code', function() {
+        let flag = $(this).find('option:selected').data('flag') || '🇬🇧';
+        $('#selected-flag').text(flag);
+    });
+
     // Mobile Navigation Toggle
     $('#mobile-menu-toggle').on('click', function () {
         $('#nav-menu').toggleClass('active');
@@ -291,10 +297,14 @@ $(document).ready(function () {
         
         submitBtn.prop('disabled', true).html('Creating your booking...');
 
+        let rawMobile = $('#mobile').val().trim();
+        let countryCode = $('#country_code').val() || '+44';
+        let fullMobile = rawMobile.startsWith('+') ? rawMobile : (countryCode + ' ' + rawMobile);
+
         let formData = new FormData();
         formData.append('csrf_token', $('#csrf_token').val());
         formData.append('customer_name', $('#customer_name').val().trim());
-        formData.append('mobile', $('#mobile').val().trim());
+        formData.append('mobile', fullMobile);
         formData.append('email', $('#email').val().trim());
         formData.append('address_line_1', $('#address_line_1').val().trim());
         formData.append('address_line_2', $('#address_line_2').val().trim());

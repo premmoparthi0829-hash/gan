@@ -2219,6 +2219,51 @@ body.modal-open { overflow: hidden; }
 }
 .bm-input-wrap.locked input { cursor: not-allowed; }
 
+/* Phone Group & Country Code Selector */
+.bm-phone-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.bm-country-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-ivory);
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0 10px;
+  height: 44px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.bm-country-box:focus-within {
+  border-color: var(--color-maroon);
+  box-shadow: 0 0 0 3px rgba(74,11,23,0.08);
+  background: #fff;
+}
+
+.bm-country-box .country-flag {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.bm-country-box select {
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-maroon);
+  outline: none;
+  cursor: pointer;
+  padding-right: 2px;
+}
+
 /* Next / Back buttons */
 .bm-next-btn {
   width: 100%;
