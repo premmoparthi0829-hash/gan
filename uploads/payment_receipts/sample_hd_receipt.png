@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#F8FAFC" />
+  
+  <!-- Header Banner -->
+  <rect width="800" height="150" fill="#3B0612" />
+  <text x="40" y="55" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#D4AF37">BARCLAYS BANK UK — OFFICIAL PAYMENT RECEIPT</text>
+  <text x="40" y="100" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#34D399">STATUS: FASTER PAYMENTS TRANSFER SUCCESSFUL ✓</text>
+  
+  <!-- Receipt Card Box -->
+  <rect x="40" y="190" width="720" height="740" rx="16" ry="16" fill="#FFFFFF" stroke="#D4AF37" stroke-width="3" />
+  
+  <text x="80" y="250" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#0F172A">UK BANK TRANSFER PAYMENT PROOF</text>
+  <line x1="80" y1="275" x2="720" y2="275" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="6,6" />
+  
+  <text x="80" y="325" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Beneficiary Name:</text>
+  <text x="280" y="325" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0F172A">VK LOGISTICS LTD</text>
+  
+  <text x="80" y="375" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Sort Code:</text>
+  <text x="280" y="375" font-family="Courier, monospace" font-size="19" font-weight="bold" fill="#0F172A">20-45-77</text>
+  
+  <text x="80" y="425" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Account Number:</text>
+  <text x="280" y="425" font-family="Courier, monospace" font-size="19" font-weight="bold" fill="#0F172A">83920144</text>
+
+  <text x="80" y="475" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Payment Method:</text>
+  <text x="280" y="475" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0F172A">Faster Payments Service (FPS)</text>
+  
+  <line x1="80" y1="515" x2="720" y2="515" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="6,6" />
+  
+  <text x="80" y="565" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#64748B">Total Amount Paid:</text>
+  <text x="280" y="565" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#059669">£18.98 GBP</text>
+  
+  <text x="80" y="625" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Payment Reference:</text>
+  <text x="280" y="625" font-family="Courier, monospace" font-size="19" font-weight="bold" fill="#4A0B17">BANK-TXN-VKG9988</text>
+  
+  <text x="80" y="675" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Date &amp; Time:</text>
+  <text x="280" y="675" font-family="Arial, sans-serif" font-size="17" font-weight="bold" fill="#0F172A">05 August 2026, 14:35 BST</text>
+  
+  <text x="80" y="725" font-family="Arial, sans-serif" font-size="17" fill="#64748B">Bank Reference ID:</text>
+  <text x="280" y="725" font-family="Courier, monospace" font-size="18" font-weight="bold" fill="#0F172A">BARC-UK-2026-887799</text>
+
+  <line x1="80" y1="775" x2="720" y2="775" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="6,6" />
+  
+  <rect x="80" y="815" width="560" height="70" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5" />
+  <text x="100" y="857" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#92400E">✓ VERIFIED BANK PROOF &bull; High Resolution Document</text>
+</svg>

@@ -185,7 +185,7 @@ function save_uploaded_payment_receipt($file_input, $booking_ref) {
         return null;
     }
 
-    $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
+    $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'gif', 'bmp', 'svg'];
     
     $file_name = $file_input['name'];
     $file_size = $file_input['size'];

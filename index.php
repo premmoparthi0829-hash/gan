@@ -420,7 +420,7 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     </div>
                                 </div>
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="payment_proof_file">Upload Payment Receipt Photo <span style="color:#B45309;font-weight:600;">(Optional - Ultra HD Upload)</span></label>
+                                    <label for="payment_proof_file">Upload Payment Receipt Photo</label>
                                     <div class="bm-upload-box" id="receipt-upload-zone">
                                         <input type="file" id="payment_proof_file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
                                         <div class="upload-drop-content" id="upload-idle-state">
