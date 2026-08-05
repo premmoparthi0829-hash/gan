@@ -54,3 +54,33 @@ function json_response($success, $message, $data = [], $http_code = 200) {
     ], $data));
     exit;
 }
+
+/**
+ * Check if admin is currently authenticated in session
+ */
+function is_admin_logged_in() {
+    return !empty($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+}
+
+/**
+ * Verify admin passcode against database setting or default 'admin123'
+ */
+function verify_admin_password($passcode) {
+    $stored_pass = get_setting('admin_password', 'admin123');
+    return $passcode === $stored_pass;
+}
+
+/**
+ * Mark admin authenticated state in session
+ */
+function set_admin_logged_in($status = true) {
+    $_SESSION['admin_logged_in'] = (bool)$status;
+}
+
+/**
+ * Destroy admin session
+ */
+function admin_logout() {
+    unset($_SESSION['admin_logged_in']);
+}
+
