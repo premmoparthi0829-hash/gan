@@ -419,7 +419,25 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                         <input type="text" id="payment_reference" placeholder="Your name or bank reference">
                                     </div>
                                 </div>
-                                <button type="button" class="bm-submit-btn" id="btn-submit-bank">
+                                <div class="bm-field" style="margin-top:14px;">
+                                    <label for="payment_proof_file">Upload Payment Receipt Photo <span style="color:#B45309;font-weight:600;">(Optional - Ultra HD Upload)</span></label>
+                                    <div class="bm-upload-box" id="receipt-upload-zone">
+                                        <input type="file" id="payment_proof_file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
+                                        <div class="upload-drop-content" id="upload-idle-state">
+                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                            <div class="upload-text"><strong>Click to select photo</strong> or drag &amp; drop receipt here</div>
+                                            <div class="upload-sub">Supports Ultra HD JPG, PNG, WEBP (Up to 10MB)</div>
+                                        </div>
+                                        <div class="upload-preview-content" id="upload-preview-state" style="display:none;">
+                                            <img id="receipt-img-preview" src="" alt="Receipt Photo Preview">
+                                            <div class="upload-file-info">
+                                                <span id="upload-file-name">receipt.jpg</span>
+                                                <button type="button" id="btn-remove-receipt" class="btn-remove-file">&times; Remove Photo</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="bm-submit-btn" id="btn-submit-bank" style="margin-top:16px;">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     Confirm Bank Transfer Booking
                                 </button>

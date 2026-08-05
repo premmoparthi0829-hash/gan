@@ -2429,7 +2429,7 @@ body.modal-open { overflow: hidden; }
 
 .simple-header-container {
   width: 100%;
-  max-width: 1240px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
@@ -2803,29 +2803,31 @@ body.modal-open { overflow: hidden; }
   overflow-x: auto;
   border-radius: 12px !important;
   border: 1px solid #CBD5E1 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
 }
 
 .admin-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.9rem !important;
+  font-size: 0.86rem !important;
 }
 
 .admin-table th {
-  background: #32060F !important;
+  background: #3B0612 !important;
   color: #FFFFFF !important;
   font-family: var(--font-heading);
+  font-size: 0.82rem !important;
   font-weight: 800 !important;
-  padding: 16px !important;
+  padding: 12px 10px !important;
   border-bottom: 3px solid #D4AF37 !important;
   white-space: nowrap;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
 .admin-table td {
-  padding: 16px !important;
+  padding: 11px 10px !important;
   border-bottom: 1px solid #E2E8F0 !important;
   vertical-align: middle;
   color: #1E293B !important;
@@ -2843,15 +2845,16 @@ body.modal-open { overflow: hidden; }
   background: #FEF3C7 !important;
 }
 
-/* Status Badges - High Contrast */
+/* Status Badges - High Contrast & Compact */
 .status-pill {
   display: inline-block;
-  padding: 5px 12px !important;
+  padding: 4px 9px !important;
   border-radius: 50px !important;
-  font-size: 0.775rem !important;
+  font-size: 0.72rem !important;
   font-weight: 800 !important;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
 }
 
 .status-paid {
@@ -3360,4 +3363,227 @@ body.modal-open { overflow: hidden; }
 .btn-modal-save:hover {
   transform: translateY(-2px) !important;
   box-shadow: 0 8px 22px rgba(230, 81, 0, 0.5) !important;
+}
+
+/* ==========================================================================
+   ULTRA HD RECEIPT UPLOAD & LIGHTBOX MODAL STYLES
+   ========================================================================== */
+.bm-upload-box {
+  border: 2px dashed #D4AF37;
+  border-radius: 12px;
+  background: #FFFDF7;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.bm-upload-box:hover, .bm-upload-box.drag-active {
+  border-color: #E65100;
+  background: #FFF5EC;
+  box-shadow: 0 4px 14px rgba(230, 81, 0, 0.12);
+}
+
+.upload-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.upload-text {
+  font-size: 0.9rem;
+  color: #1E293B;
+}
+
+.upload-sub {
+  font-size: 0.78rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.upload-preview-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-preview-content img {
+  max-height: 140px;
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  object-fit: contain;
+  border: 1px solid #E2E8F0;
+}
+
+.upload-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-file-info span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.btn-remove-file {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-file:hover {
+  background: #FCA5A5;
+  color: #7F1D1D;
+}
+
+/* Admin Receipt Badge & Thumbnail */
+.btn-view-receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #F59E0B;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view-receipt:hover {
+  background: #F59E0B;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+}
+
+.badge-no-receipt {
+  font-size: 0.78rem;
+  color: #94A3B8;
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Ultra HD Lightbox Modal */
+.hd-lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(11, 19, 43, 0.92);
+  backdrop-filter: blur(10px);
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.hd-lightbox-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  max-width: 1040px;
+  width: 92%;
+  height: 82vh;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  border: 2px solid #D4AF37;
+}
+
+.hd-lightbox-header {
+  padding: 18px 28px;
+  background: #3B0612;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #D4AF37;
+}
+
+.hd-lightbox-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hd-lightbox-body {
+  padding: 28px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0B132B;
+  overflow: auto;
+  min-height: 400px;
+}
+
+.hd-lightbox-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  transition: transform 0.3s ease;
+  cursor: zoom-in;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hd-lightbox-body img.zoomed {
+  transform: scale(1.6);
+  cursor: zoom-out;
+}
+
+.hd-lightbox-footer {
+  padding: 18px 28px;
+  background: #1C2541;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-hd-action {
+  background: #334155;
+  color: #F8FAFC;
+  border: 1px solid #475569;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-hd-action:hover {
+  background: #D4AF37;
+  color: #3B0612;
+  border-color: #D4AF37;
 }

@@ -36,12 +36,24 @@ if (!$booking) {
     json_response(false, 'Booking reference not found. Please create a booking first.', [], 404);
 }
 
-// Update booking record with Bank Reference & status
-update_booking_payment($booking_ref, 'PAYMENT VERIFICATION PENDING', $payment_ref);
+// Upload receipt photo if provided
+$proof_image = '';
+if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
+    $uploaded_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
+    if ($uploaded_path) {
+        $proof_image = $uploaded_path;
+    }
+}
+
+// Update booking record with Bank Reference, status & proof image
+update_booking_payment($booking_ref, 'PAYMENT VERIFICATION PENDING', $payment_ref, '', '', $proof_image);
 
 // Update active session
 $_SESSION['last_booking']['payment_reference'] = $payment_ref;
 $_SESSION['last_booking']['payment_status'] = 'PAYMENT VERIFICATION PENDING';
+if (!empty($proof_image)) {
+    $_SESSION['last_booking']['payment_proof_image'] = $proof_image;
+}
 
 json_response(true, 'Bank transfer details recorded. Your booking status is Payment Verification Pending.', [
     'booking_reference' => $booking_ref,

@@ -221,6 +221,55 @@ $(document).ready(function () {
     });
 
 
+    // Drag & Drop / File Click Receipt Uploader Handlers
+    $(document).on('click', '#upload-idle-state', function() {
+        $('#payment_proof_file').trigger('click');
+    });
+
+    $(document).on('change', '#payment_proof_file', function() {
+        let file = this.files[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Image file size must be less than 10MB.', 'error');
+                $(this).val('');
+                return;
+            }
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                $('#receipt-img-preview').attr('src', evt.target.result);
+                $('#upload-file-name').text(file.name);
+                $('#upload-idle-state').hide();
+                $('#upload-preview-state').show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $(document).on('click', '#btn-remove-receipt', function(e) {
+        e.stopPropagation();
+        $('#payment_proof_file').val('');
+        $('#receipt-img-preview').attr('src', '');
+        $('#upload-preview-state').hide();
+        $('#upload-idle-state').show();
+    });
+
+    $(document).on('dragover dragenter', '#receipt-upload-zone', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('drag-active');
+    });
+
+    $(document).on('dragleave drop', '#receipt-upload-zone', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('drag-active');
+        if (e.type === 'drop' && e.originalEvent.dataTransfer.files.length > 0) {
+            let files = e.originalEvent.dataTransfer.files;
+            $('#payment_proof_file')[0].files = files;
+            $('#payment_proof_file').trigger('change');
+        }
+    });
+
     // Bank Transfer Booking Submit (button click in modal)
     $(document).on('click', '#btn-submit-bank', function (e) {
         e.preventDefault();
@@ -232,34 +281,41 @@ $(document).ready(function () {
 
         let submitBtn = $('#btn-submit-bank');
         let originalText = submitBtn.html();
-        
-        submitBtn.prop('disabled', true).html('Creating your booking...');
+        let payRef = $('#payment_reference').val().trim();
 
-        let formData = {
-            csrf_token: $('#csrf_token').val(),
-            customer_name: $('#customer_name').val().trim(),
-            mobile: $('#mobile').val().trim(),
-            email: $('#email').val().trim(),
-            address_line_1: $('#address_line_1').val().trim(),
-            address_line_2: $('#address_line_2').val().trim(),
-            city: $('#city').val().trim(),
-            county: $('#county').val().trim(),
-            postcode: $('#postcode').val().trim(),
-            quantity: $('#quantity-input').val(),
-            payment_method: 'bank_transfer',
-            payment_reference: $('#payment_reference').val().trim()
-        };
-
-        if (!formData.payment_reference) {
+        if (!payRef) {
             showToast('Please enter your Bank Transfer payment reference number.', 'error');
             submitBtn.prop('disabled', false).html(originalText);
             return;
+        }
+        
+        submitBtn.prop('disabled', true).html('Creating your booking...');
+
+        let formData = new FormData();
+        formData.append('csrf_token', $('#csrf_token').val());
+        formData.append('customer_name', $('#customer_name').val().trim());
+        formData.append('mobile', $('#mobile').val().trim());
+        formData.append('email', $('#email').val().trim());
+        formData.append('address_line_1', $('#address_line_1').val().trim());
+        formData.append('address_line_2', $('#address_line_2').val().trim());
+        formData.append('city', $('#city').val().trim());
+        formData.append('county', $('#county').val().trim());
+        formData.append('postcode', $('#postcode').val().trim());
+        formData.append('quantity', $('#quantity-input').val());
+        formData.append('payment_method', 'bank_transfer');
+        formData.append('payment_reference', payRef);
+
+        let fileInput = $('#payment_proof_file')[0];
+        if (fileInput && fileInput.files.length > 0) {
+            formData.append('payment_proof', fileInput.files[0]);
         }
 
         $.ajax({
             url: 'ajax/create-booking.php',
             type: 'POST',
             data: formData,
+            processData: false,
+            contentType: false,
             dataType: 'json',
             success: function (res) {
                 if (res.success) {

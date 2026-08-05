@@ -126,7 +126,7 @@ $settings     = get_all_settings();
         </header>
 
         <!-- Main Body Content -->
-        <main class="container" style="padding-top: 24px; padding-bottom: 60px;">
+        <main class="admin-main-container" style="max-width: 1440px; margin: 0 auto; padding: 24px 20px 60px 20px;">
             
             <!-- KPI Summary Cards -->
             <div class="admin-kpi-grid">
@@ -166,7 +166,7 @@ $settings     = get_all_settings();
                     &#128221; Bookings Management
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-settings">
-                    &#9881; Store & Pricing Settings
+                    &#9881; Store &amp; Pricing Settings
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-export">
                     &#128229; CSV Reports
@@ -194,15 +194,16 @@ $settings     = get_all_settings();
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Booking Ref</th>
-                                <th>Customer & Contact</th>
-                                <th>Delivery Address</th>
-                                <th>Qty</th>
-                                <th>Total (£)</th>
-                                <th>Payment</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
+                                <th style="white-space:nowrap; text-align:left;">Booking Ref</th>
+                                <th style="text-align:left;">Customer &amp; Contact</th>
+                                <th style="text-align:left;">Delivery Address</th>
+                                <th style="white-space:nowrap; text-align:center;">Qty</th>
+                                <th style="white-space:nowrap; text-align:right;">Total (£)</th>
+                                <th style="white-space:nowrap; text-align:center;">Payment</th>
+                                <th style="white-space:nowrap; text-align:center;">Status</th>
+                                <th style="white-space:nowrap; text-align:center;">Date</th>
+                                <th style="white-space:nowrap; text-align:center;">Receipt</th>
+                                <th style="white-space:nowrap; text-align:center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="bookings-table-body">
@@ -370,6 +371,37 @@ $settings     = get_all_settings();
         </div>
     </div>
 
+    <!-- ULTRA HD PAYMENT RECEIPT LIGHTBOX MODAL -->
+    <div id="payment-proof-modal" class="hd-lightbox-overlay" style="display:none;">
+        <div class="hd-lightbox-card">
+            <div class="hd-lightbox-header">
+                <div class="hd-lightbox-title">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>Payment Proof Receipt &bull; <strong id="hd-modal-ref">VKG-2026-000001</strong></span>
+                </div>
+                <button type="button" id="btn-close-hd-modal" style="background:none; border:none; color:#F1F5F9; font-size:1.8rem; cursor:pointer; font-weight:800;" title="Close Modal">&times;</button>
+            </div>
+            <div class="hd-lightbox-body">
+                <img id="hd-modal-img" src="" alt="Payment Receipt Photo" title="Click to zoom in / out">
+            </div>
+            <div class="hd-lightbox-footer">
+                <div style="color:#94A3B8; font-size:0.8rem; font-weight:600;">
+                    🔍 Click photo to zoom in / out
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <a id="hd-modal-download" href="" download class="btn-hd-action">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download HD Photo
+                    </a>
+                    <a id="hd-modal-open-new" href="" target="_blank" class="btn-hd-action">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        Open Full Resolution ↗
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -493,7 +525,12 @@ $settings     = get_all_settings();
                     data.bookings.forEach(b => {
                         const tr = document.createElement('tr');
                         
-                        let payBadge = `<span class="status-pill status-pending">${b.payment_status}</span>`;
+                        let pStatusDisplay = b.payment_status;
+                        if (pStatusDisplay === 'PAYMENT VERIFICATION PENDING') {
+                            pStatusDisplay = 'PENDING VERIFY';
+                        }
+
+                        let payBadge = `<span class="status-pill status-pending" title="${escapeHtml(b.payment_status)}">${pStatusDisplay}</span>`;
                         if (b.payment_status === 'PAID') {
                             payBadge = `<span class="status-pill status-paid">PAID</span>`;
                         } else if (b.payment_status === 'FAILED' || b.payment_status === 'CANCELLED') {
@@ -505,24 +542,31 @@ $settings     = get_all_settings();
                             bBadge = `<span class="status-pill status-shipped">${b.booking_status}</span>`;
                         }
 
+                        let receiptCell = `<span class="badge-no-receipt">No Photo</span>`;
+                        if (b.payment_proof_image) {
+                            receiptCell = `<button type="button" class="btn-view-receipt btn-open-hd-modal" data-img="${escapeHtml(b.payment_proof_image)}" data-ref="${escapeHtml(b.booking_reference)}">📷 View Photo</button>`;
+                        }
+
                         tr.innerHTML = `
-                            <td><strong style="color:#4A0B17; font-size:0.95rem;">${b.booking_reference}</strong></td>
-                            <td>
-                                <div><strong style="color:#0F172A; font-size:0.95rem;">${escapeHtml(b.customer_name)}</strong></div>
-                                <div style="font-size:0.875rem; color:#334155; font-weight:600; margin-top:2px;">${escapeHtml(b.mobile)} &bull; ${escapeHtml(b.email)}</div>
+                            <td style="white-space:nowrap;"><strong style="color:#4A0B17; font-size:0.86rem; font-family:monospace; letter-spacing:-0.2px;">${b.booking_reference}</strong></td>
+                            <td style="min-width:140px;">
+                                <div><strong style="color:#0F172A; font-size:0.88rem;">${escapeHtml(b.customer_name)}</strong></div>
+                                <div style="font-size:0.8rem; color:#334155; font-weight:600; margin-top:2px;">${escapeHtml(b.mobile)}</div>
+                                <div style="font-size:0.78rem; color:#64748B;">${escapeHtml(b.email)}</div>
                             </td>
-                            <td style="font-size:0.875rem; color:#1E293B; font-weight:600;">
+                            <td style="max-width:200px; font-size:0.82rem; color:#334155; line-height:1.35;">
                                 ${escapeHtml(b.address_line_1)}, ${escapeHtml(b.city)}, <strong style="color:#0F172A;">${escapeHtml(b.postcode)}</strong>
                             </td>
-                            <td><strong style="color:#0F172A; font-size:1rem;">${b.quantity}</strong></td>
-                            <td><strong style="color:#0F172A; font-size:1.05rem;">&pound;${parseFloat(b.total_amount).toFixed(2)}</strong></td>
-                            <td>
-                                <div style="text-transform:capitalize; font-size:0.85rem; font-weight:700; color:#1E293B; margin-bottom:4px;">${(b.payment_method || '').replace('_', ' ')}</div>
+                            <td style="text-align:center; white-space:nowrap;"><strong style="color:#0F172A; font-size:0.95rem;">${b.quantity}</strong></td>
+                            <td style="text-align:right; white-space:nowrap;"><strong style="color:#0F172A; font-size:0.95rem;">&pound;${parseFloat(b.total_amount).toFixed(2)}</strong></td>
+                            <td style="text-align:center; white-space:nowrap;">
+                                <div style="text-transform:capitalize; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:3px;">${(b.payment_method || '').replace('_', ' ')}</div>
                                 ${payBadge}
                             </td>
-                            <td>${bBadge}</td>
-                            <td style="font-size:0.875rem; color:#334155; font-weight:700;">${(b.created_at || '').substring(0, 10)}</td>
-                            <td>
+                            <td style="text-align:center; white-space:nowrap;">${bBadge}</td>
+                            <td style="text-align:center; white-space:nowrap; font-size:0.82rem; color:#334155; font-weight:700;">${(b.created_at || '').substring(0, 10)}</td>
+                            <td style="text-align:center; white-space:nowrap;">${receiptCell}</td>
+                            <td style="text-align:center; white-space:nowrap;">
                                 <button type="button" class="btn-action-sm btn-edit-booking" 
                                     data-ref="${b.booking_reference}" 
                                     data-pstat="${b.payment_status}" 
@@ -533,6 +577,21 @@ $settings     = get_all_settings();
                             </td>
                         `;
                         tbody.appendChild(tr);
+                    });
+
+                    // Attach HD Lightbox Modal Handlers
+                    document.querySelectorAll('.btn-open-hd-modal').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const imgSrc = this.getAttribute('data-img');
+                            const ref = this.getAttribute('data-ref');
+                            document.getElementById('hd-modal-ref').textContent = ref;
+                            const imgEl = document.getElementById('hd-modal-img');
+                            imgEl.src = imgSrc;
+                            imgEl.classList.remove('zoomed');
+                            document.getElementById('hd-modal-download').href = imgSrc;
+                            document.getElementById('hd-modal-open-new').href = imgSrc;
+                            document.getElementById('payment-proof-modal').style.display = 'flex';
+                        });
                     });
 
                     // Attach Edit Handlers
@@ -552,6 +611,55 @@ $settings     = get_all_settings();
                             document.getElementById('update-status-modal').style.display = 'flex';
                         });
                     });
+                });
+            }
+
+            // Global Click Event Delegation for HD Lightbox Modal Open
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-open-hd-modal');
+                if (btn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const imgSrc = btn.getAttribute('data-img');
+                    const ref = btn.getAttribute('data-ref');
+                    
+                    const refEl = document.getElementById('hd-modal-ref');
+                    const imgEl = document.getElementById('hd-modal-img');
+                    const dlEl = document.getElementById('hd-modal-download');
+                    const openEl = document.getElementById('hd-modal-open-new');
+                    const modalEl = document.getElementById('payment-proof-modal');
+
+                    if (refEl) refEl.textContent = ref;
+                    if (imgEl) {
+                        imgEl.src = imgSrc;
+                        imgEl.classList.remove('zoomed');
+                    }
+                    if (dlEl) dlEl.href = imgSrc;
+                    if (openEl) openEl.href = imgSrc;
+                    if (modalEl) {
+                        modalEl.style.display = 'flex';
+                    }
+                }
+            });
+
+            // Ultra HD Lightbox Close & Zoom Listeners
+            const btnCloseHdModal = document.getElementById('btn-close-hd-modal');
+            const hdModalOverlay = document.getElementById('payment-proof-modal');
+            const hdModalImg = document.getElementById('hd-modal-img');
+
+            if (btnCloseHdModal && hdModalOverlay) {
+                btnCloseHdModal.addEventListener('click', function() {
+                    hdModalOverlay.style.display = 'none';
+                });
+                hdModalOverlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            }
+            if (hdModalImg) {
+                hdModalImg.addEventListener('click', function() {
+                    this.classList.toggle('zoomed');
                 });
             }
 

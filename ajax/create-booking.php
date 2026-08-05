@@ -67,8 +67,18 @@ if (!empty($errors)) {
     json_response(false, implode('<br>', $errors), ['errors' => $errors], 422);
 }
 
+// Generate unique reference first so filename matches reference
+$booking_ref = generate_unique_booking_reference();
+
+// Handle optional receipt upload
+$proof_image_path = null;
+if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
+    $proof_image_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
+}
+
 // Data is valid. Create booking via backend
 $booking_data = [
+    'booking_reference' => $booking_ref,
     'customer_name' => $customer_name,
     'mobile' => $mobile,
     'email' => $email,
@@ -79,7 +89,8 @@ $booking_data = [
     'postcode' => $postcode,
     'quantity' => $quantity,
     'payment_method' => $payment_method,
-    'payment_reference' => sanitize_input($_POST['payment_reference'] ?? '')
+    'payment_reference' => sanitize_input($_POST['payment_reference'] ?? ''),
+    'payment_proof_image' => $proof_image_path
 ];
 
 $booking = create_new_booking($booking_data);

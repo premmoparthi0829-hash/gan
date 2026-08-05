@@ -35,6 +35,12 @@ class Database {
 
                     if ($is_new) {
                         self::initSqliteSchema(self::$conn);
+                    } else {
+                        try {
+                            self::$conn->exec("ALTER TABLE bookings ADD COLUMN payment_proof_image TEXT NULL");
+                        } catch (Exception $ex) {
+                            // Column already exists
+                        }
                     }
                 } catch (Exception $sqe) {
                     log_system_error("Database Connection Error: " . $e->getMessage() . " | SQLite Error: " . $sqe->getMessage());
@@ -77,6 +83,7 @@ class Database {
                 paypal_transaction_id TEXT NULL,
                 payment_status TEXT NOT NULL DEFAULT 'PAYMENT VERIFICATION PENDING',
                 booking_status TEXT NOT NULL DEFAULT 'CONFIRMED',
+                payment_proof_image TEXT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );

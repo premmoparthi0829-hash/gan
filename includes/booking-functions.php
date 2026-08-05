@@ -64,7 +64,7 @@ function calculate_order_totals($quantity) {
  */
 function create_new_booking($customer_data) {
     $totals = calculate_order_totals($customer_data['quantity']);
-    $reference = generate_unique_booking_reference();
+    $reference = $customer_data['booking_reference'] ?? generate_unique_booking_reference();
     
     $db = Database::getConnection();
     
@@ -89,7 +89,8 @@ function create_new_booking($customer_data) {
         'paypal_order_id' => $customer_data['paypal_order_id'] ?? null,
         'paypal_transaction_id' => $customer_data['paypal_transaction_id'] ?? null,
         'payment_status' => ($customer_data['payment_method'] === 'paypal' && !empty($customer_data['paypal_transaction_id'])) ? 'PAID' : 'PAYMENT VERIFICATION PENDING',
-        'booking_status' => 'CONFIRMED'
+        'booking_status' => 'CONFIRMED',
+        'payment_proof_image' => $customer_data['payment_proof_image'] ?? null
     ];
 
     if ($db) {
@@ -99,13 +100,13 @@ function create_new_booking($customer_data) {
                 address_line_1, address_line_2, city, county, postcode, country,
                 quantity, unit_price, subtotal, shipping_charge, total_amount,
                 payment_method, payment_reference, paypal_order_id, paypal_transaction_id,
-                payment_status, booking_status
+                payment_status, booking_status, payment_proof_image
             ) VALUES (
                 :booking_reference, :customer_name, :mobile, :email,
                 :address_line_1, :address_line_2, :city, :county, :postcode, :country,
                 :quantity, :unit_price, :subtotal, :shipping_charge, :total_amount,
                 :payment_method, :payment_reference, :paypal_order_id, :paypal_transaction_id,
-                :payment_status, :booking_status
+                :payment_status, :booking_status, :payment_proof_image
             )";
 
             $stmt = $db->prepare($sql);
@@ -147,9 +148,9 @@ function get_booking_by_ref($reference) {
 }
 
 /**
- * Update payment status for a booking
+ * Update payment status & proof for a booking
  */
-function update_booking_payment($reference, $status, $payment_ref = '', $paypal_order = '', $paypal_txn = '') {
+function update_booking_payment($reference, $status, $payment_ref = '', $paypal_order = '', $paypal_txn = '', $proof_image = '') {
     $db = Database::getConnection();
     if ($db) {
         try {
@@ -157,7 +158,8 @@ function update_booking_payment($reference, $status, $payment_ref = '', $paypal_
                     payment_status = :status,
                     payment_reference = COALESCE(NULLIF(:payment_ref, ''), payment_reference),
                     paypal_order_id = COALESCE(NULLIF(:paypal_order, ''), paypal_order_id),
-                    paypal_transaction_id = COALESCE(NULLIF(:paypal_txn, ''), paypal_transaction_id)
+                    paypal_transaction_id = COALESCE(NULLIF(:paypal_txn, ''), paypal_transaction_id),
+                    payment_proof_image = COALESCE(NULLIF(:proof_img, ''), payment_proof_image)
                     WHERE booking_reference = :ref";
             $stmt = $db->prepare($sql);
             return $stmt->execute([
@@ -165,6 +167,7 @@ function update_booking_payment($reference, $status, $payment_ref = '', $paypal_
                 ':payment_ref' => $payment_ref,
                 ':paypal_order' => $paypal_order,
                 ':paypal_txn' => $paypal_txn,
+                ':proof_img' => $proof_image,
                 ':ref' => $reference
             ]);
         } catch (Exception $e) {
@@ -172,4 +175,44 @@ function update_booking_payment($reference, $status, $payment_ref = '', $paypal_
         }
     }
     return false;
+}
+
+/**
+ * Upload & save payment proof receipt image securely
+ */
+function save_uploaded_payment_receipt($file_input, $booking_ref) {
+    if (empty($file_input) || !isset($file_input['error']) || $file_input['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
+    
+    $file_name = $file_input['name'];
+    $file_size = $file_input['size'];
+    $tmp_name  = $file_input['tmp_name'];
+
+    if ($file_size > 10 * 1024 * 1024) { // 10MB max
+        return null;
+    }
+
+    $ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+    if (!in_array($ext, $allowed_exts)) {
+        return null;
+    }
+
+    $upload_dir = __DIR__ . '/../uploads/payment_receipts/';
+    if (!is_dir($upload_dir)) {
+        @mkdir($upload_dir, 0755, true);
+        @file_put_contents($upload_dir . 'index.html', '');
+    }
+
+    $clean_ref = preg_replace('/[^A-Za-z0-9_-]/', '', $booking_ref);
+    $new_filename = sprintf('receipt_%s_%s_%s.%s', $clean_ref, time(), bin2hex(random_bytes(3)), $ext);
+    $target_file = $upload_dir . $new_filename;
+
+    if (move_uploaded_file($tmp_name, $target_file)) {
+        return 'uploads/payment_receipts/' . $new_filename;
+    }
+
+    return null;
 }

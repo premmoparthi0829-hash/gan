@@ -55,3 +55,5 @@
 [2026-08-04 11:27:47] Error fetching setting 'support_phone': SQLSTATE[42S02]: Base table or view not found: 1146 Table 'vk_logistics.settings' doesn't exist
 [2026-08-04 11:27:47] Error fetching setting 'support_email': SQLSTATE[42S02]: Base table or view not found: 1146 Table 'vk_logistics.settings' doesn't exist
 [2026-08-05 08:06:57] Sequence generation error: SQLSTATE[HY000]: General error: 1 no such function: NOW
+[2026-08-05 09:21:20] Sequence generation error: SQLSTATE[HY000]: General error: 1 no such function: NOW
+[2026-08-05 09:22:11] Sequence generation error: SQLSTATE[HY000]: General error: 1 no such function: NOW
