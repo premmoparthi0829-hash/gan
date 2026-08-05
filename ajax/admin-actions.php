@@ -230,10 +230,12 @@ if ($action === 'export_csv') {
         $bookings[] = $_SESSION['last_booking'];
     }
 
-    filename: header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=vk_logistics_bookings_' . date('Ymd_His') . '.csv');
 
     $output = fopen('php://output', 'w');
+    // Output UTF-8 BOM for Google Sheets & Excel compatibility
+    fprintf($output, "\xEF\xBB\xBF");
     fputcsv($output, [
         'Booking Ref', 'Customer Name', 'Mobile', 'Email',
         'Address Line 1', 'Address Line 2', 'City', 'County', 'Postcode', 'Country',
@@ -264,6 +266,62 @@ if ($action === 'export_csv') {
             $row['booking_status'] ?? '',
             $row['created_at'] ?? ''
         ]);
+    }
+    fclose($output);
+    exit;
+}
+
+// 5. Export TSV (Tab Separated Values for Google Sheets)
+if ($action === 'export_tsv') {
+    $db = Database::getConnection();
+    $bookings = [];
+
+    if ($db) {
+        try {
+            $stmt = $db->query("SELECT * FROM bookings ORDER BY id DESC");
+            $bookings = $stmt->fetchAll();
+        } catch (Exception $e) {
+            log_system_error("Export TSV error: " . $e->getMessage());
+        }
+    } elseif (isset($_SESSION['last_booking'])) {
+        $bookings[] = $_SESSION['last_booking'];
+    }
+
+    header('Content-Type: text/tab-separated-values; charset=utf-8');
+    header('Content-Disposition: attachment; filename=vk_logistics_bookings_' . date('Ymd_His') . '.tsv');
+
+    $output = fopen('php://output', 'w');
+    fprintf($output, "\xEF\xBB\xBF");
+    fputcsv($output, [
+        'Booking Ref', 'Customer Name', 'Mobile', 'Email',
+        'Address Line 1', 'Address Line 2', 'City', 'County', 'Postcode', 'Country',
+        'Quantity', 'Unit Price (£)', 'Subtotal (£)', 'Shipping (£)', 'Total (£)',
+        'Payment Method', 'Payment Ref / Txn ID', 'Payment Status', 'Booking Status', 'Date Created'
+    ], "\t");
+
+    foreach ($bookings as $row) {
+        fputcsv($output, [
+            $row['booking_reference'] ?? '',
+            $row['customer_name'] ?? '',
+            $row['mobile'] ?? '',
+            $row['email'] ?? '',
+            $row['address_line_1'] ?? '',
+            $row['address_line_2'] ?? '',
+            $row['city'] ?? '',
+            $row['county'] ?? '',
+            $row['postcode'] ?? '',
+            $row['country'] ?? 'United Kingdom',
+            $row['quantity'] ?? 1,
+            $row['unit_price'] ?? '14.99',
+            $row['subtotal'] ?? '',
+            $row['shipping_charge'] ?? '3.99',
+            $row['total_amount'] ?? '',
+            $row['payment_method'] ?? '',
+            $row['payment_reference'] ?? $row['paypal_transaction_id'] ?? '',
+            $row['payment_status'] ?? '',
+            $row['booking_status'] ?? '',
+            $row['created_at'] ?? ''
+        ], "\t");
     }
     fclose($output);
     exit;

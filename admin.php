@@ -169,7 +169,7 @@ $settings     = get_all_settings();
                     &#9881; Store &amp; Pricing Settings
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-export">
-                    &#128229; CSV Reports
+                    📄 PDF &amp; CSV Reports
                 </button>
             </div>
 
@@ -307,18 +307,47 @@ $settings     = get_all_settings();
                 </form>
             </div>
 
-            <!-- TAB 3: CSV EXPORT -->
+            <!-- TAB 3: PDF & CSV REPORTS -->
             <div class="admin-tab-content admin-panel-card" id="tab-export" style="display:none;">
-                <div style="text-align: center; padding: 40px 20px;">
-                    <div style="font-size: 3rem; margin-bottom: 12px;">&#128229;</div>
-                    <h2 style="font-size: 1.5rem; color: var(--color-maroon); margin-bottom: 8px;">Export All Bookings to CSV</h2>
-                    <p style="color: var(--color-text-muted); max-width: 500px; margin: 0 auto 24px;">
-                        Download a clean CSV report containing all customer contact details, quantities, full shipping addresses, total amounts, and payment statuses.
-                    </p>
+                <div style="padding: 24px 20px;">
+                    <div style="text-align:center; max-width: 600px; margin: 0 auto 32px;">
+                        <h2 style="font-size: 1.6rem; color: #3B0612; margin-bottom: 8px; font-weight:800;">Export &amp; Download Reports</h2>
+                        <p style="color: #64748B; font-size: 0.95rem; line-height: 1.5; margin: 0;">
+                            Generate high-resolution PDF reports or export formatted datasets directly into Google Sheets &amp; Microsoft Excel.
+                        </p>
+                    </div>
 
-                    <a href="ajax/admin-actions.php?action=export_csv" class="btn-gold" style="display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; font-size: 1.05rem;">
-                        &#128229; Download Complete CSV Report
-                    </a>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 960px; margin: 0 auto;">
+                        
+                        <!-- PDF Report Option Card -->
+                        <div style="background: #FFFFFF; border: 2px solid #D4AF37; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="font-size: 3rem; margin-bottom: 14px;">📄</div>
+                                <h3 style="font-size: 1.25rem; color: #3B0612; margin: 0 0 10px 0; font-weight: 800;">Ultra HD PDF Report</h3>
+                                <p style="font-size: 0.88rem; color: #64748B; line-height: 1.5; margin-bottom: 24px;">
+                                    Generates a high-resolution, beautifully formatted PDF document with executive KPI summary metrics, VK Logistics branding, structured table, and official signature block.
+                                </p>
+                            </div>
+                            <a href="export-pdf.php" target="_blank" class="btn-gold" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 24px; font-size: 1rem; text-decoration: none; border-radius: 8px;">
+                                🖨️ Open / Download PDF Report
+                            </a>
+                        </div>
+
+                        <!-- Google Sheets / Excel Option Card -->
+                        <div style="background: #FFFFFF; border: 2px solid #10B981; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06); display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="font-size: 3rem; margin-bottom: 14px;">📊</div>
+                                <h3 style="font-size: 1.25rem; color: #065F46; margin: 0 0 10px 0; font-weight: 800;">Google Sheets &amp; Excel Reports</h3>
+                                <p style="font-size: 0.88rem; color: #64748B; line-height: 1.5; margin-bottom: 20px;">
+                                    View real-time booking data in Google Sheets Web Table format, download UTF-8 CSV, or copy all data to Google Sheets in 1 click.
+                                </p>
+                            </div>
+                            <a href="export-html-sheet.php" target="_blank" style="background: #065F46; color: #FFFFFF; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: 800; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                📊 Open Google Sheets &amp; Excel Table ↗
+                            </a>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 
