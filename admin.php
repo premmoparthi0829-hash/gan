@@ -30,45 +30,81 @@ $settings     = get_all_settings();
 </head>
 <body class="admin-body">
 
-    <!-- PROFESSIONAL ADMIN AUTHENTICATION PORTAL -->
-    <div class="admin-auth-overlay" id="admin-login-screen" style="<?php echo $is_logged_in ? 'display:none;' : 'display:flex;'; ?>">
-        <div class="admin-auth-card">
-            <!-- Brand Badge -->
-            <div class="admin-auth-brand">
-                <div class="auth-logo-badge">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    <!-- MEDIUM FLOATING BOX REFERENCE DESIGN -->
+    <div class="saleskip-auth-overlay" id="admin-login-screen" style="<?php echo $is_logged_in ? 'display:none;' : 'display:flex;'; ?>">
+        <div class="saleskip-medium-card">
+            <!-- Left Hero Pane (52% Width) -->
+            <div class="saleskip-hero-pane">
+                <!-- Rotated Wireframe Frames -->
+                <div class="saleskip-wireframe-container">
+                    <div class="wireframe-rect wireframe-rect-1"></div>
+                    <div class="wireframe-rect wireframe-rect-2"></div>
+                    <div class="wireframe-rect wireframe-rect-3"></div>
+                    <div class="wireframe-rect wireframe-rect-4"></div>
+                </div>
+
+                <!-- Top Asterisk / Burst Icon -->
+                <div class="saleskip-asterisk-icon">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                        <line x1="4.93" y1="19.07" x2="19.07" y2="4.93"></line>
                     </svg>
                 </div>
-                <div class="auth-brand-info">
-                    <h2>VK LOGISTICS</h2>
-                    <span>ADMINISTRATOR CONSOLE</span>
+
+                <!-- Hero Content -->
+                <div class="saleskip-hero-content">
+                    <h1 class="saleskip-text-hello">Hello</h1>
+                    <h1 class="saleskip-text-brand">
+                        <span>Ganesh Kit!</span>
+                        <span class="saleskip-wave-hand">&#128075;</span>
+                    </h1>
+                    <p class="saleskip-text-body">UK Ganesh Idol Booking &amp; Logistics Portal. Manage customer orders, track delivery dispatches, and update store settings effortlessly.</p>
+                </div>
+
+                <!-- Copyright Footer -->
+                <div class="saleskip-copyright">
+                    &copy; 2026 VK Logistics. All rights reserved.
                 </div>
             </div>
 
-            <p class="auth-subtitle">Enter your security passkey to access the operations dashboard.</p>
+            <!-- Right Form Pane (48% Width) -->
+            <div class="saleskip-form-pane">
+                <h2 class="saleskip-brand-top">VK Logistics</h2>
 
-            <form id="admin-login-form">
-                <div class="auth-form-group">
-                    <label for="admin-passcode-input">Security Passkey</label>
-                    <div class="auth-input-wrapper">
-                        <svg class="auth-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-2-2l2 2m2 4l-4 4m2-2l-2 2m-4 0l-7 7-4-4 7-7 4 4z"></path></svg>
-                        <input type="password" id="admin-passcode-input" class="auth-input-field" placeholder="••••••••" required autofocus autocomplete="current-password">
+                <div class="saleskip-form-wrapper">
+                    <h3 class="saleskip-title-welcome">Welcome Back!</h3>
+                    <p class="saleskip-sub-text">Enter your password to access your dashboard.</p>
+
+                    <form id="admin-login-form">
+                        <div class="saleskip-field-group" style="position: relative;">
+                            <input type="password" id="admin-passcode-input" class="saleskip-underline-input" placeholder="Password" required autofocus autocomplete="current-password" style="padding-right: 42px !important;">
+                            <button type="button" id="toggle-password-btn" class="password-eye-toggle" title="Toggle password visibility" style="position: absolute; right: 8px; bottom: 8px; background: none; border: none; cursor: pointer; color: #64748B; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;">
+                                <svg id="eye-icon-show" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg id="eye-icon-hide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <button type="submit" class="saleskip-btn-primary" id="btn-login-submit">Login Now</button>
+                    </form>
+
+                    <div id="login-error-msg" style="color: #DC2626; font-size: 0.85rem; font-weight: 600; margin-top: 12px; text-align: center; display: none;"></div>
+
+                    <div class="saleskip-bottom-link">
+                        Default Password: <strong>admin123</strong>
                     </div>
                 </div>
 
-                <button type="submit" class="auth-submit-btn" id="btn-login-submit">
-                    <span>Sign In to Portal</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                </button>
-            </form>
-
-            <div id="login-error-msg" class="auth-error-alert" style="display: none;"></div>
-
-            <div class="auth-footer-note">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Encrypted Session &bull; UK Chaturthi 2026</span>
+                <div style="font-size: 0.75rem; color: #94A3B8;">
+                    VK Logistics UK Console &bull; Protected Access
+                </div>
             </div>
         </div>
     </div>
@@ -393,6 +429,27 @@ $settings     = get_all_settings();
                         errBox.textContent = 'Server connection error';
                         errBox.style.display = 'block';
                     });
+                });
+            }
+
+            // Password Eye Icon Toggle Listener
+            const togglePassBtn = document.getElementById('toggle-password-btn');
+            if (togglePassBtn) {
+                togglePassBtn.addEventListener('click', function() {
+                    const passInput = document.getElementById('admin-passcode-input');
+                    const eyeShow = document.getElementById('eye-icon-show');
+                    const eyeHide = document.getElementById('eye-icon-hide');
+                    if (passInput && eyeShow && eyeHide) {
+                        if (passInput.type === 'password') {
+                            passInput.type = 'text';
+                            eyeShow.style.display = 'none';
+                            eyeHide.style.display = 'block';
+                        } else {
+                            passInput.type = 'password';
+                            eyeShow.style.display = 'block';
+                            eyeHide.style.display = 'none';
+                        }
+                    }
                 });
             }
 
