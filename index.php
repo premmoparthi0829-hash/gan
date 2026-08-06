@@ -54,9 +54,9 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
             <div class="header-inner">
                 <div class="header-queries-box">
                     <span class="queries-label">For any queries call:</span>
-                    <a href="tel:+447700900888" class="header-phone-link">
+                    <a href="tel:<?php echo preg_replace('/[^0-9+]/', '', $phone); ?>" id="header-phone-link" class="header-phone-link">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg>
-                        +44 7700 900888
+                        <span id="header-phone-text"><?php echo $phone; ?></span>
                     </a>
                 </div>
                 <a href="#" class="btn-gold scroll-to-booking">
@@ -168,7 +168,7 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                     <div class="bm-product-card">
                         <img src="assets/images/ganesh_hero.png" alt="Ganesh Statue" class="bm-product-img">
                         <div class="bm-product-info">
-                            <div class="bm-product-name">Ganesh Statue</div>
+                            <div id="bm-product-name-display" class="bm-product-name"><?php echo escape_output($settings['product_name'] ?? 'Ganesh Statue'); ?></div>
                             <div class="bm-product-price">&pound;<span class="display-unit-price"><?php echo number_format($unit_price, 2); ?></span> <span>+ shipping</span></div>
                         </div>
                     </div>
@@ -387,11 +387,11 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                             <!-- Payment Tabs -->
                             <div class="bm-pay-tabs">
-                                <button type="button" class="bm-pay-tab active" data-tab="bank-tab">
+                                <button type="button" class="bm-pay-tab active" id="pay-tab-bank" data-tab="bank-tab">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>
                                     Bank Transfer
                                 </button>
-                                <button type="button" class="bm-pay-tab" data-tab="paypal-tab">
+                                <button type="button" class="bm-pay-tab" id="pay-tab-paypal" data-tab="paypal-tab">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                                     PayPal
                                 </button>
@@ -402,19 +402,19 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                 <div class="bm-bank-box">
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Account Name</span>
-                                        <span class="bm-bank-val"><?php echo $bank_acc_name; ?></span>
+                                        <span id="bank-acc-name-display" class="bm-bank-val"><?php echo $bank_acc_name; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Bank</span>
-                                        <span class="bm-bank-val"><?php echo $bank_name; ?></span>
+                                        <span id="bank-name-display" class="bm-bank-val"><?php echo $bank_name; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Sort Code</span>
-                                        <span class="bm-bank-val bm-mono"><?php echo $bank_sort; ?></span>
+                                        <span id="bank-sort-display" class="bm-bank-val bm-mono"><?php echo $bank_sort; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Account No.</span>
-                                        <span class="bm-bank-val bm-mono"><?php echo $bank_acc_num; ?></span>
+                                        <span id="bank-num-display" class="bm-bank-val bm-mono"><?php echo $bank_acc_num; ?></span>
                                     </div>
                                 </div>
                                 <div class="bm-field" style="margin-top:14px;">
@@ -425,7 +425,7 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     </div>
                                 </div>
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="payment_proof_file">Upload Payment Receipt Photo</label>
+                                    <label for="payment_proof_file">Upload Payment Receipt Photo <span class="req">*</span></label>
                                     <div class="bm-upload-box" id="receipt-upload-zone">
                                         <input type="file" id="payment_proof_file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
                                         <div class="upload-drop-content" id="upload-idle-state">
@@ -530,7 +530,7 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
     <!-- Minimal Bottom Bar -->
     <div class="bottom-bar-minimal">
         &copy; 2026 VK Logistics &mdash; Ganesh Chaturthi UK Delivery &nbsp;|&nbsp;
-        <a href="tel:+447700900888">+44 7700 900888</a>
+        <a href="tel:<?php echo preg_replace('/[^0-9+]/', '', $phone); ?>" id="footer-phone-link"><?php echo $phone; ?></a>
     </div>
 
     <!-- JavaScript -->

@@ -198,19 +198,11 @@ if ($action === 'save_settings') {
             if ($db) {
                 try {
                     $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)
-                        ON CONFLICT(setting_key) DO UPDATE SET setting_value = :v");
+                        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
                     $stmt->execute([':k' => $key, ':v' => $val]);
                     $updated_count++;
                 } catch (Exception $e) {
-                    // Fallback query format for MySQL if ON CONFLICT fails
-                    try {
-                        $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)
-                            ON DUPLICATE KEY UPDATE setting_value = :v");
-                        $stmt->execute([':k' => $key, ':v' => $val]);
-                        $updated_count++;
-                    } catch (Exception $e2) {
-                        log_system_error("Save setting error for '$key': " . $e2->getMessage());
-                    }
+                    log_system_error("Save setting error for '$key': " . $e->getMessage());
                 }
             }
         }

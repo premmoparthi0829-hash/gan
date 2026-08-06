@@ -194,15 +194,14 @@ $settings     = get_all_settings();
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th style="white-space:nowrap; text-align:left;">Booking Ref</th>
+                                <th style="white-space:nowrap; text-align:center; width: 40px;">#</th>
+                                <th style="white-space:nowrap; text-align:left;">Booking Ref / Date</th>
                                 <th style="text-align:left;">Customer &amp; Contact</th>
-                                <th style="text-align:left;">Delivery Address</th>
+                                <th style="text-align:left;">Delivery Area</th>
                                 <th style="white-space:nowrap; text-align:center;">Qty</th>
                                 <th style="white-space:nowrap; text-align:right;">Total (£)</th>
-                                <th style="white-space:nowrap; text-align:center;">Payment</th>
-                                <th style="white-space:nowrap; text-align:center;">Status</th>
-                                <th style="white-space:nowrap; text-align:center;">Date</th>
-                                <th style="white-space:nowrap; text-align:center;">Receipt</th>
+                                <th style="white-space:nowrap; text-align:center;">Payment Details</th>
+                                <th style="white-space:nowrap; text-align:center;">Fulfillment</th>
                                 <th style="white-space:nowrap; text-align:center;">Actions</th>
                             </tr>
                         </thead>
@@ -352,6 +351,22 @@ $settings     = get_all_settings();
         </main>
     </div>
 
+    <!-- VIEW DETAILS MODAL -->
+    <div class="admin-modal-overlay" id="view-details-modal" style="display:none;">
+        <div class="admin-modal-card" style="max-width: 600px; width: 90%;">
+            <div class="admin-modal-header">
+                <h3 class="admin-modal-title" id="view-modal-ref-title">Booking Details</h3>
+                <button type="button" class="admin-modal-close" id="view-modal-close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="admin-modal-body" id="view-modal-body-content" style="padding: 20px; font-size: 0.9rem; line-height: 1.6; max-height: 70vh; overflow-y: auto;">
+                <!-- Content injected dynamically -->
+            </div>
+            <div class="admin-modal-footer">
+                <button type="button" class="btn-modal-cancel" id="view-modal-close-action-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- UPDATE STATUS MODAL -->
     <div class="admin-modal-overlay" id="update-status-modal" style="display:none;">
         <div class="admin-modal-card">
@@ -428,13 +443,13 @@ $settings     = get_all_settings();
             </div>
         </div>
     </div>
-
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const csrfToken = "<?php echo escape_output($csrf_token); ?>";
             let activeStatusFilter = 'ALL';
             let currentSearchQuery = '';
+            let loadedBookings = [];
 
             // Tab Switching Logic
             const tabBtns = document.querySelectorAll('.admin-tab-btn');
@@ -531,6 +546,7 @@ $settings     = get_all_settings();
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) return;
+                    loadedBookings = data.bookings || [];
 
                     // Render Stats
                     const stats = data.stats;
@@ -549,6 +565,7 @@ $settings     = get_all_settings();
                         return;
                     }
 
+                    let serialNo = 1;
                     data.bookings.forEach(b => {
                         const tr = document.createElement('tr');
                         
@@ -569,40 +586,48 @@ $settings     = get_all_settings();
                             bBadge = `<span class="status-pill status-shipped">${b.booking_status}</span>`;
                         }
 
-                        let receiptCell = `<span class="badge-no-receipt">No Photo</span>`;
+                        let receiptCell = '';
                         if (b.payment_proof_image) {
-                            receiptCell = `<button type="button" class="btn-view-receipt btn-open-hd-modal" data-img="${escapeHtml(b.payment_proof_image)}" data-ref="${escapeHtml(b.booking_reference)}">📷 View Photo</button>`;
+                            receiptCell = `<div style="margin-top:5px;"><button type="button" class="btn-view-receipt btn-open-hd-modal" data-img="${escapeHtml(b.payment_proof_image)}" data-ref="${escapeHtml(b.booking_reference)}" style="background:#FEF3C7 !important; border:1px solid #F59E0B !important; color:#B45309 !important; font-size:0.7rem !important; font-weight:800 !important; padding:2px 6px !important; border-radius:4px !important; cursor:pointer;">📷 Receipt</button></div>`;
                         }
 
                         tr.innerHTML = `
-                            <td style="white-space:nowrap;"><strong style="color:#4A0B17; font-size:0.86rem; font-family:monospace; letter-spacing:-0.2px;">${b.booking_reference}</strong></td>
-                            <td style="min-width:140px;">
+                            <td style="text-align:center; font-weight:700; color:#475569; vertical-align:top; padding-top:12px;">${serialNo++}</td>
+                            <td style="white-space:nowrap; vertical-align:top; padding-top:12px;">
+                                <strong style="color:#4A0B17; font-size:0.86rem; font-family:monospace; letter-spacing:-0.2px; display:block;">${b.booking_reference}</strong>
+                                <span style="font-size:0.72rem; color:#64748B; font-weight:600; display:block; margin-top:2px;">${(b.created_at || '').substring(0, 10)}</span>
+                            </td>
+                            <td style="min-width:130px; vertical-align:top; padding-top:12px;">
                                 <div><strong style="color:#0F172A; font-size:0.88rem;">${escapeHtml(b.customer_name)}</strong></div>
-                                <div style="font-size:0.8rem; color:#334155; font-weight:600; margin-top:2px;">${escapeHtml(b.mobile)}</div>
-                                <div style="font-size:0.78rem; color:#64748B;">${escapeHtml(b.email)}</div>
+                                <div style="font-size:0.78rem; color:#475569; font-weight:600; margin-top:2px;">${escapeHtml(b.mobile)}</div>
                             </td>
-                            <td style="max-width:200px; font-size:0.82rem; color:#334155; line-height:1.35;">
-                                ${escapeHtml(b.address_line_1)}, ${escapeHtml(b.city)}, <strong style="color:#0F172A;">${escapeHtml(b.postcode)}</strong>
+                            <td style="max-width:160px; font-size:0.82rem; color:#334155; line-height:1.35; vertical-align:top; padding-top:12px;">
+                                ${escapeHtml(b.city)}, <strong style="color:#0F172A;">${escapeHtml(b.postcode)}</strong>
                             </td>
-                            <td style="text-align:center; white-space:nowrap;"><strong style="color:#0F172A; font-size:0.95rem;">${b.quantity}</strong></td>
-                            <td style="text-align:right; white-space:nowrap;"><strong style="color:#0F172A; font-size:0.95rem;">&pound;${parseFloat(b.total_amount).toFixed(2)}</strong></td>
-                            <td style="text-align:center; white-space:nowrap;">
-                                <div style="font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:3px;">
-                                    ${b.payment_method === 'paypal' ? 'PayPal' : (b.payment_method === 'bank_transfer' ? 'Bank Transfer' : escapeHtml(b.payment_method))}
+                            <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;"><strong style="color:#0F172A; font-size:0.95rem;">${b.quantity}</strong></td>
+                            <td style="text-align:right; white-space:nowrap; vertical-align:top; padding-top:12px;"><strong style="color:#0F172A; font-size:0.95rem;">&pound;${parseFloat(b.total_amount).toFixed(2)}</strong></td>
+                            <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;">
+                                <div style="font-size:0.75rem; font-weight:800; color:#475569; margin-bottom:3px;">
+                                    ${b.payment_method === 'paypal' ? 'PayPal' : (b.payment_method === 'bank_transfer' ? 'Bank' : escapeHtml(b.payment_method))}
                                 </div>
                                 ${payBadge}
+                                ${receiptCell}
                             </td>
-                            <td style="text-align:center; white-space:nowrap;">${bBadge}</td>
-                            <td style="text-align:center; white-space:nowrap; font-size:0.82rem; color:#334155; font-weight:700;">${(b.created_at || '').substring(0, 10)}</td>
-                            <td style="text-align:center; white-space:nowrap;">${receiptCell}</td>
-                            <td style="text-align:center; white-space:nowrap;">
+                            <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;">${bBadge}</td>
+                            <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px; display: flex; gap: 4px; justify-content: center; align-items: center; border: none;">
+                                <button type="button" class="btn-action-sm btn-view-booking" 
+                                    data-ref="${b.booking_reference}"
+                                    style="background:#0F172A !important; color:#fff !important; border-color:#0F172A !important; padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
+                                    View 👁️
+                                </button>
                                 <button type="button" class="btn-action-sm btn-edit-booking" 
                                     data-ref="${b.booking_reference}" 
                                     data-pstat="${b.payment_status}" 
                                     data-bstat="${b.booking_status || 'CONFIRMED'}"
                                     data-pmeth="${b.payment_method || 'bank_transfer'}"
-                                    data-pref="${b.payment_reference || b.paypal_transaction_id || ''}">
-                                    Edit &#9998;
+                                    data-pref="${b.payment_reference || b.paypal_transaction_id || ''}"
+                                    style="padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
+                                    Edit ✏️
                                 </button>
                             </td>
                         `;
@@ -651,6 +676,14 @@ $settings     = get_all_settings();
                             }
 
                             document.getElementById('update-status-modal').style.display = 'flex';
+                        });
+                    });
+
+                    // Attach View Handlers
+                    document.querySelectorAll('.btn-view-booking').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const ref = this.getAttribute('data-ref');
+                            viewBookingDetails(ref);
                         });
                     });
                 });
@@ -786,6 +819,127 @@ $settings     = get_all_settings();
             // Initial load if authenticated
             if (<?php echo $is_logged_in ? 'true' : 'false'; ?>) {
                 loadDashboardData();
+            }
+
+            // Close view details modal
+            const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
+            const viewModalCloseActionBtn = document.getElementById('view-modal-close-action-btn');
+            if (viewModalCloseBtn) viewModalCloseBtn.addEventListener('click', closeViewModal);
+            if (viewModalCloseActionBtn) viewModalCloseActionBtn.addEventListener('click', closeViewModal);
+            
+            function closeViewModal() {
+                const modal = document.getElementById('view-details-modal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            function viewBookingDetails(ref) {
+                const b = loadedBookings.find(x => x.booking_reference === ref);
+                if (!b) return;
+
+                document.getElementById('view-modal-ref-title').textContent = 'Booking Details: ' + ref;
+
+                let pStatusDisplay = b.payment_status;
+                if (pStatusDisplay === 'PAYMENT VERIFICATION PENDING') {
+                    pStatusDisplay = 'PENDING VERIFY';
+                }
+
+                let receiptLink = '<span style="color:#64748B; font-style:italic;">No Proof Uploaded</span>';
+                if (b.payment_proof_image) {
+                    receiptLink = `<a href="${escapeHtml(b.payment_proof_image)}" target="_blank" style="color:#4A0B17; font-weight:700; text-decoration:underline;">View Uploaded Photo</a>`;
+                }
+
+                let address2Text = b.address_line_2 ? `, ${escapeHtml(b.address_line_2)}` : '';
+
+                const html = `
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px;">
+                        <div>
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:#64748B; font-weight:700; letter-spacing:0.5px;">Booking Date</div>
+                            <div style="font-weight:700; color:#0F172A;">${escapeHtml(b.created_at || '')}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:#64748B; font-weight:700; letter-spacing:0.5px;">Fulfillment Status</div>
+                            <div style="font-weight:700; color:#4A0B17;">${escapeHtml(b.booking_status || 'CONFIRMED')}</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px;">
+                        <h4 style="margin:0 0 10px 0; color:#4A0B17; font-size:0.95rem; border-left:3px solid #D4AF37; padding-left:8px;">Customer Information</h4>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div>
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">Full Name</span>
+                                <strong style="color:#0F172A;">${escapeHtml(b.customer_name)}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">UK Mobile</span>
+                                <strong style="color:#0F172A;">${escapeHtml(b.mobile)}</strong>
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">Email Address</span>
+                                <strong style="color:#0F172A;">${escapeHtml(b.email)}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px;">
+                        <h4 style="margin:0 0 10px 0; color:#4A0B17; font-size:0.95rem; border-left:3px solid #D4AF37; padding-left:8px;">Delivery Destination</h4>
+                        <div>
+                            <span style="font-size:0.78rem; color:#64748B; display:block;">Shipping Address</span>
+                            <strong style="color:#0F172A; display:block; line-height:1.4;">
+                                ${escapeHtml(b.address_line_1)}${address2Text}<br>
+                                ${escapeHtml(b.city)}${b.county ? ', ' + escapeHtml(b.county) : ''}<br>
+                                <span style="font-family:monospace; font-size:0.95rem; letter-spacing:0.2px;">${escapeHtml(b.postcode)}</span>, ${escapeHtml(b.country || 'United Kingdom')}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:20px; border-bottom:1px solid #E2E8F0; padding-bottom:14px;">
+                        <h4 style="margin:0 0 10px 0; color:#4A0B17; font-size:0.95rem; border-left:3px solid #D4AF37; padding-left:8px;">Payment & Pricing</h4>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div>
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">Payment Method</span>
+                                <strong style="color:#0F172A; text-transform:capitalize;">${escapeHtml(b.payment_method).replace('_', ' ')}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">Payment Status</span>
+                                <strong style="color:#4A0B17;">${escapeHtml(b.payment_status)}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">Payment Reference</span>
+                                <strong style="color:#0F172A; font-family:monospace;">${escapeHtml(b.payment_reference || b.paypal_transaction_id || 'None')}</strong>
+                            </div>
+                            <div>
+                                <span style="font-size:0.78rem; color:#64748B; display:block;">Receipt Image</span>
+                                <strong>${receiptLink}</strong>
+                            </div>
+                        </div>
+                        
+                        <div style="background:#FFFDF5; border:1px solid #FEF3C7; border-radius:8px; padding:12px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;">
+                                <span>Unit Price</span>
+                                <strong>&pound;${parseFloat(b.unit_price).toFixed(2)}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;">
+                                <span>Quantity Ordered</span>
+                                <strong>${b.quantity}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;">
+                                <span>Subtotal</span>
+                                <strong>&pound;${parseFloat(b.subtotal || (b.quantity * b.unit_price)).toFixed(2)}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem; padding-bottom:6px; border-bottom:1px dashed #E2E8F0;">
+                                <span>Shipping Fee</span>
+                                <strong>&pound;${parseFloat(b.shipping_charge).toFixed(2)}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:1.05rem; font-weight:800; color:#4A0B17;">
+                                <span>Total Paid/Payable</span>
+                                <strong>&pound;${parseFloat(b.total_amount).toFixed(2)}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('view-modal-body-content').innerHTML = html;
+                document.getElementById('view-details-modal').style.display = 'flex';
             }
 
             function escapeHtml(str) {

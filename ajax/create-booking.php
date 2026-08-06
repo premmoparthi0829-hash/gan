@@ -70,10 +70,14 @@ if (!empty($errors)) {
 // Generate unique reference first so filename matches reference
 $booking_ref = generate_unique_booking_reference();
 
-// Handle optional receipt upload
+// Receipt upload is mandatory
 $proof_image_path = null;
-if (isset($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
-    $proof_image_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
+if (!isset($_FILES['payment_proof']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
+    json_response(false, 'Payment proof screenshot or receipt photo is mandatory. Please upload one to complete your booking.', [], 422);
+}
+$proof_image_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
+if (!$proof_image_path) {
+    json_response(false, 'Failed to process receipt image. Please upload a valid image file (JPG, PNG, or WEBP).', [], 422);
 }
 
 // Data is valid. Create booking via backend

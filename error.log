@@ -64,3 +64,39 @@
 [2026-08-05 13:06:33] Sequence generation error: SQLSTATE[HY000]: General error: 1 no such function: NOW
 [2026-08-05 13:07:46] Sequence generation error: SQLSTATE[HY000]: General error: 1 no such function: NOW
 [2026-08-05 13:21:09] Sequence generation error: SQLSTATE[HY000]: General error: 1 no such function: NOW
+[2026-08-06 05:14:53] Save setting error for 'unit_price': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'shipping_charge': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'bank_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'bank_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'bank_sort_code': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'bank_account_number': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'paypal_email': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'paypal_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:14:53] Save setting error for 'support_phone': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'unit_price': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'shipping_charge': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'bank_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'bank_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'bank_sort_code': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'bank_account_number': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'paypal_email': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'paypal_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:15:07] Save setting error for 'support_phone': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'unit_price': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'shipping_charge': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'bank_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'bank_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'bank_sort_code': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'bank_account_number': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'paypal_email': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'paypal_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:21:24] Save setting error for 'support_phone': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'unit_price': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'shipping_charge': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'bank_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'bank_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'bank_sort_code': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'bank_account_number': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'paypal_email': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'paypal_account_name': SQLSTATE[HY093]: Invalid parameter number
+[2026-08-06 05:22:58] Save setting error for 'support_phone': SQLSTATE[HY093]: Invalid parameter number

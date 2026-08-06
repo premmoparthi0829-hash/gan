@@ -313,9 +313,11 @@ $(document).ready(function () {
         formData.append('payment_reference', payRef);
 
         let fileInput = $('#payment_proof_file')[0];
-        if (fileInput && fileInput.files.length > 0) {
-            formData.append('payment_proof', fileInput.files[0]);
+        if (!fileInput || fileInput.files.length === 0) {
+            showToast('Please upload a photo of your Bank Transfer receipt.', 'error');
+            return;
         }
+        formData.append('payment_proof', fileInput.files[0]);
 
         $.ajax({
             url: 'ajax/create-booking.php',
@@ -607,12 +609,66 @@ $(document).ready(function () {
                     if (res.settings.csrf_token) {
                         $('#csrf_token').val(res.settings.csrf_token);
                     }
+                    
+                    // PayPal details
                     if (res.settings.paypal_email) {
                         $('#paypal-email-display').text(res.settings.paypal_email);
                     }
                     if (res.settings.paypal_account_name) {
                         $('#paypal-acc-name-display').text(res.settings.paypal_account_name);
                     }
+                    
+                    // Bank details
+                    if (res.settings.bank_account_name) {
+                        $('#bank-acc-name-display').text(res.settings.bank_account_name);
+                    }
+                    if (res.settings.bank_name) {
+                        $('#bank-name-display').text(res.settings.bank_name);
+                    }
+                    if (res.settings.bank_sort_code) {
+                        $('#bank-sort-display').text(res.settings.bank_sort_code);
+                    }
+                    if (res.settings.bank_account_number) {
+                        $('#bank-num-display').text(res.settings.bank_account_number);
+                    }
+                    
+                    // Helpline Phone
+                    if (res.settings.support_phone) {
+                        $('#header-phone-text').text(res.settings.support_phone);
+                        let cleanPhone = res.settings.support_phone.replace(/[^0-9+]/g, '');
+                        $('#header-phone-link').attr('href', 'tel:' + cleanPhone);
+                        $('#footer-phone-link').text(res.settings.support_phone).attr('href', 'tel:' + cleanPhone);
+                    }
+                    
+                    // Product Name
+                    if (res.settings.product_name) {
+                        $('#bm-product-name-display').text(res.settings.product_name);
+                    }
+
+                    // Dynamic Payment Method Toggles
+                    let hasBank = res.settings.bank_account_number && res.settings.bank_account_number.trim() !== '';
+                    let hasPaypal = res.settings.paypal_email && res.settings.paypal_email.trim() !== '';
+
+                    if (!hasPaypal) {
+                        $('#pay-tab-paypal').hide();
+                    } else {
+                        $('#pay-tab-paypal').show();
+                    }
+
+                    if (!hasBank) {
+                        $('#pay-tab-bank').hide();
+                        // Fallback active to PayPal if bank is disabled
+                        if (hasPaypal) {
+                            $('#pay-tab-paypal').addClass('active');
+                            $('#paypal-tab').addClass('active');
+                            $('#pay-tab-bank').removeClass('active');
+                            $('#bank-tab').removeClass('active');
+                            $('#payment_method').val('paypal');
+                        }
+                    } else {
+                        $('#pay-tab-bank').show();
+                    }
+
                     recalculateTotals(parseInt($('#quantity-input').val()) || 1);
                 }
             }

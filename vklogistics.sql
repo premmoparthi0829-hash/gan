@@ -2,6 +2,7 @@
 -- VK LOGISTICS - GANESH STATUE BOOKING DATABASE SCHEMA
 -- Website: UK Ganesh Chaturthi Booking Platform
 -- Currency: GBP (£)
+-- Consolidated & Ported from SQLite
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS `vk_logistics` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -20,23 +21,26 @@ CREATE TABLE `settings` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed Settings Data
-INSERT INTO `settings` (`setting_key`, `setting_value`, `description`) VALUES
-('product_name', 'Ganesh Statue / Vinayaka Vigraha', 'Name of the festival product'),
-('unit_price', '14.99', 'Base unit price per statue in GBP (£)'),
-('shipping_charge', '3.99', 'Flat shipping fee within United Kingdom in GBP (£)'),
-('currency_symbol', '£', 'Display currency symbol'),
-('currency_code', 'GBP', 'Standard ISO currency code'),
-('service_area', 'United Kingdom', 'Restricted delivery region'),
-('bank_account_name', 'VK LOGISTICS LTD', 'Bank account holder name for direct transfers'),
-('bank_name', 'Barclays Bank UK', 'Bank name for customer transfers'),
-('bank_sort_code', '20-45-77', 'UK Bank Sort Code'),
-('bank_account_number', '83920144', 'UK Bank Account Number'),
-('paypal_client_id', 'sb', 'PayPal SDK Client ID (Default: sb for Sandbox)'),
-('paypal_mode', 'sandbox', 'PayPal Mode: sandbox or live'),
-('support_phone', '+44 7700 900888', 'UK Support Contact Line'),
-('support_email', 'bappa@vklogistics.co.uk', 'Support Email Address'),
-('website_status', 'active', 'Website status: active or maintenance');
+-- Seed Settings Data with latest SQLite modifications
+INSERT INTO `settings` (`id`, `setting_key`, `setting_value`, `description`, `updated_at`) VALUES
+(1, 'product_name', 'Ganesh Statue / Vinayaka Vigraha', 'Name of the festival product', '2026-08-05 07:06:40'),
+(2, 'unit_price', '14.99', 'Base unit price per statue in GBP (£)', '2026-08-05 07:06:40'),
+(3, 'shipping_charge', '4.99', 'Flat shipping fee within United Kingdom in GBP (£)', '2026-08-05 07:06:40'),
+(4, 'currency_symbol', '£', 'Display currency symbol', '2026-08-05 07:06:40'),
+(5, 'currency_code', 'GBP', 'Standard ISO currency code', '2026-08-05 07:06:40'),
+(6, 'service_area', 'United Kingdom', 'Restricted delivery region', '2026-08-05 07:06:40'),
+(7, 'bank_account_name', 'VK LOGISTICS LTD', 'Bank account holder name for direct transfers', '2026-08-05 07:06:40'),
+(8, 'bank_name', 'Barclays Bank UK', 'Bank name for customer transfers', '2026-08-05 07:06:40'),
+(9, 'bank_sort_code', '20-45-77', 'UK Bank Sort Code', '2026-08-05 07:06:40'),
+(10, 'bank_account_number', '83920144', 'UK Bank Account Number', '2026-08-05 07:06:40'),
+(11, 'paypal_client_id', 'sb', 'PayPal SDK Client ID (Default: sb for Sandbox)', '2026-08-05 07:06:40'),
+(12, 'paypal_mode', 'sandbox', 'PayPal Mode: sandbox or live', '2026-08-05 07:06:40'),
+(13, 'support_phone', '+44 7700 900888', 'UK Support Contact Line', '2026-08-05 07:06:40'),
+(14, 'support_email', 'bappa@vklogistics.co.uk', 'Support Email Address', '2026-08-05 07:06:40'),
+(15, 'website_status', 'active', 'Website status: active or maintenance', '2026-08-05 07:06:40'),
+(25, 'admin_password', 'admin123', 'Admin access password', '2026-08-05 10:59:44'),
+(52, 'paypal_email', 'premmoparthi0831@gmail.com', 'PayPal Merchant Email', '2026-08-05 11:49:06'),
+(66, 'paypal_account_name', 'VK LOGISTICS LTD', 'PayPal Account Holder Name', '2026-08-05 12:14:52');
 
 -- ------------------------------------------------------------
 -- Table: bookings
@@ -77,9 +81,50 @@ CREATE TABLE `bookings` (
   INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table sequence tracker for deterministic reference numbering (VKG-YYYY-XXXXXX)
+-- Migrate Bookings Data
+INSERT INTO `bookings` (
+  `id`, `booking_reference`, `customer_name`, `mobile`, `email`,
+  `address_line_1`, `address_line_2`, `city`, `county`, `postcode`, `country`,
+  `quantity`, `unit_price`, `subtotal`, `shipping_charge`, `total_amount`,
+  `payment_method`, `payment_reference`, `payment_proof_image`,
+  `paypal_order_id`, `paypal_transaction_id`,
+  `payment_status`, `booking_status`, `created_at`, `updated_at`
+) VALUES
+(1, 'VKG-2026-542061', 'Test Devotion User', '+447700900123', 'bappa@example.co.uk', '10 Downing Street', '', 'London', '', 'SW1A 1AA', 'United Kingdom', 2, 14.99, 29.98, 3.99, 33.97, 'bank_transfer', 'BARC-REF-998822', 'uploads/payment_receipts/sample_hd_receipt.svg', NULL, NULL, 'PAID', 'DELIVERED', '2026-08-05 07:06:57', '2026-08-05 07:06:57'),
+(2, 'VKG-2026-1E4966', 'Ramesh Kumar', '+447700900111', 'ramesh@example.co.uk', '10 Downing Street', '', 'London', '', 'SW1A 1AA', 'United Kingdom', 2, 14.99, 29.98, 3.99, 33.97, 'bank_transfer', 'BANK-TXN-998877', 'uploads/payment_receipts/sample_hd_receipt.svg', NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 08:21:20', '2026-08-05 08:21:20'),
+(3, 'VKG-2026-52F7EF', 'Suresh Reddy', '+447700900222', 'suresh@example.co.uk', '22 Baker Street', '', 'London', '', 'NW1 6XE', 'United Kingdom', 1, 14.99, 14.99, 3.99, 18.98, 'bank_transfer', 'BANK-TXN-776655', 'uploads/payment_receipts/sample_hd_receipt.svg', NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 08:22:11', '2026-08-05 08:22:11'),
+(4, 'VKG-2026-5C52E5', 'Prem Moparthi', '+447123456789', 'premmoparthi0831@gmail.com', 'test', 'test', 'duhqiudg', 'wqdqefdcqe', 'SW1A 1AA', 'United Kingdom', 1, 14.99, 14.99, 3.99, 18.98, 'bank_transfer', 'BARC-REF-998822', 'uploads/payment_receipts/receipt_VKG-2026-5C52E5_1785921450_b72c7b.jpeg', NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 09:17:30', '2026-08-05 09:17:30'),
+(5, 'VKG-2026-292E8F', 'PayPal Customer Test', '+447700900555', 'paypal-test@vklogistics.co.uk', '10 Downing Street', 'London', 'London', 'London', 'SW1A 2AA', 'United Kingdom', 2, 14.99, 29.98, 4.99, 34.97, 'paypal', 'PAYID-MOCK9999', NULL, NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 11:43:52', '2026-08-05 11:43:52'),
+(6, 'VKG-2026-BF675F', 'Validation User 0', '+447700900888', 'valid-0@vklogistics.co.uk', '10 Downing Street', '', 'London', '', 'SW1A 2AA', 'United Kingdom', 1, 14.99, 14.99, 4.99, 19.98, 'bank_transfer', 'REF123', NULL, NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 12:06:33', '2026-08-05 12:06:33'),
+(7, 'VKG-2026-41A8E5', 'Validation User 1', '+447700900888', 'valid-1@vklogistics.co.uk', '10 Downing Street', '', 'London', '', 'SW1A 2AA', 'United Kingdom', 1, 14.99, 14.99, 4.99, 19.98, 'bank_transfer', 'REF123', NULL, NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 12:06:33', '2026-08-05 12:06:33'),
+(8, 'VKG-2026-DF7E62', 'Validation User 2', '+447700900888', 'valid-2@vklogistics.co.uk', '10 Downing Street', '', 'London', '', 'SW1A 2AA', 'United Kingdom', 1, 14.99, 14.99, 4.99, 19.98, 'bank_transfer', 'REF123', NULL, NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 12:06:33', '2026-08-05 12:06:33'),
+(9, 'VKG-2026-5E1B42', 'Prem Moparthi', '+447700900777', 'premmoparthi0831@gmail.com', 'test', 'test', 'Gannavaram', 'wqdqefdcqe', 'SW1A 1AA', 'United Kingdom', 1, 14.99, 14.99, 4.99, 19.98, 'paypal', '78876253564256', 'uploads/payment_receipts/receipt_VKG-2026-5E1B42_1785931666_1e45b2.jpeg', NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 12:07:46', '2026-08-05 12:07:46'),
+(10, 'VKG-2026-05905F', 'Prem Moparthi', '+447700900777', 'premmoparthi0831@gmail.com', 'test', 'test', 'Gannavaram', 'wqdqefdcqe', 'SW1A 1AA', 'United Kingdom', 1, 14.99, 14.99, 4.99, 19.98, 'paypal', '565656565', 'uploads/payment_receipts/receipt_VKG-2026-05905F_1785932469_b9d2b1.jpeg', NULL, NULL, 'PAYMENT VERIFICATION PENDING', 'CONFIRMED', '2026-08-05 12:21:09', '2026-08-05 12:21:09');
+
+-- Set auto-increment offset for future bookings to start at 11
+ALTER TABLE `bookings` AUTO_INCREMENT = 11;
+
+-- ------------------------------------------------------------
+-- Table: booking_sequence
+-- Purpose: Deterministic reference numbering (VKG-YYYY-XXXXXX)
+-- ------------------------------------------------------------
 DROP TABLE IF EXISTS `booking_sequence`;
 CREATE TABLE `booking_sequence` (
   `id` INT PRIMARY KEY AUTO_INCREMENT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed the sequence table so the next ID is 11
+INSERT INTO `booking_sequence` (`id`, `created_at`) VALUES
+(1, '2026-08-05 07:06:57'),
+(2, '2026-08-05 08:21:20'),
+(3, '2026-08-05 08:22:11'),
+(4, '2026-08-05 09:17:30'),
+(5, '2026-08-05 11:43:52'),
+(6, '2026-08-05 12:06:33'),
+(7, '2026-08-05 12:06:33'),
+(8, '2026-08-05 12:06:33'),
+(9, '2026-08-05 12:07:46'),
+(10, '2026-08-05 12:21:09');
+
+ALTER TABLE `booking_sequence` AUTO_INCREMENT = 11;
