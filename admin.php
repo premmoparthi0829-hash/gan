@@ -565,7 +565,7 @@ $settings     = get_all_settings();
                         return;
                     }
 
-                    let serialNo = 1;
+                    let serialNo = data.bookings.length;
                     data.bookings.forEach(b => {
                         const tr = document.createElement('tr');
                         
@@ -592,7 +592,7 @@ $settings     = get_all_settings();
                         }
 
                         tr.innerHTML = `
-                            <td style="text-align:center; font-weight:700; color:#475569; vertical-align:top; padding-top:12px;">${serialNo++}</td>
+                            <td style="text-align:center; font-weight:700; color:#475569; vertical-align:top; padding-top:12px;">${serialNo--}</td>
                             <td style="white-space:nowrap; vertical-align:top; padding-top:12px;">
                                 <strong style="color:#4A0B17; font-size:0.86rem; font-family:monospace; letter-spacing:-0.2px; display:block;">${b.booking_reference}</strong>
                                 <span style="font-size:0.72rem; color:#64748B; font-weight:600; display:block; margin-top:2px;">${(b.created_at || '').substring(0, 10)}</span>
