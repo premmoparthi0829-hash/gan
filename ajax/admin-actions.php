@@ -180,7 +180,7 @@ if ($action === 'save_settings') {
     $allowed_keys = [
         'unit_price', 'shipping_charge', 'bank_name', 'bank_account_name',
         'bank_sort_code', 'bank_account_number', 'paypal_client_id', 'paypal_mode',
-        'paypal_email', 'paypal_account_name', 'support_phone', 'support_email', 'admin_password'
+        'paypal_email', 'paypal_account_name', 'paypal_id', 'support_phone', 'support_email', 'admin_password'
     ];
 
     $db = Database::getConnection();

@@ -403,23 +403,38 @@ $(document).ready(function () {
             navigator.clipboard.writeText(emailText).then(function() {
                 showToast('PayPal email copied to clipboard!', 'success');
             }).catch(function() {
-                // Fallback if permission denied
-                fallbackCopy(emailText);
+                fallbackCopy(emailText, 'PayPal email');
             });
         } else {
-            fallbackCopy(emailText);
+            fallbackCopy(emailText, 'PayPal email');
         }
     });
 
-    function fallbackCopy(text) {
+    // Copy PayPal ID to Clipboard
+    $(document).on('click', '#btn-copy-paypal-id', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let idText = $('#paypal-id-display').text().trim();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(idText).then(function() {
+                showToast('PayPal ID copied to clipboard!', 'success');
+            }).catch(function() {
+                fallbackCopy(idText, 'PayPal ID');
+            });
+        } else {
+            fallbackCopy(idText, 'PayPal ID');
+        }
+    });
+
+    function fallbackCopy(text, label = 'PayPal email') {
         let temp = $('<input>');
         $('body').append(temp);
         temp.val(text).select();
         try {
             document.execCommand('copy');
-            showToast('PayPal email copied to clipboard!', 'success');
+            showToast(label + ' copied to clipboard!', 'success');
         } catch (err) {
-            showToast('Could not copy email automatically. Please highlight and copy manually.', 'error');
+            showToast('Could not copy ' + label + ' automatically. Please highlight and copy manually.', 'error');
         }
         temp.remove();
     }
@@ -611,6 +626,9 @@ $(document).ready(function () {
                     }
                     
                     // PayPal details
+                    if (res.settings.paypal_id) {
+                        $('#paypal-id-display').text(res.settings.paypal_id);
+                    }
                     if (res.settings.paypal_email) {
                         $('#paypal-email-display').text(res.settings.paypal_email);
                     }

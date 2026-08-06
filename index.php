@@ -12,6 +12,7 @@ $unit_price      = (float)($settings['unit_price']      ?? 14.99);
 $shipping_charge = (float)($settings['shipping_charge'] ?? 3.99);
 $paypal_client_id = $settings['paypal_client_id'] ?? 'sb';
 $paypal_email     = escape_output($settings['paypal_email']    ?? 'payments@vklogistics.co.uk');
+$paypal_id        = escape_output($settings['paypal_id']        ?? 'premmoparthi@paypal');
 $paypal_acc_name  = escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD');
 $csrf_token       = get_csrf_token();
 $phone            = escape_output($settings['support_phone'] ?? '+44 7700 900888');
@@ -458,7 +459,16 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                         <span class="bm-bank-val">PayPal Transfer</span>
                                     </div>
                                     <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Send Payment To</span>
+                                        <span class="bm-bank-key">PayPal ID</span>
+                                        <span class="bm-bank-val bm-mono" style="display:flex; align-items:center; gap:6px;">
+                                            <span id="paypal-id-display"><?php echo $paypal_id; ?></span>
+                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-id" title="Copy PayPal ID" style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            </button>
+                                        </span>
+                                    </div>
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">PayPal Email</span>
                                         <span class="bm-bank-val bm-mono" style="display:flex; align-items:center; gap:6px;">
                                             <span id="paypal-email-display"><?php echo $paypal_email; ?></span>
                                             <button type="button" class="btn-copy-mini" id="btn-copy-paypal-email" title="Copy PayPal Email" style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">

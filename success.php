@@ -18,9 +18,8 @@ if (!$booking && isset($_SESSION['last_booking'])) {
     $ref = $booking['booking_reference'] ?? '';
 }
 
-$settings = get_all_settings();
-$phone = escape_output($settings['support_phone'] ?? '+44 7700 900888');
-$email = escape_output($settings['support_email'] ?? 'bappa@vklogistics.co.uk');
+$phone = '+44 7772 882 889';
+$email = 'support@vklogisticshub.com';
 ?>
 <!DOCTYPE html>
 <html lang="en">

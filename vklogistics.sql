@@ -40,7 +40,8 @@ INSERT INTO `settings` (`id`, `setting_key`, `setting_value`, `description`, `up
 (15, 'website_status', 'active', 'Website status: active or maintenance', '2026-08-05 07:06:40'),
 (25, 'admin_password', 'admin123', 'Admin access password', '2026-08-05 10:59:44'),
 (52, 'paypal_email', 'premmoparthi0831@gmail.com', 'PayPal Merchant Email', '2026-08-05 11:49:06'),
-(66, 'paypal_account_name', 'VK LOGISTICS LTD', 'PayPal Account Holder Name', '2026-08-05 12:14:52');
+(66, 'paypal_account_name', 'VK LOGISTICS LTD', 'PayPal Account Holder Name', '2026-08-05 12:14:52'),
+(67, 'paypal_id', 'premmoparthi@paypal', 'PayPal ID for payments', '2026-08-05 12:14:52');
 
 -- ------------------------------------------------------------
 -- Table: bookings

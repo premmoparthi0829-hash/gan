@@ -273,7 +273,12 @@ $settings     = get_all_settings();
                             <h3 class="settings-section-title">&#128179; PayPal & Contact Support</h3>
 
                             <div class="admin-field-group">
-                                <label for="setting_paypal_email">PayPal Email Address (Receive Payments)</label>
+                                <label for="setting_paypal_id">PayPal ID (Receive Payments)</label>
+                                <input type="text" id="setting_paypal_id" name="paypal_id" value="<?php echo escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal'); ?>" placeholder="your-paypal-id">
+                            </div>
+
+                            <div class="admin-field-group">
+                                <label for="setting_paypal_email">PayPal Email Address</label>
                                 <input type="email" id="setting_paypal_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="your-paypal@email.com">
                                 <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">Customers will send PayPal payments to this email address (Friends &amp; Family)</small>
                             </div>
