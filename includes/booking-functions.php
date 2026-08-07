@@ -38,24 +38,84 @@ function generate_unique_booking_reference() {
 }
 
 /**
- * Calculate order totals server-side (NEVER trust client total)
+ * Helper to fetch a product by its ID
  */
-function calculate_order_totals($quantity) {
-    $quantity = max(1, (int)$quantity);
-    $unit_price = (float)get_setting('unit_price', DEFAULT_UNIT_PRICE);
-    $shipping_charge = (float)get_setting('shipping_charge', DEFAULT_SHIPPING_FEE);
+function get_product_by_id($id) {
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $stmt = $db->prepare("SELECT * FROM products WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => $id]);
+            return $stmt->fetch();
+        } catch (Exception $e) {
+            log_system_error("Error fetching product: " . $e->getMessage());
+        }
+    }
+    return null;
+}
+
+/**
+ * Calculate order totals server-side (NEVER trust client total)
+ * Expects an array of items: [ ["id" => X, "quantity" => Y], ... ]
+ */
+function calculate_order_totals($cart_items) {
+    $subtotal = 0.00;
+    $total_quantity = 0;
+    $validated_items = [];
     
-    $subtotal = round($quantity * $unit_price, 2);
+    // Ensure it's an array
+    if (!is_array($cart_items)) {
+        $cart_items = [];
+    }
+
+    foreach ($cart_items as $item) {
+        $id = (int)($item['id'] ?? 0);
+        $qty = max(1, (int)($item['quantity'] ?? 1));
+        
+        $product = get_product_by_id($id);
+        if ($product) {
+            $price = (float)$product['price'];
+            $item_subtotal = round($qty * $price, 2);
+            $subtotal += $item_subtotal;
+            $total_quantity += $qty;
+            
+            $validated_items[] = [
+                'product_id' => $product['id'],
+                'product_name' => $product['name'],
+                'quantity' => $qty,
+                'price' => $price,
+                'subtotal' => $item_subtotal
+            ];
+        }
+    }
+    
+    // Fallback if cart is empty
+    if (empty($validated_items)) {
+        $product = get_product_by_id(1);
+        $price = $product ? (float)$product['price'] : DEFAULT_UNIT_PRICE;
+        $subtotal = $price;
+        $total_quantity = 1;
+        $validated_items[] = [
+            'product_id' => 1,
+            'product_name' => $product ? $product['name'] : 'Ganesh Statue / Vinayaka Vigraha',
+            'quantity' => 1,
+            'price' => $price,
+            'subtotal' => $price
+        ];
+    }
+    
+    $shipping_charge = (float)get_setting('shipping_charge', DEFAULT_SHIPPING_FEE);
     $total_amount = round($subtotal + $shipping_charge, 2);
 
     return [
-        'quantity' => $quantity,
-        'unit_price' => $unit_price,
-        'subtotal' => $subtotal,
+        'quantity' => $total_quantity,
+        'unit_price' => $validated_items[0]['price'] ?? DEFAULT_UNIT_PRICE,
+        'subtotal' => round($subtotal, 2),
         'shipping_charge' => $shipping_charge,
         'total_amount' => $total_amount,
         'currency_symbol' => get_setting('currency_symbol', '£'),
-        'currency_code' => get_setting('currency_code', 'GBP')
+        'currency_code' => get_setting('currency_code', 'GBP'),
+        'items' => $validated_items
     ];
 }
 
@@ -63,7 +123,7 @@ function calculate_order_totals($quantity) {
  * Create a new booking in MySQL
  */
 function create_new_booking($customer_data) {
-    $totals = calculate_order_totals($customer_data['quantity']);
+    $totals = calculate_order_totals($customer_data['cart_items'] ?? []);
     $reference = $customer_data['booking_reference'] ?? generate_unique_booking_reference();
     
     $db = Database::getConnection();
@@ -111,16 +171,32 @@ function create_new_booking($customer_data) {
 
             $stmt = $db->prepare($sql);
             $stmt->execute($booking);
-            $booking['id'] = $db->lastInsertId();
+            $booking_id = $db->lastInsertId();
+            $booking['id'] = $booking_id;
+            
+            // Insert cart items into booking_items
+            if ($booking_id) {
+                $stmt_item = $db->prepare("INSERT INTO booking_items (booking_id, product_id, product_name, quantity, price) 
+                    VALUES (:booking_id, :product_id, :product_name, :quantity, :price)");
+                foreach ($totals['items'] as $item) {
+                    $stmt_item->execute([
+                        ':booking_id' => $booking_id,
+                        ':product_id' => $item['product_id'],
+                        ':product_name' => $item['product_name'],
+                        ':quantity' => $item['quantity'],
+                        ':price' => $item['price']
+                    ]);
+                }
+            }
         } catch (Exception $e) {
             log_system_error("Failed to insert booking: " . $e->getMessage());
-            // Fallback object for session state if DB connection was offline
             $booking['id'] = rand(1000, 9999);
         }
     } else {
         $booking['id'] = rand(1000, 9999);
     }
-
+    
+    $booking['items'] = $totals['items'];
     return $booking;
 }
 
@@ -133,7 +209,13 @@ function get_booking_by_ref($reference) {
         try {
             $stmt = $db->prepare("SELECT * FROM bookings WHERE booking_reference = :ref LIMIT 1");
             $stmt->execute([':ref' => $reference]);
-            return $stmt->fetch();
+            $booking = $stmt->fetch();
+            if ($booking) {
+                $stmt_items = $db->prepare("SELECT * FROM booking_items WHERE booking_id = :booking_id");
+                $stmt_items->execute([':booking_id' => $booking['id']]);
+                $booking['items'] = $stmt_items->fetchAll();
+                return $booking;
+            }
         } catch (Exception $e) {
             log_system_error("Error fetching booking: " . $e->getMessage());
         }

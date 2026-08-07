@@ -6,7 +6,7 @@
 require_once __DIR__ . '/config.php';
 
 class Database {
-    private static $host = 'localhost';
+    private static $host = '127.0.0.1';
     private static $db_name = 'vk_logistics';
     private static $username = 'root';
     private static $password = '';

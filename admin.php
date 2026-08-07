@@ -166,10 +166,13 @@ $settings     = get_all_settings();
                     &#128221; Bookings Management
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-settings">
-                    &#9881; Store &amp; Pricing Settings
+                    &#9881; Store Settings
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-export">
                     📄 PDF &amp; CSV Reports
+                </button>
+                <button type="button" class="admin-tab-btn" data-tab="tab-catalog">
+                    🛍️ Products &amp; Categories
                 </button>
             </div>
 
@@ -353,6 +356,66 @@ $settings     = get_all_settings();
                 </div>
             </div>
 
+            <!-- TAB 4: PRODUCTS & CATEGORIES -->
+            <div class="admin-tab-content admin-panel-card" id="tab-catalog" style="display:none; padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #E2E8F0; padding-bottom: 12px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="font-size: 1.6rem; color: #4A0B17; margin: 0; font-weight:800;">Catalog Management</h2>
+                        <p style="color: #64748B; font-size: 0.88rem; margin: 4px 0 0 0;">Manage your store categories, products, and pricing.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn-gold" id="btn-add-category" style="padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #D4AF37;">
+                            📁 Add Category
+                        </button>
+                        <button type="button" class="btn-modal-save" id="btn-add-product" style="background:#4A0B17; color:#fff; border:1px solid #4A0B17; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                            🛒 Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+                    <!-- Categories Management -->
+                    <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:12px; padding:20px;">
+                        <h3 style="color:#4A0B17; font-size:1.15rem; margin-top:0; margin-bottom:15px; border-bottom:1px dashed #CBD5E1; padding-bottom:8px;">📁 Shop Categories</h3>
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px; text-align: center;">ID</th>
+                                        <th style="text-align: left;">Category Name</th>
+                                        <th style="width: 150px; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-categories-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Products Management -->
+                    <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:12px; padding:20px;">
+                        <h3 style="color:#4A0B17; font-size:1.15rem; margin-top:0; margin-bottom:15px; border-bottom:1px dashed #CBD5E1; padding-bottom:8px;">🛒 Products Catalog</h3>
+                        <div class="admin-table-wrapper">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px; text-align: center;">Image</th>
+                                        <th style="text-align: left;">Product Name / Category</th>
+                                        <th style="text-align: left;">Description</th>
+                                        <th style="width: 100px; text-align: right;">Price</th>
+                                        <th style="width: 150px; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-products-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -448,6 +511,75 @@ $settings     = get_all_settings();
             </div>
         </div>
     </div>
+    <!-- CATEGORY MODAL -->
+    <div class="admin-modal-overlay" id="category-modal" style="display:none; z-index:1100;">
+        <div class="admin-modal-card" style="max-width: 400px; width: 90%;">
+            <div class="admin-modal-header">
+                <h3 class="admin-modal-title" id="category-modal-title">Add Category</h3>
+                <button type="button" class="admin-modal-close" id="category-modal-close-btn">&times;</button>
+            </div>
+            <form id="category-form">
+                <input type="hidden" id="category-id" name="id" value="0">
+                <div class="admin-modal-body" style="padding: 20px;">
+                    <div class="admin-field-group">
+                        <label for="category-name">Category Name</label>
+                        <input type="text" id="category-name" name="name" placeholder="e.g. Rakhi" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" id="category-modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-modal-save">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRODUCT MODAL -->
+    <div class="admin-modal-overlay" id="product-modal" style="display:none; z-index:1100;">
+        <div class="admin-modal-card" style="max-width: 500px; width: 90%;">
+            <div class="admin-modal-header">
+                <h3 class="admin-modal-title" id="product-modal-title">Add Product</h3>
+                <button type="button" class="admin-modal-close" id="product-modal-close-btn">&times;</button>
+            </div>
+            <form id="product-form" enctype="multipart/form-data">
+                <input type="hidden" id="product-id" name="id" value="0">
+                <input type="hidden" id="product-current-image" name="current_image_path" value="">
+                <div class="admin-modal-body" style="padding: 20px; max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:15px; box-sizing:border-box;">
+                    <div class="admin-field-group">
+                        <label for="product-category">Category</label>
+                        <select id="product-category" name="category_id" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                            <!-- Dynamic category list -->
+                        </select>
+                    </div>
+                    <div class="admin-field-group">
+                        <label for="product-name">Product Name</label>
+                        <input type="text" id="product-name" name="name" placeholder="e.g. Designer Rudraksha Rakhi" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div class="admin-field-group">
+                        <label for="product-price">Price (£)</label>
+                        <input type="number" id="product-price" name="price" step="0.01" min="0.00" placeholder="14.99" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div class="admin-field-group">
+                        <label for="product-description">Description</label>
+                        <textarea id="product-description" name="description" rows="3" placeholder="Enter product details..." style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+                    </div>
+                    <div class="admin-field-group">
+                        <label for="product-image-file">Product Image File</label>
+                        <input type="file" id="product-image-file" name="product_image" accept="image/*" style="width:100%; padding:5px 0;">
+                        <span style="font-size:0.75rem; color:#64748B; display:block; margin-top:2px;">Upload a product photo. Keep blank to use current photo.</span>
+                        <div id="product-image-preview-box" style="margin-top:10px; display:none;">
+                            <img id="product-image-preview-el" src="" alt="Preview" style="max-width:100px; max-height:100px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0;">
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" id="product-modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-modal-save">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -462,12 +594,18 @@ $settings     = get_all_settings();
 
             tabBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
                     tabBtns.forEach(b => b.classList.remove('active'));
                     tabContents.forEach(c => c.style.display = 'none');
                     
                     this.classList.add('active');
-                    const target = this.getAttribute('data-tab');
-                    document.getElementById(target).style.display = 'block';
+                    const targetContent = document.getElementById(tabId);
+                    if (targetContent) targetContent.style.display = 'block';
+                    
+                    if (tabId === 'tab-catalog') {
+                        loadCatalogData();
+                    }
                 });
             });
 
@@ -917,18 +1055,38 @@ $settings     = get_all_settings();
                                 <strong>${receiptLink}</strong>
                             </div>
                         </div>
+
+                        <!-- Booking Items List -->
+                        <div style="margin-top:10px; margin-bottom:12px; border:1px solid #E2E8F0; border-radius:8px; overflow:hidden;">
+                            <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                                <thead>
+                                    <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                                        <th style="padding:8px; text-align:left; color:#475569;">Product</th>
+                                        <th style="padding:8px; text-align:center; color:#475569; width:60px;">Qty</th>
+                                        <th style="padding:8px; text-align:right; color:#475569; width:85px;">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${b.items && b.items.length > 0 ? b.items.map(item => `
+                                        <tr style="border-bottom:1px solid #F1F5F9;">
+                                            <td style="padding:8px; color:#0F172A; font-weight:600;">${escapeHtml(item.product_name)}</td>
+                                            <td style="padding:8px; text-align:center; color:#0F172A; font-weight:700;">${item.quantity}</td>
+                                            <td style="padding:8px; text-align:right; color:#0F172A; font-weight:700;">&pound;${parseFloat(item.price).toFixed(2)}</td>
+                                        </tr>
+                                    `).join('') : `
+                                        <tr style="border-bottom:1px solid #F1F5F9;">
+                                            <td style="padding:8px; color:#0F172A; font-weight:600;">Legacy Product Item</td>
+                                            <td style="padding:8px; text-align:center; color:#0F172A; font-weight:700;">${b.quantity}</td>
+                                            <td style="padding:8px; text-align:right; color:#0F172A; font-weight:700;">&pound;${parseFloat(b.unit_price).toFixed(2)}</td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
                         
                         <div style="background:#FFFDF5; border:1px solid #FEF3C7; border-radius:8px; padding:12px;">
                             <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;">
-                                <span>Unit Price</span>
-                                <strong>&pound;${parseFloat(b.unit_price).toFixed(2)}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;">
-                                <span>Quantity Ordered</span>
-                                <strong>${b.quantity}</strong>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.85rem;">
-                                <span>Subtotal</span>
+                                <span>Items Subtotal</span>
                                 <strong>&pound;${parseFloat(b.subtotal || (b.quantity * b.unit_price)).toFixed(2)}</strong>
                             </div>
                             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem; padding-bottom:6px; border-bottom:1px dashed #E2E8F0;">
@@ -942,10 +1100,251 @@ $settings     = get_all_settings();
                         </div>
                     </div>
                 `;
-
+ 
                 document.getElementById('view-modal-body-content').innerHTML = html;
                 document.getElementById('view-details-modal').style.display = 'flex';
             }
+
+            // Catalog Management functions
+            let catalogCategories = [];
+            let catalogProducts = [];
+
+            function loadCatalogData() {
+                fetch('ajax/admin-actions.php?action=admin_get_categories_products')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) return;
+                    catalogCategories = data.categories || [];
+                    catalogProducts = data.products || [];
+
+                    renderCategoriesTable();
+                    renderProductsTable();
+                    populateCategoryDropdown();
+                });
+            }
+
+            function renderCategoriesTable() {
+                const tbody = document.getElementById('admin-categories-table-body');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                
+                if (catalogCategories.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:15px; color:#64748B;">No categories found.</td></tr>';
+                    return;
+                }
+
+                catalogCategories.forEach(cat => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:center; font-weight:700;">${cat.id}</td>
+                        <td><strong style="color:#4A0B17;">${escapeHtml(cat.name)}</strong></td>
+                        <td style="text-align:center;">
+                            <button type="button" class="btn-action-sm btn-edit-category" data-id="${cat.id}" data-name="${escapeHtml(cat.name)}" style="padding: 4px 8px; font-size:0.72rem; cursor:pointer;">Edit ✏️</button>
+                            <button type="button" class="btn-action-sm btn-delete-category" data-id="${cat.id}" style="padding: 4px 8px; font-size:0.72rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.querySelectorAll('.btn-edit-category').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const name = this.getAttribute('data-name');
+                        document.getElementById('category-id').value = id;
+                        document.getElementById('category-name').value = name;
+                        document.getElementById('category-modal-title').textContent = 'Edit Category';
+                        document.getElementById('category-modal').style.display = 'flex';
+                    });
+                });
+
+                document.querySelectorAll('.btn-delete-category').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        if (confirm('Are you sure you want to delete this category? All products in it will also be deleted.')) {
+                            let fd = new FormData();
+                            fd.append('id', id);
+                            fd.append('csrf_token', csrfToken);
+                            fetch('ajax/admin-actions.php?action=delete_category', {
+                                method: 'POST',
+                                body: fd
+                            })
+                            .then(res => res.json())
+                            .then(res => {
+                                if (res.success) {
+                                    loadCatalogData();
+                                } else {
+                                    alert(res.message);
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            function renderProductsTable() {
+                const tbody = document.getElementById('admin-products-table-body');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                if (catalogProducts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No products found.</td></tr>';
+                    return;
+                }
+
+                catalogProducts.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align:center; vertical-align:middle;">
+                            <img src="${escapeHtml(p.image_path || 'assets/images/ganesh_hero.png')}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0;">
+                        </td>
+                        <td style="vertical-align:middle;">
+                            <strong style="color:#0F172A; font-size:0.9rem; display:block;">${escapeHtml(p.name)}</strong>
+                            <span style="font-size:0.75rem; color:#64748B; font-weight:700; text-transform:uppercase;">${escapeHtml(p.category_name)}</span>
+                        </td>
+                        <td style="font-size:0.8rem; color:#475569; vertical-align:middle; max-width:250px;">
+                            ${escapeHtml(p.description || '')}
+                        </td>
+                        <td style="text-align:right; font-weight:800; color:#4A0B17; vertical-align:middle;">
+                            &pound;${parseFloat(p.price).toFixed(2)}
+                        </td>
+                        <td style="text-align:center; vertical-align:middle;">
+                            <button type="button" class="btn-action-sm btn-edit-product" data-id="${p.id}" style="padding: 4px 8px; font-size:0.72rem; cursor:pointer;">Edit ✏️</button>
+                            <button type="button" class="btn-action-sm btn-delete-product" data-id="${p.id}" style="padding: 4px 8px; font-size:0.72rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.querySelectorAll('.btn-edit-product').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        const p = catalogProducts.find(x => x.id === id);
+                        if (!p) return;
+
+                        document.getElementById('product-id').value = p.id;
+                        document.getElementById('product-category').value = p.category_id;
+                        document.getElementById('product-name').value = p.name;
+                        document.getElementById('product-price').value = p.price;
+                        document.getElementById('product-description').value = p.description || '';
+                        document.getElementById('product-current-image').value = p.image_path || '';
+                        
+                        const previewEl = document.getElementById('product-image-preview-el');
+                        if (p.image_path) {
+                            previewEl.src = p.image_path;
+                            document.getElementById('product-image-preview-box').style.display = 'block';
+                        } else {
+                            document.getElementById('product-image-preview-box').style.display = 'none';
+                        }
+                        
+                        document.getElementById('product-modal-title').textContent = 'Edit Product';
+                        document.getElementById('product-modal').style.display = 'flex';
+                    });
+                });
+
+                document.querySelectorAll('.btn-delete-product').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        if (confirm('Are you sure you want to delete this product?')) {
+                            let fd = new FormData();
+                            fd.append('id', id);
+                            fd.append('csrf_token', csrfToken);
+                            fetch('ajax/admin-actions.php?action=delete_product', {
+                                method: 'POST',
+                                body: fd
+                            })
+                            .then(res => res.json())
+                            .then(res => {
+                                if (res.success) {
+                                    loadCatalogData();
+                                } else {
+                                    alert(res.message);
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+
+            function populateCategoryDropdown() {
+                const select = document.getElementById('product-category');
+                if (!select) return;
+                select.innerHTML = '';
+                catalogCategories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = cat.name;
+                    select.appendChild(opt);
+                });
+            }
+
+            // Modal triggers
+            document.getElementById('btn-add-category').addEventListener('click', () => {
+                document.getElementById('category-id').value = '0';
+                document.getElementById('category-name').value = '';
+                document.getElementById('category-modal-title').textContent = 'Add Category';
+                document.getElementById('category-modal').style.display = 'flex';
+            });
+
+            document.getElementById('btn-add-product').addEventListener('click', () => {
+                document.getElementById('product-id').value = '0';
+                document.getElementById('product-name').value = '';
+                document.getElementById('product-price').value = '';
+                document.getElementById('product-description').value = '';
+                document.getElementById('product-current-image').value = '';
+                document.getElementById('product-image-file').value = '';
+                document.getElementById('product-image-preview-box').style.display = 'none';
+                document.getElementById('product-modal-title').textContent = 'Add Product';
+                document.getElementById('product-modal').style.display = 'flex';
+            });
+
+            const closeCategoryModal = () => document.getElementById('category-modal').style.display = 'none';
+            document.getElementById('category-modal-close-btn').addEventListener('click', closeCategoryModal);
+            document.getElementById('category-modal-cancel-btn').addEventListener('click', closeCategoryModal);
+
+            const closeProductModal = () => document.getElementById('product-modal').style.display = 'none';
+            document.getElementById('product-modal-close-btn').addEventListener('click', closeProductModal);
+            document.getElementById('product-modal-cancel-btn').addEventListener('click', closeProductModal);
+
+            // Forms submits
+            document.getElementById('category-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                let fd = new FormData(this);
+                fd.append('csrf_token', csrfToken);
+                
+                fetch('ajax/admin-actions.php?action=save_category', {
+                    method: 'POST',
+                    body: fd
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        closeCategoryModal();
+                        loadCatalogData();
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            });
+
+            document.getElementById('product-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                let fd = new FormData(this);
+                fd.append('csrf_token', csrfToken);
+
+                fetch('ajax/admin-actions.php?action=save_product', {
+                    method: 'POST',
+                    body: fd
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        closeProductModal();
+                        loadCatalogData();
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            });
 
             function escapeHtml(str) {
                 if (!str) return '';

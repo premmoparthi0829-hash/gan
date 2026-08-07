@@ -7,6 +7,18 @@ header('Content-Type: text/html; charset=UTF-8');
 
 require_once __DIR__ . '/includes/functions.php';
 
+$db = Database::getConnection();
+$categories = [];
+$products = [];
+if ($db) {
+    try {
+        $categories = $db->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
+        $products = $db->query("SELECT * FROM products ORDER BY id ASC")->fetchAll();
+    } catch (Exception $e) {
+        log_system_error("Failed to load catalog in index.php: " . $e->getMessage());
+    }
+}
+
 $settings        = get_all_settings();
 $unit_price      = (float)($settings['unit_price']      ?? 14.99);
 $shipping_charge = (float)($settings['shipping_charge'] ?? 3.99);
@@ -68,93 +80,99 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
         </div>
     </header>
 
-    <!-- HERO SECTION -->
-    <section class="hero-section" id="hero">
+
+    <!-- ═══════════════════════════════════════════
+         MAIN SHOP PAGE
+         ═══════════════════════════════════════════ -->
+    <main class="shop-main" id="shop-catalog">
         <div class="container">
-            <div class="hero-grid">
 
-                <!-- Left: Text Content -->
-                <div class="hero-content">
-                    <span class="hero-tag">&#10024; Ganesh Chaturthi 2026 Special</span>
-                    <h1 class="hero-title">Bring Home <span>Bappa</span> This Ganesh Chaturthi</h1>
-                    <p class="hero-subtitle">
-                        Welcome <strong>Lord Ganesha</strong> into your home with joy &amp; devotion. Handcrafted eco-friendly Ganesh statues carefully packaged and delivered safely to your doorstep anywhere across the United Kingdom.
-                    </p>
-                    <!-- Luxury Hero Booking Card -->
-                    <div class="hero-booking-card">
-                        <div class="hbc-badge-row">
-                            <span class="hbc-offer-tag">&#10024; Festive Offer</span>
-                            <span class="hbc-uk-tag">UK Doorstep Delivery</span>
-                        </div>
-                        <div class="hbc-price-row">
-                            <div class="hbc-price-main">
-                                <span class="hbc-currency">&pound;</span><span id="hbc-price-val" class="display-unit-price"><?php echo number_format($unit_price, 2); ?></span>
-                            </div>
-                            <div class="hbc-price-details">
-                                <div class="hbc-shipping">+ &pound;<span id="hbc-shipping-val" class="display-shipping"><?php echo number_format($shipping_charge, 2); ?></span> UK Shipping</div>
-                                <div class="hbc-unit-sub">Complete Statue Package</div>
-                            </div>
-                        </div>
-                        <a href="#" class="hbc-btn scroll-to-booking">
-                            &#127983; BOOK YOUR GANESH NOW
-                        </a>
-                    </div>
-
-                    <div class="hero-trust-list">
-                        <div class="trust-item">
-                            <div class="check-icon">&#10003;</div> Eco Clay Ganesh Idol
-                        </div>
-                        <div class="trust-item">
-                            <div class="check-icon">&#10003;</div> Mukut &amp; Ornaments Kit
-                        </div>
-                        <div class="trust-item">
-                            <div class="check-icon">&#10003;</div> Safe Protective Box
-                        </div>
-                        <div class="trust-item">
-                            <div class="check-icon">&#10003;</div> Express UK Delivery
-                        </div>
-                    </div>
+            <!-- ── STEP 1: Category Selection ── -->
+            <div id="catalog-step-categories">
+                <div class="shop-hero-text">
+                    <h1 class="shop-page-title">Shop Our <span>Collections</span></h1>
+                    <p class="shop-page-subtitle">Choose a category to explore our handcrafted festive items — delivered to your door across the UK.</p>
                 </div>
 
-                <!-- Right: Image Slider -->
-                <div class="hero-visual">
-                    <div class="hero-card-frame" id="hero-slider-container">
-                        <div class="hero-slider-wrapper">
-                            <div class="hero-slide active">
-                                <img src="assets/images/ganesh_hero.png" alt="Ganesh Statue - Festive Shrine View">
-                            </div>
-                            <div class="hero-slide">
-                                <img src="assets/images/ganesh_product_1.png" alt="Ganesh Statue - Front View">
-                            </div>
-                            <div class="hero-slide">
-                                <img src="assets/images/ganesh_product_2.png" alt="Ganesh Statue - Gold Ornaments Detail">
-                            </div>
-                            <div class="hero-slide">
-                                <img src="assets/images/ganesh_product_3.png" alt="Ganesh Statue - Mandap Shrine Angle">
-                            </div>
-                            <div class="hero-slide">
-                                <img src="assets/images/ganesh_product_4.png" alt="Ganesh Statue - Satin Pedestal View">
-                            </div>
+                <div class="cat-pick-grid">
+                    <?php foreach ($categories as $cat):
+                        $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
+                        $count = count($cat_products);
+                        $cat_img = '';
+                        foreach ($cat_products as $p) { if (!empty($p['image_path'])) { $cat_img = $p['image_path']; break; } }
+                    ?>
+                    <div class="cat-clean-card" data-cat-id="<?php echo $cat['id']; ?>"
+                         data-cat-name="<?php echo escape_output($cat['name']); ?>"
+                         role="button" tabindex="0"
+                         aria-label="Browse <?php echo escape_output($cat['name']); ?>">
+
+                        <!-- Clear product image -->
+                        <div class="cat-clean-img-wrap">
+                            <?php if ($cat_img): ?>
+                            <img src="<?php echo escape_output($cat_img); ?>" alt="<?php echo escape_output($cat['name']); ?>">
+                            <?php else: ?>
+                            <div class="cat-clean-img-placeholder">🎁</div>
+                            <?php endif; ?>
                         </div>
 
-                        <!-- Prev / Next Arrows -->
-                        <button type="button" class="slider-arrow prev" id="slider-prev" aria-label="Previous Slide">&#8249;</button>
-                        <button type="button" class="slider-arrow next" id="slider-next" aria-label="Next Slide">&#8250;</button>
-
-                        <!-- Pagination Dots -->
-                        <div class="slider-dots" id="slider-dots">
-                            <span class="slider-dot active" data-index="0"></span>
-                            <span class="slider-dot" data-index="1"></span>
-                            <span class="slider-dot" data-index="2"></span>
-                            <span class="slider-dot" data-index="3"></span>
-                            <span class="slider-dot" data-index="4"></span>
+                        <!-- Name + button only -->
+                        <div class="cat-clean-footer">
+                            <h2 class="cat-clean-name"><?php echo escape_output($cat['name']); ?></h2>
+                            <span class="cat-clean-btn">Shop Now &rarr;</span>
                         </div>
                     </div>
+                    <?php endforeach; ?>
                 </div>
-
             </div>
+
+            <!-- ── STEP 2: Products for chosen category ── -->
+            <div id="catalog-step-products" style="display:none;">
+
+                <!-- Back + breadcrumb -->
+                <div class="cat-products-breadcrumb">
+                    <button type="button" id="btn-back-to-categories">&larr; All Categories</button>
+                    <span class="cat-products-heading-label" id="active-cat-label"></span>
+                </div>
+
+                <h2 class="section-title" id="cat-products-title" style="margin-top:16px;"></h2>
+                <p class="section-subtitle" id="cat-products-subtitle"></p>
+
+                <!-- Per-category product panes -->
+                <?php foreach ($categories as $cat):
+                    $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
+                    if (stripos($cat['name'], 'ganesh') !== false) { $accent = '#E85D04'; }
+                    elseif (stripos($cat['name'], 'rakhi') !== false) { $accent = '#9B1D8A'; }
+                    else { $accent = '#4A0B17'; }
+                ?>
+                <div class="products-grid cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>" style="display:none;">
+                    <?php foreach ($cat_products as $prod): ?>
+                    <div class="product-card-item">
+                        <div class="prod-img-wrap">
+                            <img src="<?php echo escape_output($prod['image_path']); ?>" alt="<?php echo escape_output($prod['name']); ?>" loading="lazy">
+                            <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
+                        </div>
+                        <div class="prod-details">
+                            <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
+                            <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
+                            <button type="button" class="btn-add-to-cart btn-gold"
+                                data-id="<?php echo $prod['id']; ?>"
+                                data-name="<?php echo escape_output($prod['name']); ?>"
+                                data-price="<?php echo $prod['price']; ?>"
+                                data-img="<?php echo escape_output($prod['image_path']); ?>">
+                                🛒 Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endforeach; ?>
+
+            </div><!-- /catalog-step-products -->
+
         </div>
-    </section>
+    </main>
+
+
 
     <!-- PREMIUM BOOKING MODAL - MULTI STEP -->
     <div class="bm-overlay" id="booking-modal-overlay">
@@ -164,13 +182,12 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
             <div class="bm-left">
                 <div class="bm-left-inner">
                     <div class="bm-deco-top"></div>
-                    <div class="bm-festival-tag">&#127800; Ganesh Chaturthi 2026</div>
+                    <div class="bm-festival-tag">&#127800; Festive Booking 2026</div>
 
-                    <div class="bm-product-card">
-                        <img src="assets/images/ganesh_hero.png" alt="Ganesh Statue" class="bm-product-img">
-                        <div class="bm-product-info">
-                            <div id="bm-product-name-display" class="bm-product-name"><?php echo escape_output($settings['product_name'] ?? 'Ganesh Statue'); ?></div>
-                            <div class="bm-product-price">&pound;<span class="display-unit-price"><?php echo number_format($unit_price, 2); ?></span> <span>+ shipping</span></div>
+                    <div class="bm-checkout-cart-items-wrapper" style="width:100%; margin-top:20px; margin-bottom:20px;">
+                        <h4 style="color:#D4AF37; font-family:'Cinzel', serif; font-size:1.1rem; margin-bottom:12px; border-bottom:1px solid rgba(212,175,55,0.3); padding-bottom:6px;">Your Order Items</h4>
+                        <div id="checkout-cart-items-list" style="display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; padding-right:5px;">
+                            <!-- Dynamic list of cart items in modal left pane -->
                         </div>
                     </div>
 
@@ -239,20 +256,18 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                 </div>
                             </div>
 
-                            <!-- Quantity Picker -->
-                            <div class="bm-qty-picker">
+                            <!-- Cart Items Summary in Step 1 -->
+                            <div class="bm-qty-picker" style="border-bottom:none; margin-bottom:15px;">
                                 <div class="bm-qty-label-row">
-                                    <span class="bm-qty-label">Quantity</span>
-                                    <span class="bm-qty-hint">Max 20 statues</span>
+                                    <span class="bm-qty-label">Order Items Review</span>
+                                    <span class="bm-qty-hint" id="checkout-total-items-text">Total Items: 0</span>
                                 </div>
-                                <div class="bm-qty-row">
-                                    <button type="button" class="qty-btn minus bm-qty-btn">&minus;</button>
-                                    <input type="number" id="quantity-input" class="bm-qty-input" value="1" min="1" max="20" readonly>
-                                    <button type="button" class="qty-btn plus bm-qty-btn">&plus;</button>
-                                    <div class="bm-price-pill">
-                                        <span id="calc-breakdown">1 &times; &pound;<?php echo number_format($unit_price, 2); ?></span>
-                                        <strong id="calc-grand-total">&pound;<?php echo number_format($unit_price + $shipping_charge, 2); ?></strong>
-                                    </div>
+                                <div id="step1-cart-items-table" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px; margin-top:8px; display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;">
+                                    <!-- List of items to verify -->
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed #CBD5E1;">
+                                    <span style="font-size:0.9rem; font-weight:700; color:#475569;">Items Subtotal:</span>
+                                    <strong style="font-size:1.15rem; color:#4A0B17;" id="step1-grand-total">&pound;0.00</strong>
                                 </div>
                             </div>
 
@@ -372,17 +387,16 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                             <!-- Summary Card -->
                             <div class="bm-summary-card">
-                                <div class="bm-summary-row">
-                                    <span>Ganesh Statue &times; <strong class="display-qty">1</strong></span>
-                                    <span class="display-subtotal">&pound;<?php echo number_format($unit_price, 2); ?></span>
+                                <div id="checkout-final-items-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+                                    <!-- Dynamic list of items -->
                                 </div>
-                                <div class="bm-summary-row">
+                                <div class="bm-summary-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(74, 11, 23, 0.1);">
                                     <span>UK Shipping</span>
                                     <span class="display-shipping">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
                                 </div>
                                 <div class="bm-summary-row total">
                                     <span>Total Payable</span>
-                                    <span class="display-total">&pound;<?php echo number_format($unit_price + $shipping_charge, 2); ?></span>
+                                    <span class="display-total">&pound;0.00</span>
                                 </div>
                             </div>
 
@@ -536,6 +550,45 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
 
 
+
+    <!-- FLOATING CART BUTTON -->
+    <button type="button" class="floating-cart-toggle" id="cart-toggle-btn" aria-label="View Shopping Cart">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count-badge" id="cart-total-badge">0</span>
+    </button>
+
+    <!-- SHOPPING CART SIDEBAR -->
+    <div class="cart-sidebar-overlay" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Festive Cart</h3>
+            <button type="button" class="cart-close-btn" id="cart-close-btn">&times;</button>
+        </div>
+        <div class="cart-items-container" id="cart-items-list">
+            <!-- Dynamic Cart Items -->
+            <div class="cart-empty-state">
+                <span style="font-size:3rem; display:block; margin-bottom:12px;">🛒</span>
+                Your cart is empty.<br>Add items from the catalog above!
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-summary-row">
+                <span>Subtotal:</span>
+                <span id="cart-subtotal-val">&pound;0.00</span>
+            </div>
+            <div class="cart-summary-row">
+                <span>UK Shipping:</span>
+                <span id="cart-shipping-val">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
+            </div>
+            <div class="cart-summary-row total">
+                <span>Total Payable:</span>
+                <span id="cart-total-val">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
+            </div>
+            <button type="button" class="cart-checkout-btn" id="cart-checkout-btn" disabled>
+                Proceed to Booking Checkout
+            </button>
+        </div>
+    </div>
 
     <!-- Minimal Bottom Bar -->
     <div class="bottom-bar-minimal">

@@ -107,6 +107,23 @@ if ($action === 'get_dashboard_data') {
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
             $bookings = $stmt->fetchAll();
+
+            if (!empty($bookings)) {
+                $booking_ids = array_column($bookings, 'id');
+                $in_clause = implode(',', array_map('intval', $booking_ids));
+                $items_stmt = $db->query("SELECT * FROM booking_items WHERE booking_id IN ($in_clause)");
+                $all_items = $items_stmt->fetchAll();
+                
+                $items_by_booking = [];
+                foreach ($all_items as $item) {
+                    $items_by_booking[$item['booking_id']][] = $item;
+                }
+                
+                foreach ($bookings as &$b) {
+                    $b['items'] = $items_by_booking[$b['id']] ?? [];
+                }
+                unset($b);
+            }
         } catch (Exception $e) {
             log_system_error("Admin get_dashboard_data error: " . $e->getMessage());
         }
@@ -322,6 +339,138 @@ if ($action === 'export_tsv') {
     }
     fclose($output);
     exit;
+}
+
+// 6. Admin Get Categories & Products
+if ($action === 'admin_get_categories_products') {
+    $db = Database::getConnection();
+    $categories = [];
+    $products = [];
+    if ($db) {
+        try {
+            $categories = $db->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
+            $products = $db->query("SELECT p.*, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
+        } catch (Exception $e) {
+            log_system_error("Admin get categories/products error: " . $e->getMessage());
+        }
+    }
+    json_response(true, 'Categories and products fetched', [
+        'categories' => $categories,
+        'products' => $products
+    ]);
+}
+
+// 7. Save Category
+if ($action === 'save_category') {
+    $id = (int)($_POST['id'] ?? 0);
+    $name = sanitize_input($_POST['name'] ?? '');
+    if (empty($name)) {
+        json_response(false, 'Category name is required.', [], 422);
+    }
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            if ($id > 0) {
+                $stmt = $db->prepare("UPDATE categories SET name = :name WHERE id = :id");
+                $stmt->execute([':name' => $name, ':id' => $id]);
+            } else {
+                $stmt = $db->prepare("INSERT INTO categories (name) VALUES (:name)");
+                $stmt->execute([':name' => $name]);
+            }
+            json_response(true, 'Category saved successfully.');
+        } catch (Exception $e) {
+            json_response(false, 'Error saving category: ' . $e->getMessage(), [], 500);
+        }
+    }
+}
+
+// 8. Delete Category
+if ($action === 'delete_category') {
+    $id = (int)($_POST['id'] ?? 0);
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $stmt = $db->prepare("DELETE FROM categories WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            json_response(true, 'Category deleted successfully.');
+        } catch (Exception $e) {
+            json_response(false, 'Error deleting category: ' . $e->getMessage(), [], 500);
+        }
+    }
+}
+
+// 9. Save Product
+if ($action === 'save_product') {
+    $id = (int)($_POST['id'] ?? 0);
+    $category_id = (int)($_POST['category_id'] ?? 0);
+    $name = sanitize_input($_POST['name'] ?? '');
+    $description = sanitize_input($_POST['description'] ?? '');
+    $price = (float)($_POST['price'] ?? 0.00);
+    
+    if (empty($name) || $category_id <= 0 || $price < 0) {
+        json_response(false, 'Valid name, category, and price are required.', [], 422);
+    }
+    
+    $image_path = sanitize_input($_POST['current_image_path'] ?? '');
+    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['product_image'];
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
+            $new_filename = 'prod_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $target_dir = __DIR__ . '/../assets/images/';
+            if (!is_dir($target_dir)) {
+                @mkdir($target_dir, 0755, true);
+            }
+            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                $image_path = 'assets/images/' . $new_filename;
+            }
+        }
+    }
+    
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            if ($id > 0) {
+                $stmt = $db->prepare("UPDATE products SET category_id = :category_id, name = :name, description = :description, price = :price, image_path = :image_path WHERE id = :id");
+                $stmt->execute([
+                    ':category_id' => $category_id,
+                    ':name' => $name,
+                    ':description' => $description,
+                    ':price' => $price,
+                    ':image_path' => $image_path,
+                    ':id' => $id
+                ]);
+            } else {
+                $stmt = $db->prepare("INSERT INTO products (category_id, name, description, price, image_path) VALUES (:category_id, :name, :description, :price, :image_path)");
+                $stmt->execute([
+                    ':category_id' => $category_id,
+                    ':name' => $name,
+                    ':description' => $description,
+                    ':price' => $price,
+                    ':image_path' => $image_path
+                ]);
+            }
+            json_response(true, 'Product saved successfully.');
+        } catch (Exception $e) {
+            json_response(false, 'Error saving product: ' . $e->getMessage(), [], 500);
+        }
+    }
+}
+
+// 10. Delete Product
+if ($action === 'delete_product') {
+    $id = (int)($_POST['id'] ?? 0);
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $stmt = $db->prepare("DELETE FROM products WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            json_response(true, 'Product deleted successfully.');
+        } catch (Exception $e) {
+            json_response(false, 'Error deleting product: ' . $e->getMessage(), [], 500);
+        }
+    }
 }
 
 json_response(false, 'Invalid admin action', [], 400);

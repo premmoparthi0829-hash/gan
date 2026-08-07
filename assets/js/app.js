@@ -78,50 +78,262 @@ $(document).ready(function () {
         startAutoSlide();
     }
 
-    // Quantity Increment / Decrement
-    $('.qty-btn.minus').on('click', function () {
-        let currentVal = parseInt($('#quantity-input').val()) || 1;
-        if (currentVal > 1) {
-            updateQuantity(currentVal - 1);
-        }
-    });
+    // ============================================================
+    // SHOPPING CART STATE MANAGEMENT
+    // ============================================================
+    let cart = [];
 
-    $('.qty-btn.plus').on('click', function () {
-        let currentVal = parseInt($('#quantity-input').val()) || 1;
-        if (currentVal < 20) {
-            updateQuantity(currentVal + 1);
-        }
-    });
 
-    $('#quantity-input').on('change keyup', function () {
-        let val = parseInt($(this).val()) || 1;
-        if (val < 1) val = 1;
-        if (val > 20) val = 20;
-        updateQuantity(val);
-    });
+    // ── 2-Step Category Picker ──────────────────────────────────
+    // Store category name info from PHP rendered data attributes
+    function showCategoryProducts(catId) {
+        // Find the picked card to read name
+        let $card = $(`.cat-pick-card[data-cat-id="${catId}"]`);
+        let catName = $card.find('.cat-pick-name').text().trim();
 
-    function updateQuantity(qty) {
-        $('#quantity-input').val(qty);
-        $('#form-quantity').val(qty);
-        recalculateTotals(qty);
+        // Update heading labels
+        $('#cat-products-title').html(`${catName} <span>Collection</span>`);
+        $('#cat-products-subtitle').text(`Browse our ${catName} items below and add them to your cart.`);
+        $('#active-cat-label').text(`Shop › ${catName}`);
+
+        // Hide all product panes, show only selected
+        $('.cat-products-pane').hide();
+        $(`#products-pane-${catId}`).show();
+
+        // Swap panels with animation
+        $('#catalog-step-categories').fadeOut(200, function() {
+            $('#catalog-step-products').show().addClass('step-fade-in');
+            // Smooth scroll to catalog section
+            $('html, body').animate({
+                scrollTop: $('#shop-catalog').offset().top - 80
+            }, 400);
+        });
     }
 
-    function recalculateTotals(qty) {
-        let subtotal = (qty * unitPrice).toFixed(2);
-        let total = (parseFloat(subtotal) + shippingCharge).toFixed(2);
+    // Click on category card
+    $(document).on('click keypress', '.cat-clean-card', function(e) {
+        if (e.type === 'keypress' && e.which !== 13) return;
+        let catId   = $(this).data('cat-id');
+        let catName = $(this).find('.cat-clean-name').text().trim();
 
-        // Update UI displays across entire application
-        $('.display-unit-price').text(unitPrice.toFixed(2));
-        $('.display-qty').text(qty);
-        $('.display-subtotal').text(currencySymbol + subtotal);
+    // Back button — return to category grid
+    $('#btn-back-to-categories').on('click', function() {
+        $('#catalog-step-products').fadeOut(200, function() {
+            $(this).removeClass('step-fade-in');
+            $('#catalog-step-categories').fadeIn(300).addClass('step-fade-in');
+        });
+    });
+
+    // Add to Cart Action
+    $(document).on('click', '.btn-add-to-cart', function(e) {
+        e.preventDefault();
+        let id = parseInt($(this).data('id'));
+        let name = $(this).data('name');
+        let price = parseFloat($(this).data('price'));
+        let img = $(this).data('img');
+
+        addToCart(id, name, price, img);
+    });
+
+    function addToCart(id, name, price, img) {
+        let totalQty = getCartTotalQty();
+        if (totalQty >= 20) {
+            showToast('You can buy a maximum of 20 items in a single order.', 'error');
+            return;
+        }
+
+        let existing = cart.find(item => item.id === id);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({
+                id: id,
+                name: name,
+                price: price,
+                image: img,
+                quantity: 1
+            });
+        }
+
+        renderCart();
+        showToast(`Added "${name}" to your cart!`, 'success');
+        openCartSidebar();
+    }
+
+    function updateCartQty(id, delta) {
+        let item = cart.find(i => i.id === id);
+        if (!item) return;
+
+        let newQty = item.quantity + delta;
+        let totalQty = getCartTotalQty();
+
+        if (delta > 0 && totalQty >= 20) {
+            showToast('You can buy a maximum of 20 items in a single order.', 'error');
+            return;
+        }
+
+        if (newQty <= 0) {
+            removeFromCart(id);
+        } else {
+            item.quantity = newQty;
+            renderCart();
+        }
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(i => i.id !== id);
+        renderCart();
+    }
+
+    function getCartTotalQty() {
+        return cart.reduce((sum, item) => sum + item.quantity, 0);
+    }
+
+    function renderCart() {
+        let listContainer = $('#cart-items-list');
+        listContainer.empty();
+
+        if (cart.length === 0) {
+            listContainer.html(`
+                <div class="cart-empty-state">
+                    <span style="font-size:3rem; display:block; margin-bottom:12px;">🛒</span>
+                    Your cart is empty.<br>Add items from the catalog above!
+                </div>
+            `);
+            recalculateTotals();
+            return;
+        }
+
+        cart.forEach(item => {
+            let row = $(`
+                <div class="cart-item-row">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">${currencySymbol}${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <div class="cart-qty-ctrl">
+                            <button type="button" class="cart-qty-btn cart-minus" data-id="${item.id}">&minus;</button>
+                            <span class="cart-qty-val">${item.quantity}</span>
+                            <button type="button" class="cart-qty-btn cart-plus" data-id="${item.id}">&plus;</button>
+                        </div>
+                        <button type="button" class="cart-remove-btn" data-id="${item.id}">Remove</button>
+                    </div>
+                </div>
+            `);
+            listContainer.append(row);
+        });
+
+        recalculateTotals();
+    }
+
+    // Plus/Minus/Remove Event Listeners
+    $(document).on('click', '.cart-plus', function() {
+        let id = parseInt($(this).data('id'));
+        updateCartQty(id, 1);
+    });
+
+    $(document).on('click', '.cart-minus', function() {
+        let id = parseInt($(this).data('id'));
+        updateCartQty(id, -1);
+    });
+
+    $(document).on('click', '.cart-remove-btn', function() {
+        let id = parseInt($(this).data('id'));
+        removeFromCart(id);
+    });
+
+    // Cart Sidebar controls
+    function openCartSidebar() {
+        $('#cart-sidebar').addClass('active');
+        $('#cart-overlay').addClass('active');
+    }
+
+    function closeCartSidebar() {
+        $('#cart-sidebar').removeClass('active');
+        $('#cart-overlay').removeClass('active');
+    }
+
+    $('#cart-toggle-btn').on('click', openCartSidebar);
+    $('#cart-close-btn, #cart-overlay').on('click', closeCartSidebar);
+
+    // Recalculate Totals
+    function recalculateTotals() {
+        let subtotal = 0.00;
+        let totalQty = getCartTotalQty();
+        
+        cart.forEach(item => {
+            subtotal += item.price * item.quantity;
+        });
+        
+        let total = (subtotal + shippingCharge).toFixed(2);
+        
+        // Update UI floats
+        $('#cart-total-badge').text(totalQty);
+        $('#cart-subtotal-val').text(currencySymbol + subtotal.toFixed(2));
+        $('#cart-total-val').text(currencySymbol + total);
+        
+        if (totalQty > 0) {
+            $('#cart-checkout-btn').prop('disabled', false);
+        } else {
+            $('#cart-checkout-btn').prop('disabled', true);
+        }
+        
+        // Update checkout modal displays
+        $('#checkout-total-items-text').text(`Total Items: ${totalQty}`);
+        $('#step1-grand-total').text(currencySymbol + subtotal.toFixed(2));
+        $('.display-qty').text(totalQty);
+        $('.display-subtotal').text(currencySymbol + subtotal.toFixed(2));
         $('.display-shipping').text(currencySymbol + shippingCharge.toFixed(2));
         $('.display-total').text(currencySymbol + total);
-        
-        // Update hero card & breakdown elements
-        $('#hbc-price-val').text(unitPrice.toFixed(2));
-        $('#hbc-shipping-val').text(shippingCharge.toFixed(2));
-        $('#calc-breakdown').text(`${qty} × ${currencySymbol}${unitPrice.toFixed(2)}`);
-        $('#calc-grand-total').text(currencySymbol + total);
+    }
+
+    // Populate checkout modal with cart items
+    function populateCheckoutModal() {
+        // Modal left pane items list
+        let leftContainer = $('#checkout-cart-items-list');
+        leftContainer.empty();
+
+        // Step 1 table items list
+        let step1Container = $('#step1-cart-items-table');
+        step1Container.empty();
+
+        // Step 3 summary items list
+        let step3Container = $('#checkout-final-items-list');
+        step3Container.empty();
+
+        cart.forEach(item => {
+            // Left pane row
+            let leftRow = $(`
+                <div class="checkout-cart-item-row" style="display:flex; align-items:center; gap:10px; background:rgba(255, 255, 255, 0.05); border-radius:8px; padding:8px; border:1px solid rgba(255,255,255,0.1);">
+                    <img src="${item.image}" alt="${item.name}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+                    <div style="flex-grow:1; font-size:0.8rem; color:#fff;">
+                        <div style="font-weight:700;">${item.name}</div>
+                        <div style="color:#D4AF37; font-weight:600; margin-top:2px;">${item.quantity} × ${currencySymbol}${item.price.toFixed(2)}</div>
+                    </div>
+                </div>
+            `);
+            leftContainer.append(leftRow);
+
+            // Step 1 summary row
+            let step1Row = $(`
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; padding:4px 0;">
+                    <span style="color:#334155; font-weight:600;">${item.name} <span style="color:#64748B;">(x${item.quantity})</span></span>
+                    <span style="color:#0F172A; font-weight:700;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `);
+            step1Container.append(step1Row);
+
+            // Step 3 final summary row
+            let step3Row = $(`
+                <div class="bm-summary-row">
+                    <span>${item.name} &times; <strong>${item.quantity}</strong></span>
+                    <span>${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `);
+            step3Container.append(step3Row);
+        });
     }
 
     // Payment Tab Switcher
@@ -140,9 +352,17 @@ $(document).ready(function () {
     let currentStep = 1;
 
     function openBookingModal() {
+        if (cart.length === 0) {
+            showToast('Your cart is empty. Add items from the catalog first.', 'error');
+            return;
+        }
+        populateCheckoutModal();
+        closeCartSidebar();
+
         $('#booking-modal-overlay').addClass('active');
         $('body').addClass('modal-open');
         goToStep(1);
+        
         // Lazy-load PayPal SDK only on first open
         if (!window._paypalLoaded && !$('#paypal-sdk-script').length) {
             window._paypalLoaded = true;
@@ -161,29 +381,26 @@ $(document).ready(function () {
 
     function goToStep(step) {
         currentStep = step;
-        // Update panels
         $('.bm-step-panel').removeClass('active');
         $('#step-panel-' + step).addClass('active');
-        // Update step indicators
         $('.bm-step').each(function () {
             let s = parseInt($(this).data('step'));
             $(this).removeClass('active done');
             if (s === step) $(this).addClass('active');
             if (s < step)  $(this).addClass('done');
         });
-        // Update step lines
         $('.bm-step-line').each(function (i) {
             $(this).toggleClass('done', i + 1 < step);
         });
     }
 
-    // Open modal on Book Now click
-    $(document).on('click', '.scroll-to-booking, [href="#booking-section"]', function (e) {
+    // Open modal on checkout / Book Now click
+    $(document).on('click', '.scroll-to-booking, #cart-checkout-btn', function (e) {
         e.preventDefault();
         openBookingModal();
     });
 
-    // Close modal (ONLY via cross X button)
+    // Close modal
     $('#modal-close-btn').on('click', closeBookingModal);
 
     // Step navigation
@@ -218,7 +435,6 @@ $(document).ready(function () {
     $('#postcode').on('blur keyup', function () {
         $(this).val($(this).val().toUpperCase());
     });
-
 
     // Drag & Drop / File Click Receipt Uploader Handlers
     $(document).on('click', '#upload-idle-state', function() {
@@ -273,7 +489,6 @@ $(document).ready(function () {
     $(document).on('click', '#btn-submit-bank', function (e) {
         e.preventDefault();
         
-        // Front-end validation
         if (!validateBookingForm()) {
             return;
         }
@@ -284,10 +499,15 @@ $(document).ready(function () {
 
         if (!payRef) {
             showToast('Please enter your Bank Transfer payment reference number.', 'error');
-            submitBtn.prop('disabled', false).html(originalText);
             return;
         }
         
+        let fileInput = $('#payment_proof_file')[0];
+        if (!fileInput || fileInput.files.length === 0) {
+            showToast('Please upload a photo of your Bank Transfer receipt.', 'error');
+            return;
+        }
+
         submitBtn.prop('disabled', true).html('Creating your booking...');
 
         let rawMobile = $('#mobile').val().trim();
@@ -308,15 +528,9 @@ $(document).ready(function () {
         formData.append('city', $('#city').val().trim());
         formData.append('county', $('#county').val().trim());
         formData.append('postcode', $('#postcode').val().trim());
-        formData.append('quantity', $('#quantity-input').val());
+        formData.append('cart', JSON.stringify(cart));
         formData.append('payment_method', 'bank_transfer');
         formData.append('payment_reference', payRef);
-
-        let fileInput = $('#payment_proof_file')[0];
-        if (!fileInput || fileInput.files.length === 0) {
-            showToast('Please upload a photo of your Bank Transfer receipt.', 'error');
-            return;
-        }
         formData.append('payment_proof', fileInput.files[0]);
 
         $.ajax({
@@ -480,7 +694,7 @@ $(document).ready(function () {
         formData.append('city', $('#city').val().trim());
         formData.append('county', $('#county').val().trim());
         formData.append('postcode', $('#postcode').val().trim());
-        formData.append('quantity', $('#quantity-input').val());
+        formData.append('cart', JSON.stringify(cart));
         formData.append('payment_method', 'paypal');
         formData.append('payment_reference', payRef);
         formData.append('payment_proof', fileInput.files[0]);
@@ -687,7 +901,7 @@ $(document).ready(function () {
                         $('#pay-tab-bank').show();
                     }
 
-                    recalculateTotals(parseInt($('#quantity-input').val()) || 1);
+                    recalculateTotals();
                 }
             }
         });

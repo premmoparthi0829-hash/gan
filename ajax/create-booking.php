@@ -25,7 +25,11 @@ $address_line_2 = sanitize_input($_POST['address_line_2'] ?? '');
 $city           = sanitize_input($_POST['city'] ?? '');
 $county         = sanitize_input($_POST['county'] ?? '');
 $postcode       = sanitize_input($_POST['postcode'] ?? '');
-$quantity       = (int)($_POST['quantity'] ?? 1);
+$cart_raw = $_POST['cart'] ?? '[]';
+$cart_items = json_decode($cart_raw, true);
+if (!is_array($cart_items)) {
+    $cart_items = [];
+}
 $payment_method = sanitize_input($_POST['payment_method'] ?? 'bank_transfer');
 
 // Server-side validation
@@ -55,8 +59,15 @@ if (!validate_uk_postcode($postcode)) {
     $errors[] = 'Please enter a valid UK postcode (e.g. SW1A 1AA).';
 }
 
-if ($quantity < 1 || $quantity > 20) {
-    $errors[] = 'Please select a valid quantity between 1 and 20.';
+$total_qty = 0;
+foreach ($cart_items as $item) {
+    $total_qty += (int)($item['quantity'] ?? 0);
+}
+
+if (empty($cart_items) || $total_qty < 1) {
+    $errors[] = 'Your shopping cart is empty. Please select products to book.';
+} else if ($total_qty > 20) {
+    $errors[] = 'You can book a maximum of 20 items in a single order.';
 }
 
 if (!in_array($payment_method, ['paypal', 'bank_transfer'])) {
@@ -91,7 +102,7 @@ $booking_data = [
     'city' => $city,
     'county' => $county,
     'postcode' => $postcode,
-    'quantity' => $quantity,
+    'cart_items' => $cart_items,
     'payment_method' => $payment_method,
     'payment_reference' => sanitize_input($_POST['payment_reference'] ?? ''),
     'payment_proof_image' => $proof_image_path
