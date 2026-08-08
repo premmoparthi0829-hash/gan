@@ -101,6 +101,7 @@ $(document).ready(function () {
         $(`#products-pane-${catId}`).show();
 
         // Swap panels with animation
+        $('body').removeClass('single-view-mode');
         $('#catalog-step-categories').fadeOut(200, function() {
             $('#catalog-step-products').show().addClass('step-fade-in');
             // Smooth scroll to catalog section
@@ -115,11 +116,14 @@ $(document).ready(function () {
         if (e.type === 'keypress' && e.which !== 13) return;
         let catId   = $(this).data('cat-id');
         let catName = $(this).find('.cat-clean-name').text().trim();
+        showCategoryProducts(catId, catName);
+    });
 
     // Back button — return to category grid
     $('#btn-back-to-categories').on('click', function() {
         $('#catalog-step-products').fadeOut(200, function() {
             $(this).removeClass('step-fade-in');
+            $('body').addClass('single-view-mode');
             $('#catalog-step-categories').fadeIn(300).addClass('step-fade-in');
         });
     });

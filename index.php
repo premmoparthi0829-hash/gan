@@ -19,33 +19,37 @@ if ($db) {
     }
 }
 
-$settings        = get_all_settings();
-$unit_price      = (float)($settings['unit_price']      ?? 14.99);
-$shipping_charge = (float)($settings['shipping_charge'] ?? 3.99);
+$settings = get_all_settings();
+$unit_price = (float) ($settings['unit_price'] ?? 14.99);
+$shipping_charge = (float) ($settings['shipping_charge'] ?? 3.99);
 $paypal_client_id = $settings['paypal_client_id'] ?? 'sb';
-$paypal_email     = escape_output($settings['paypal_email']    ?? 'payments@vklogistics.co.uk');
-$paypal_id        = escape_output($settings['paypal_id']        ?? 'premmoparthi@paypal');
-$paypal_acc_name  = escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD');
-$csrf_token       = get_csrf_token();
-$phone            = escape_output($settings['support_phone'] ?? '+44 7700 900888');
-$bank_name        = escape_output($settings['bank_name']         ?? 'Barclays Bank UK');
-$bank_acc_name    = escape_output($settings['bank_account_name'] ?? 'VK LOGISTICS LTD');
-$bank_sort        = escape_output($settings['bank_sort_code']    ?? '20-45-77');
-$bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144');
+$paypal_email = escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk');
+$paypal_id = escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal');
+$paypal_acc_name = escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD');
+$csrf_token = get_csrf_token();
+$phone = escape_output($settings['support_phone'] ?? '+44 7700 900888');
+$bank_name = escape_output($settings['bank_name'] ?? 'Barclays Bank UK');
+$bank_acc_name = escape_output($settings['bank_account_name'] ?? 'VK LOGISTICS LTD');
+$bank_sort = escape_output($settings['bank_sort_code'] ?? '20-45-77');
+$bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VK Logistics | Ganesh Statue Booking UK</title>
-    <meta name="description" content="Book your Ganesh Statue / Vinayaka Vigraha for Ganesh Chaturthi with VK Logistics. Doorstep delivery anywhere in the United Kingdom.">
+    <meta name="description"
+        content="Book your Ganesh Statue / Vinayaka Vigraha for Ganesh Chaturthi with VK Logistics. Doorstep delivery anywhere in the United Kingdom.">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <!-- CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
@@ -53,12 +57,12 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
 
 </head>
+
 <body>
 
     <!-- Festive Top Bar -->
     <div class="top-festive-bar">
-        &#127800; <span class="highlight">Ganesh Chaturthi Special Delivery</span>
-        &mdash; Deliveries available exclusively across the <span class="highlight">UK</span>
+        &#127800; <span class="highlight">VK Logistics Festive Express</span> &mdash; Handcrafted Ganesh Idols &amp; Designer Rakhis Delivered Across the <span class="highlight">UK</span>
     </div>
 
     <!-- Header -->
@@ -91,7 +95,8 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
             <div id="catalog-step-categories">
                 <div class="shop-hero-text">
                     <h1 class="shop-page-title">Shop Our <span>Collections</span></h1>
-                    <p class="shop-page-subtitle">Choose a category to explore our handcrafted festive items — delivered to your door across the UK.</p>
+                    <p class="shop-page-subtitle">Choose a category to explore our handcrafted festive items — delivered
+                        to your door across the UK.</p>
                 </div>
 
                 <div class="cat-pick-grid">
@@ -99,28 +104,33 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                         $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
                         $count = count($cat_products);
                         $cat_img = '';
-                        foreach ($cat_products as $p) { if (!empty($p['image_path'])) { $cat_img = $p['image_path']; break; } }
-                    ?>
-                    <div class="cat-clean-card" data-cat-id="<?php echo $cat['id']; ?>"
-                         data-cat-name="<?php echo escape_output($cat['name']); ?>"
-                         role="button" tabindex="0"
-                         aria-label="Browse <?php echo escape_output($cat['name']); ?>">
+                        foreach ($cat_products as $p) {
+                            if (!empty($p['image_path'])) {
+                                $cat_img = $p['image_path'];
+                                break;
+                            }
+                        }
+                        ?>
+                        <div class="cat-clean-card" data-cat-id="<?php echo $cat['id']; ?>"
+                            data-cat-name="<?php echo escape_output($cat['name']); ?>" role="button" tabindex="0"
+                            aria-label="Browse <?php echo escape_output($cat['name']); ?>">
 
-                        <!-- Clear product image -->
-                        <div class="cat-clean-img-wrap">
-                            <?php if ($cat_img): ?>
-                            <img src="<?php echo escape_output($cat_img); ?>" alt="<?php echo escape_output($cat['name']); ?>">
-                            <?php else: ?>
-                            <div class="cat-clean-img-placeholder">🎁</div>
-                            <?php endif; ?>
-                        </div>
+                            <!-- Clear product image -->
+                            <div class="cat-clean-img-wrap">
+                                <?php if ($cat_img): ?>
+                                    <img src="<?php echo escape_output($cat_img); ?>"
+                                        alt="<?php echo escape_output($cat['name']); ?>">
+                                <?php else: ?>
+                                    <div class="cat-clean-img-placeholder">🎁</div>
+                                <?php endif; ?>
+                            </div>
 
-                        <!-- Name + button only -->
-                        <div class="cat-clean-footer">
-                            <h2 class="cat-clean-name"><?php echo escape_output($cat['name']); ?></h2>
-                            <span class="cat-clean-btn">Shop Now &rarr;</span>
+                            <!-- Name + button only -->
+                            <div class="cat-clean-footer">
+                                <h2 class="cat-clean-name"><?php echo escape_output($cat['name']); ?></h2>
+                                <span class="cat-clean-btn">Shop Now &rarr;</span>
+                            </div>
                         </div>
-                    </div>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -140,31 +150,36 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                 <!-- Per-category product panes -->
                 <?php foreach ($categories as $cat):
                     $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
-                    if (stripos($cat['name'], 'ganesh') !== false) { $accent = '#E85D04'; }
-                    elseif (stripos($cat['name'], 'rakhi') !== false) { $accent = '#9B1D8A'; }
-                    else { $accent = '#4A0B17'; }
-                ?>
-                <div class="products-grid cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>" style="display:none;">
-                    <?php foreach ($cat_products as $prod): ?>
-                    <div class="product-card-item">
-                        <div class="prod-img-wrap">
-                            <img src="<?php echo escape_output($prod['image_path']); ?>" alt="<?php echo escape_output($prod['name']); ?>" loading="lazy">
-                            <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
-                        </div>
-                        <div class="prod-details">
-                            <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
-                            <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
-                            <button type="button" class="btn-add-to-cart btn-gold"
-                                data-id="<?php echo $prod['id']; ?>"
-                                data-name="<?php echo escape_output($prod['name']); ?>"
-                                data-price="<?php echo $prod['price']; ?>"
-                                data-img="<?php echo escape_output($prod['image_path']); ?>">
-                                🛒 Add to Cart
-                            </button>
-                        </div>
+                    if (stripos($cat['name'], 'ganesh') !== false) {
+                        $accent = '#E85D04';
+                    } elseif (stripos($cat['name'], 'rakhi') !== false) {
+                        $accent = '#9B1D8A';
+                    } else {
+                        $accent = '#4A0B17';
+                    }
+                    ?>
+                    <div class="products-grid cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>"
+                        style="display:none;">
+                        <?php foreach ($cat_products as $prod): ?>
+                            <div class="product-card-item">
+                                <div class="prod-img-wrap">
+                                    <img src="<?php echo escape_output($prod['image_path']); ?>"
+                                        alt="<?php echo escape_output($prod['name']); ?>" loading="lazy">
+                                    <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
+                                </div>
+                                <div class="prod-details">
+                                    <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
+                                    <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
+                                    <button type="button" class="btn-add-to-cart btn-gold" data-id="<?php echo $prod['id']; ?>"
+                                        data-name="<?php echo escape_output($prod['name']); ?>"
+                                        data-price="<?php echo $prod['price']; ?>"
+                                        data-img="<?php echo escape_output($prod['image_path']); ?>">
+                                        🛒 Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                </div>
                 <?php endforeach; ?>
 
             </div><!-- /catalog-step-products -->
@@ -184,24 +199,37 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                     <div class="bm-deco-top"></div>
                     <div class="bm-festival-tag">&#127800; Festive Booking 2026</div>
 
-                    <div class="bm-checkout-cart-items-wrapper" style="width:100%; margin-top:20px; margin-bottom:20px;">
-                        <h4 style="color:#D4AF37; font-family:'Cinzel', serif; font-size:1.1rem; margin-bottom:12px; border-bottom:1px solid rgba(212,175,55,0.3); padding-bottom:6px;">Your Order Items</h4>
-                        <div id="checkout-cart-items-list" style="display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; padding-right:5px;">
+                    <div class="bm-checkout-cart-items-wrapper"
+                        style="width:100%; margin-top:20px; margin-bottom:20px;">
+                        <h4
+                            style="color:#D4AF37; font-family:'Cinzel', serif; font-size:1.1rem; margin-bottom:12px; border-bottom:1px solid rgba(212,175,55,0.3); padding-bottom:6px;">
+                            Your Order Items</h4>
+                        <div id="checkout-cart-items-list"
+                            style="display:flex; flex-direction:column; gap:10px; max-height:220px; overflow-y:auto; padding-right:5px;">
                             <!-- Dynamic list of cart items in modal left pane -->
                         </div>
                     </div>
 
                     <ul class="bm-trust-list">
                         <li>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                             UK Doorstep Delivery
                         </li>
                         <li>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                             Unique Booking Reference
                         </li>
                         <li>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
                             Safe Packaging Guaranteed
                         </li>
                     </ul>
@@ -235,7 +263,11 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                         </div>
                     </div>
                     <button class="bm-close-btn" id="modal-close-btn" aria-label="Close">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
 
@@ -262,12 +294,16 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     <span class="bm-qty-label">Order Items Review</span>
                                     <span class="bm-qty-hint" id="checkout-total-items-text">Total Items: 0</span>
                                 </div>
-                                <div id="step1-cart-items-table" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px; margin-top:8px; display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;">
+                                <div id="step1-cart-items-table"
+                                    style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px; margin-top:8px; display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;">
                                     <!-- List of items to verify -->
                                 </div>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed #CBD5E1;">
-                                    <span style="font-size:0.9rem; font-weight:700; color:#475569;">Items Subtotal:</span>
-                                    <strong style="font-size:1.15rem; color:#4A0B17;" id="step1-grand-total">&pound;0.00</strong>
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed #CBD5E1;">
+                                    <span style="font-size:0.9rem; font-weight:700; color:#475569;">Items
+                                        Subtotal:</span>
+                                    <strong style="font-size:1.15rem; color:#4A0B17;"
+                                        id="step1-grand-total">&pound;0.00</strong>
                                 </div>
                             </div>
 
@@ -275,7 +311,11 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                 <div class="bm-field full">
                                     <label for="customer_name">Full Name <span class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
                                         <input type="text" id="customer_name" placeholder="e.g. Rajesh Patel" required>
                                     </div>
                                 </div>
@@ -284,11 +324,17 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     <div class="bm-phone-group">
                                         <div class="bm-country-box">
                                             <span class="country-flag">🇬🇧</span>
-                                            <span style="font-size:0.9rem; font-weight:800; color:var(--color-maroon); padding-right:4px;">+44</span>
+                                            <span
+                                                style="font-size:0.9rem; font-weight:800; color:var(--color-maroon); padding-right:4px;">+44</span>
                                             <input type="hidden" id="country_code" value="+44">
                                         </div>
                                         <div class="bm-input-wrap" style="flex:1;">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"></path></svg>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                <path
+                                                    d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z">
+                                                </path>
+                                            </svg>
                                             <input type="tel" id="mobile" placeholder="7700 900888" required>
                                         </div>
                                     </div>
@@ -296,7 +342,13 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                 <div class="bm-field">
                                     <label for="email">Email <span class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <path
+                                                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                            </path>
+                                            <polyline points="22,6 12,13 2,6"></polyline>
+                                        </svg>
                                         <input type="email" id="email" placeholder="rajesh@example.co.uk" required>
                                     </div>
                                 </div>
@@ -304,7 +356,10 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                             <button type="button" class="bm-next-btn" id="step1-next">
                                 Continue to Delivery Address
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
                             </button>
                         </div>
 
@@ -322,42 +377,76 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                 <div class="bm-field full">
                                     <label for="address_line_1">Address Line 1 <span class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                        <input type="text" id="address_line_1" placeholder="House number and street name" required>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                        </svg>
+                                        <input type="text" id="address_line_1"
+                                            placeholder="House number and street name" required>
                                     </div>
                                 </div>
                                 <div class="bm-field full">
-                                    <label for="address_line_2">Address Line 2 <span style="color:var(--color-text-muted);font-weight:400;">(Optional)</span></label>
+                                    <label for="address_line_2">Address Line 2 <span
+                                            style="color:var(--color-text-muted);font-weight:400;">(Optional)</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                                        <input type="text" id="address_line_2" placeholder="Flat, apartment, suite, etc.">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                        </svg>
+                                        <input type="text" id="address_line_2"
+                                            placeholder="Flat, apartment, suite, etc.">
                                     </div>
                                 </div>
                                 <div class="bm-field">
                                     <label for="city">Town / City <span class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"></path></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                                            <path
+                                                d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z">
+                                            </path>
+                                        </svg>
                                         <input type="text" id="city" placeholder="e.g. London, Birmingham" required>
                                     </div>
                                 </div>
                                 <div class="bm-field">
                                     <label for="postcode">Postcode <span class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
+                                            <circle cx="12" cy="10" r="3"></circle>
+                                        </svg>
                                         <input type="text" id="postcode" placeholder="e.g. SW1A 1AA" required>
                                     </div>
                                 </div>
                                 <div class="bm-field">
-                                    <label for="county">County <span style="color:var(--color-text-muted);font-weight:400;">(Optional)</span></label>
+                                    <label for="county">County <span
+                                            style="color:var(--color-text-muted);font-weight:400;">(Optional)</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                                        </svg>
                                         <input type="text" id="county" placeholder="e.g. Greater London">
                                     </div>
                                 </div>
                                 <div class="bm-field">
                                     <label for="country">Country</label>
                                     <div class="bm-input-wrap locked">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                            <path d="M7 11V7a5 5 0 0110 0v4"></path>
+                                        </svg>
                                         <input type="text" id="country" value="United Kingdom" readonly>
                                     </div>
                                 </div>
@@ -365,12 +454,18 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                             <div class="bm-btn-row">
                                 <button type="button" class="bm-back-btn" id="step2-back">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
                                     Back
                                 </button>
                                 <button type="button" class="bm-next-btn" id="step2-next">
                                     Review &amp; Pay
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -387,12 +482,15 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                             <!-- Summary Card -->
                             <div class="bm-summary-card">
-                                <div id="checkout-final-items-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
+                                <div id="checkout-final-items-list"
+                                    style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;">
                                     <!-- Dynamic list of items -->
                                 </div>
-                                <div class="bm-summary-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(74, 11, 23, 0.1);">
+                                <div class="bm-summary-row"
+                                    style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(74, 11, 23, 0.1);">
                                     <span>UK Shipping</span>
-                                    <span class="display-shipping">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
+                                    <span
+                                        class="display-shipping">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
                                 </div>
                                 <div class="bm-summary-row total">
                                     <span>Total Payable</span>
@@ -403,11 +501,19 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                             <!-- Payment Tabs -->
                             <div class="bm-pay-tabs">
                                 <button type="button" class="bm-pay-tab active" id="pay-tab-bank" data-tab="bank-tab">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="2" y="6" width="20" height="14" rx="2"></rect>
+                                        <path d="M2 10h20"></path>
+                                    </svg>
                                     Bank Transfer
                                 </button>
                                 <button type="button" class="bm-pay-tab" id="pay-tab-paypal" data-tab="paypal-tab">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                    </svg>
                                     PayPal
                                 </button>
                             </div>
@@ -417,48 +523,72 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                 <div class="bm-bank-box">
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Account Name</span>
-                                        <span id="bank-acc-name-display" class="bm-bank-val"><?php echo $bank_acc_name; ?></span>
+                                        <span id="bank-acc-name-display"
+                                            class="bm-bank-val"><?php echo $bank_acc_name; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Bank</span>
-                                        <span id="bank-name-display" class="bm-bank-val"><?php echo $bank_name; ?></span>
+                                        <span id="bank-name-display"
+                                            class="bm-bank-val"><?php echo $bank_name; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Sort Code</span>
-                                        <span id="bank-sort-display" class="bm-bank-val bm-mono"><?php echo $bank_sort; ?></span>
+                                        <span id="bank-sort-display"
+                                            class="bm-bank-val bm-mono"><?php echo $bank_sort; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Account No.</span>
-                                        <span id="bank-num-display" class="bm-bank-val bm-mono"><?php echo $bank_acc_num; ?></span>
+                                        <span id="bank-num-display"
+                                            class="bm-bank-val bm-mono"><?php echo $bank_acc_num; ?></span>
                                     </div>
                                 </div>
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="payment_reference">Your Payment Reference <span class="req">*</span></label>
+                                    <label for="payment_reference">Your Payment Reference <span
+                                            class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        <input type="text" id="payment_reference" placeholder="Your name or bank reference">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <input type="text" id="payment_reference"
+                                            placeholder="Your name or bank reference">
                                     </div>
                                 </div>
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="payment_proof_file">Upload Payment Receipt Photo <span class="req">*</span></label>
+                                    <label for="payment_proof_file">Upload Payment Receipt Photo <span
+                                            class="req">*</span></label>
                                     <div class="bm-upload-box" id="receipt-upload-zone">
-                                        <input type="file" id="payment_proof_file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
+                                        <input type="file" id="payment_proof_file"
+                                            accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
                                         <div class="upload-drop-content" id="upload-idle-state">
-                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                            <div class="upload-text"><strong>Click to select photo</strong> or drag &amp; drop receipt here</div>
+                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            <div class="upload-text"><strong>Click to select photo</strong> or drag
+                                                &amp; drop receipt here</div>
                                             <div class="upload-sub">Supports Ultra HD JPG, PNG, WEBP (Up to 10MB)</div>
                                         </div>
-                                        <div class="upload-preview-content" id="upload-preview-state" style="display:none;">
+                                        <div class="upload-preview-content" id="upload-preview-state"
+                                            style="display:none;">
                                             <img id="receipt-img-preview" src="" alt="Receipt Photo Preview">
                                             <div class="upload-file-info">
                                                 <span id="upload-file-name">receipt.jpg</span>
-                                                <button type="button" id="btn-remove-receipt" class="btn-remove-file">&times; Remove Photo</button>
+                                                <button type="button" id="btn-remove-receipt"
+                                                    class="btn-remove-file">&times; Remove Photo</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="bm-submit-btn" id="btn-submit-bank" style="margin-top:16px;">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <button type="button" class="bm-submit-btn" id="btn-submit-bank"
+                                    style="margin-top:16px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
                                     Confirm Bank Transfer Booking
                                 </button>
                             </div>
@@ -474,25 +604,44 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">PayPal ID</span>
-                                        <span class="bm-bank-val bm-mono" style="display:flex; align-items:center; gap:6px;">
+                                        <span class="bm-bank-val bm-mono"
+                                            style="display:flex; align-items:center; gap:6px;">
                                             <span id="paypal-id-display"><?php echo $paypal_id; ?></span>
-                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-id" title="Copy PayPal ID" style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-id"
+                                                title="Copy PayPal ID"
+                                                style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.8" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                                                    </path>
+                                                </svg>
                                             </button>
                                         </span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">PayPal Email</span>
-                                        <span class="bm-bank-val bm-mono" style="display:flex; align-items:center; gap:6px;">
+                                        <span class="bm-bank-val bm-mono"
+                                            style="display:flex; align-items:center; gap:6px;">
                                             <span id="paypal-email-display"><?php echo $paypal_email; ?></span>
-                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-email" title="Copy PayPal Email" style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-email"
+                                                title="Copy PayPal Email"
+                                                style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.8" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                                                    </path>
+                                                </svg>
                                             </button>
                                         </span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Account Name</span>
-                                        <span class="bm-bank-val" id="paypal-acc-name-display"><?php echo $paypal_acc_name; ?></span>
+                                        <span class="bm-bank-val"
+                                            id="paypal-acc-name-display"><?php echo $paypal_acc_name; ?></span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Currency</span>
@@ -502,41 +651,64 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
 
                                 <!-- PayPal Reference Field -->
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="paypal_reference">Your PayPal Transaction ID <span class="req">*</span></label>
+                                    <label for="paypal_reference">Your PayPal Transaction ID <span
+                                            class="req">*</span></label>
                                     <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        <input type="text" id="paypal_reference" placeholder="PayPal transaction ID or reference">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                        <input type="text" id="paypal_reference"
+                                            placeholder="PayPal transaction ID or reference">
                                     </div>
                                 </div>
 
                                 <!-- PayPal Receipt Upload -->
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="paypal_proof_file">Upload PayPal Payment Screenshot <span class="req">*</span></label>
+                                    <label for="paypal_proof_file">Upload PayPal Payment Screenshot <span
+                                            class="req">*</span></label>
                                     <div class="bm-upload-box" id="paypal-upload-zone">
-                                        <input type="file" id="paypal_proof_file" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
+                                        <input type="file" id="paypal_proof_file"
+                                            accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
                                         <div class="upload-drop-content" id="paypal-upload-idle">
-                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                            <div class="upload-text"><strong>Click to select screenshot</strong> or drag &amp; drop here</div>
+                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            <div class="upload-text"><strong>Click to select screenshot</strong> or drag
+                                                &amp; drop here</div>
                                             <div class="upload-sub">Supports Ultra HD JPG, PNG, WEBP (Up to 10MB)</div>
                                         </div>
-                                        <div class="upload-preview-content" id="paypal-upload-preview" style="display:none;">
+                                        <div class="upload-preview-content" id="paypal-upload-preview"
+                                            style="display:none;">
                                             <img id="paypal-img-preview" src="" alt="PayPal Receipt Preview">
                                             <div class="upload-file-info">
                                                 <span id="paypal-file-name">screenshot.jpg</span>
-                                                <button type="button" id="btn-remove-paypal-receipt" class="btn-remove-file">&times; Remove Photo</button>
+                                                <button type="button" id="btn-remove-paypal-receipt"
+                                                    class="btn-remove-file">&times; Remove Photo</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <button type="button" class="bm-submit-btn" id="btn-submit-paypal" style="margin-top:16px;">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <button type="button" class="bm-submit-btn" id="btn-submit-paypal"
+                                    style="margin-top:16px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
                                     Confirm PayPal Payment Booking
                                 </button>
                             </div>
 
                             <button type="button" class="bm-back-btn" id="step3-back" style="margin-top:12px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
                                 Back to Address
                             </button>
                         </div>
@@ -593,7 +765,8 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
     <!-- Minimal Bottom Bar -->
     <div class="bottom-bar-minimal">
         &copy; 2026 VK Logistics &mdash; Ganesh Chaturthi UK Delivery &nbsp;|&nbsp;
-        <a href="tel:<?php echo preg_replace('/[^0-9+]/', '', $phone); ?>" id="footer-phone-link"><?php echo $phone; ?></a>
+        <a href="tel:<?php echo preg_replace('/[^0-9+]/', '', $phone); ?>"
+            id="footer-phone-link"><?php echo $phone; ?></a>
     </div>
 
     <!-- JavaScript -->
@@ -601,4 +774,5 @@ $bank_acc_num     = escape_output($settings['bank_account_number'] ?? '83920144'
     <script src="assets/js/app.js"></script>
     <script src="assets/js/paypal-integration.js"></script>
 </body>
+
 </html>
