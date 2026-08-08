@@ -778,77 +778,7 @@ $(document).ready(function () {
         temp.remove();
     }
 
-    // PayPal Manual Payment Submit
-    $(document).on('click', '#btn-submit-paypal', function(e) {
-        e.preventDefault();
-
-        if (!validateBookingForm()) return;
-
-        let submitBtn = $(this);
-        let originalText = submitBtn.html();
-        let payRef = $('#paypal_reference').val().trim();
-
-        if (!payRef) {
-            showToast('Please enter your PayPal Transaction ID or reference.', 'error');
-            return;
-        }
-
-        let fileInput = $('#paypal_proof_file')[0];
-        if (!fileInput || fileInput.files.length === 0) {
-            showToast('Please upload your PayPal payment screenshot.', 'error');
-            return;
-        }
-
-        submitBtn.prop('disabled', true).html('Creating your booking...');
-
-        let rawMobile = $('#mobile').val().trim();
-        let countryCode = $('#country_code').val() || '+44';
-        let cleanRaw = rawMobile.replace(/[\s\-\(\)]/g, '');
-        if (cleanRaw.startsWith('0')) {
-            cleanRaw = cleanRaw.substring(1);
-        }
-        let fullMobile = rawMobile.startsWith('+') ? rawMobile : (countryCode + ' ' + cleanRaw);
-
-        let formData = new FormData();
-        formData.append('csrf_token', $('#csrf_token').val());
-        formData.append('customer_name', $('#customer_name').val().trim());
-        formData.append('mobile', fullMobile);
-        formData.append('email', $('#email').val().trim());
-        formData.append('address_line_1', $('#address_line_1').val().trim());
-        formData.append('address_line_2', $('#address_line_2').val().trim());
-        formData.append('city', $('#city').val().trim());
-        formData.append('county', $('#county').val().trim());
-        formData.append('postcode', $('#postcode').val().trim());
-        formData.append('cart', JSON.stringify(cart));
-        formData.append('payment_method', 'paypal');
-        formData.append('payment_reference', payRef);
-        formData.append('payment_proof', fileInput.files[0]);
-
-        $.ajax({
-            url: 'ajax/create-booking.php',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            dataType: 'json',
-            success: function(res) {
-                if (res.success) {
-                    showToast('Booking created! Redirecting to confirmation...', 'success');
-                    setTimeout(function() {
-                        window.location.href = res.redirect_url;
-                    }, 1200);
-                } else {
-                    showToast(res.message || 'Error creating booking', 'error');
-                    submitBtn.prop('disabled', false).html(originalText);
-                }
-            },
-            error: function(xhr) {
-                let err = xhr.responseJSON ? xhr.responseJSON.message : 'Server error occurred.';
-                showToast(err, 'error');
-                submitBtn.prop('disabled', false).html(originalText);
-            }
-        });
-    });
+    // Modern PayPal Live Checkout is handled cleanly by assets/js/paypal-integration.js
 
     // Helper: Form Validation
     function validateBookingForm() {
@@ -958,7 +888,7 @@ $(document).ready(function () {
             success: function (res) {
                 if (res.success && res.settings) {
                     unitPrice = parseFloat(res.settings.unit_price) || 14.99;
-                    shippingCharge = parseFloat(res.settings.shipping_charge) || 3.99;
+                    shippingCharge = res.settings.shipping_charge !== undefined ? parseFloat(res.settings.shipping_charge) : 4.99;
                     currencySymbol = res.settings.currency_symbol || '£';
                     if (res.settings.csrf_token) {
                         $('#csrf_token').val(res.settings.csrf_token);
@@ -1030,6 +960,43 @@ $(document).ready(function () {
                 }
             }
         });
+    }
+
+    // Booking Form Validation Helper
+    function validateBookingForm() {
+        let name     = $('#customer_name').val() ? $('#customer_name').val().trim() : '';
+        let mobile   = $('#mobile').val() ? $('#mobile').val().trim() : '';
+        let email    = $('#email').val() ? $('#email').val().trim() : '';
+        let addr1    = $('#address_line_1').val() ? $('#address_line_1').val().trim() : '';
+        let city     = $('#city').val() ? $('#city').val().trim() : '';
+        let postcode = $('#postcode').val() ? $('#postcode').val().trim() : '';
+
+        if (!name || name.length < 2) {
+            showToast('Please enter your full name.', 'error');
+            return false;
+        }
+        if (!mobile || mobile.length < 5) {
+            showToast('Please enter your UK mobile phone number.', 'error');
+            return false;
+        }
+        if (!email || !email.includes('@')) {
+            showToast('Please enter a valid email address.', 'error');
+            return false;
+        }
+        if (!addr1) {
+            showToast('Please enter your street delivery address.', 'error');
+            return false;
+        }
+        if (!city) {
+            showToast('Please enter your town or city.', 'error');
+            return false;
+        }
+        if (!postcode) {
+            showToast('Please enter your UK postcode.', 'error');
+            return false;
+        }
+
+        return true;
     }
 
     // Expose helpers for external modules like PayPal integration

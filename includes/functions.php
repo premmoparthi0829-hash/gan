@@ -7,13 +7,11 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/security.php';
 
 /**
- * Validate UK Postcode Format using official UK Regex
+ * Validate UK Postcode Format (Flexible validation)
  */
 function validate_uk_postcode($postcode) {
-    $postcode = strtoupper(trim(preg_replace('/\s+/', '', $postcode)));
-    // Standard UK Postcode regex pattern
-    $pattern = '/^(GIR0AA|(?:[A-PR-UWYZ][0-9][0-9]?|[A-PR-UWYZ][A-HK-Y][0-9][0-9]?|[A-PR-UWYZ][0-9][A-HJKPSTUW]|[A-PR-UWYZ][A-HK-Y][0-9][ABEHMNPRVW-Y])[0-9][ABD-HJLNP-UW-Z]{2})$/';
-    return preg_match($pattern, $postcode) === 1;
+    $clean = strtoupper(trim(preg_replace('/\s+/', '', $postcode)));
+    return strlen($clean) >= 3;
 }
 
 /**
@@ -30,12 +28,11 @@ function format_uk_postcode($postcode) {
 }
 
 /**
- * Validate UK Mobile Number Format (+44 7xxx xxx xxx or 07xxx xxx xxx)
+ * Validate UK Mobile Number Format (Flexible validation for test & real numbers)
  */
 function validate_uk_mobile($mobile) {
-    $clean = preg_replace('/[\s\-\(\)]/', '', $mobile);
-    $pattern = '/^(?:\+44|0)7\d{9}$/';
-    return preg_match($pattern, $clean) === 1;
+    $clean = preg_replace('/[^\d+]/', '', $mobile);
+    return strlen($clean) >= 7 && strlen($clean) <= 16;
 }
 
 /**
@@ -88,6 +85,7 @@ function get_setting($key, $default = '') {
         'bank_account_number' => '83920144',
         'paypal_client_id' => 'sb',
         'paypal_mode' => 'sandbox',
+        'paypal_client_secret' => '',
         'paypal_email' => 'payments@vklogistics.co.uk',
         'paypal_account_name' => 'VK LOGISTICS LTD',
         'paypal_id' => 'premmoparthi@paypal',
@@ -99,18 +97,43 @@ function get_setting($key, $default = '') {
 }
 
 /**
- * Fetch all settings array
+ * Fetch all settings array in 1 single optimized database query
  */
 function get_all_settings() {
-    $keys = [
-        'product_name', 'unit_price', 'shipping_charge', 'currency_symbol',
-        'currency_code', 'service_area', 'bank_account_name', 'bank_name',
-        'bank_sort_code', 'bank_account_number', 'paypal_client_id', 'paypal_mode',
-        'paypal_email', 'paypal_account_name', 'paypal_id', 'support_phone', 'support_email'
+    $defaults = [
+        'product_name' => 'Ganesh Statue / Vinayaka Vigraha',
+        'unit_price' => DEFAULT_UNIT_PRICE,
+        'shipping_charge' => DEFAULT_SHIPPING_FEE,
+        'currency_symbol' => '£',
+        'currency_code' => 'GBP',
+        'service_area' => 'United Kingdom',
+        'bank_account_name' => 'VK LOGISTICS LTD',
+        'bank_name' => 'Barclays Bank UK',
+        'bank_sort_code' => '20-45-77',
+        'bank_account_number' => '83920144',
+        'paypal_client_id' => 'sb',
+        'paypal_mode' => 'sandbox',
+        'paypal_client_secret' => '',
+        'paypal_email' => 'payments@vklogistics.co.uk',
+        'paypal_account_name' => 'VK LOGISTICS LTD',
+        'paypal_id' => 'premmoparthi@paypal',
+        'support_phone' => '+44 7700 900888',
+        'support_email' => 'bappa@vklogistics.co.uk',
+        'paypal_status' => 'enabled'
     ];
-    $settings = [];
-    foreach ($keys as $key) {
-        $settings[$key] = get_setting($key);
+
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $rows = $db->query("SELECT setting_key, setting_value FROM settings")->fetchAll();
+            foreach ($rows as $r) {
+                if (isset($r['setting_key']) && $r['setting_value'] !== null) {
+                    $defaults[$r['setting_key']] = $r['setting_value'];
+                }
+            }
+        } catch (Exception $e) {
+            log_system_error("Error fetching all settings: " . $e->getMessage());
+        }
     }
-    return $settings;
+    return $defaults;
 }

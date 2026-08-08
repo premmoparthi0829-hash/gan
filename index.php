@@ -306,12 +306,19 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                     style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:12px; margin-top:8px; display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;">
                                     <!-- List of items to verify -->
                                 </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed #CBD5E1;">
-                                    <span style="font-size:0.9rem; font-weight:700; color:#475569;">Items
-                                        Subtotal:</span>
-                                    <strong style="font-size:1.15rem; color:#4A0B17;"
-                                        id="step1-grand-total">&pound;0.00</strong>
+                                <div style="display:flex; flex-direction:column; gap:6px; margin-top:12px; padding-top:12px; border-top:1px dashed #CBD5E1; font-size:0.88rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#475569; font-weight:600;">Items Subtotal:</span>
+                                        <strong style="color:#0F172A;" id="step1-grand-total">&pound;0.00</strong>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <span style="color:#475569; font-weight:600;">🚚 UK Doorstep Delivery Fee:</span>
+                                        <strong style="color:#0070BA;" class="display-shipping">&pound;<?php echo number_format($shipping_charge, 2); ?></strong>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #E2E8F0; padding-top:6px; margin-top:2px;">
+                                        <span style="color:#4A0B17; font-weight:800; font-size:0.95rem;">Estimated Total Payable:</span>
+                                        <strong style="font-size:1.15rem; color:#4A0B17; font-weight:800;" class="display-total">&pound;0.00</strong>
+                                    </div>
                                 </div>
                             </div>
 
@@ -601,115 +608,38 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                 </button>
                             </div>
 
-                            <!-- PayPal Tab -->
+                            <!-- PayPal Tab — Live Checkout -->
                             <div class="bm-pay-panel" id="paypal-tab">
 
-                                <!-- PayPal Info Box (mirrors Bank Transfer layout) -->
-                                <div class="bm-bank-box">
+                                <!-- Info strip -->
+                                <div class="bm-bank-box" style="margin-bottom:18px;">
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Payment Method</span>
-                                        <span class="bm-bank-val">PayPal Transfer</span>
-                                    </div>
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">PayPal ID</span>
-                                        <span class="bm-bank-val bm-mono"
-                                            style="display:flex; align-items:center; gap:6px;">
-                                            <span id="paypal-id-display"><?php echo $paypal_id; ?></span>
-                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-id"
-                                                title="Copy PayPal ID"
-                                                style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.8" stroke-linecap="round"
-                                                    stroke-linejoin="round">
-                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
-                                                    </path>
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </div>
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">PayPal Email</span>
-                                        <span class="bm-bank-val bm-mono"
-                                            style="display:flex; align-items:center; gap:6px;">
-                                            <span id="paypal-email-display"><?php echo $paypal_email; ?></span>
-                                            <button type="button" class="btn-copy-mini" id="btn-copy-paypal-email"
-                                                title="Copy PayPal Email"
-                                                style="background:transparent; border:none; color:var(--color-maroon-light); cursor:pointer; padding:2px; display:inline-flex; align-items:center; transition:color 0.2s; outline:none;">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.8" stroke-linecap="round"
-                                                    stroke-linejoin="round">
-                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
-                                                    </path>
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </div>
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Account Name</span>
-                                        <span class="bm-bank-val"
-                                            id="paypal-acc-name-display"><?php echo $paypal_acc_name; ?></span>
+                                        <span class="bm-bank-val">PayPal Live &amp; Express Checkout</span>
                                     </div>
                                     <div class="bm-bank-row">
                                         <span class="bm-bank-key">Currency</span>
-                                        <span class="bm-bank-val">GBP (£)</span>
+                                        <span class="bm-bank-val"><?php echo escape_output($settings['currency_code'] ?? 'GBP'); ?> (&pound;)</span>
+                                    </div>
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">Merchant</span>
+                                        <span class="bm-bank-val"><?php echo $paypal_acc_name; ?></span>
                                     </div>
                                 </div>
 
-                                <!-- PayPal Reference Field -->
-                                <div class="bm-field" style="margin-top:14px;">
-                                    <label for="paypal_reference">Your PayPal Transaction ID <span
-                                            class="req">*</span></label>
-                                    <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
-                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                        </svg>
-                                        <input type="text" id="paypal_reference"
-                                            placeholder="PayPal transaction ID or reference">
-                                    </div>
-                                </div>
+                                <!-- Live PayPal Smart Buttons Container -->
+                                <div id="paypal-button-container" style="min-height:48px; margin-bottom:12px;"></div>
 
-                                <!-- PayPal Receipt Upload -->
-                                <div class="bm-field" style="margin-top:14px;">
-                                    <label for="paypal_proof_file">Upload PayPal Payment Screenshot <span
-                                            class="req">*</span></label>
-                                    <div class="bm-upload-box" id="paypal-upload-zone">
-                                        <input type="file" id="paypal_proof_file"
-                                            accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
-                                        <div class="upload-drop-content" id="paypal-upload-idle">
-                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37"
-                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                <polyline points="17 8 12 3 7 8"></polyline>
-                                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                                            </svg>
-                                            <div class="upload-text"><strong>Click to select screenshot</strong> or drag
-                                                &amp; drop here</div>
-                                            <div class="upload-sub">Supports Ultra HD JPG, PNG, WEBP (Up to 10MB)</div>
-                                        </div>
-                                        <div class="upload-preview-content" id="paypal-upload-preview"
-                                            style="display:none;">
-                                            <img id="paypal-img-preview" src="" alt="PayPal Receipt Preview">
-                                            <div class="upload-file-info">
-                                                <span id="paypal-file-name">screenshot.jpg</span>
-                                                <button type="button" id="btn-remove-paypal-receipt"
-                                                    class="btn-remove-file">&times; Remove Photo</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button type="button" class="bm-submit-btn" id="btn-submit-paypal"
-                                    style="margin-top:16px;">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                    Confirm PayPal Payment Booking
+                                <!-- High Visibility Direct PayPal Checkout Button -->
+                                <button type="button" class="bm-submit-btn" id="btn-submit-paypal" style="background: linear-gradient(135deg, #FFC439 0%, #FFB703 100%); color: #003087; font-weight: 800; font-size: 1.05rem; border: none; box-shadow: 0 4px 14px rgba(255, 196, 57, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .761-.645h6.637c3.15 0 5.48.665 6.435 2.1.84 1.258.825 2.92.008 4.777-.923 2.1-2.736 3.49-5.184 3.49H10.15a.77.77 0 0 0-.76.645l-.76 4.814a.641.641 0 0 1-.633.536z"/></svg>
+                                    Pay Now with PayPal
                                 </button>
+
+                                <p style="text-align:center; font-size:0.78rem; color:#64748B; margin-top:12px;">
+                                    🔒 You will be securely redirected to PayPal's encrypted payment checkout. No card details are stored on this site.
+                                </p>
+
                             </div>
 
                             <button type="button" class="bm-back-btn" id="step3-back" style="margin-top:12px;">
@@ -828,6 +758,16 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
     </div>
 
     <!-- JavaScript -->
+    <script>
+        window.VK_PAYPAL_CONFIG = {
+            mode: "<?php echo escape_output($settings['paypal_mode'] ?? 'sandbox'); ?>",
+            clientId: "<?php echo escape_output($settings['paypal_client_id'] ?? 'sb'); ?>",
+            currency: "<?php echo escape_output($settings['currency_code'] ?? 'GBP'); ?>",
+            status: "<?php echo escape_output($settings['paypal_status'] ?? 'enabled'); ?>"
+        };
+    </script>
+    <!-- PayPal JS SDK — loads live or sandbox button asynchronously for ultra-fast page load -->
+    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypal_client_id); ?>&currency=<?php echo urlencode($settings['currency_code'] ?? 'GBP'); ?>&intent=capture" data-namespace="paypal" async defer></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="assets/js/app.js"></script>
     <script src="assets/js/paypal-integration.js"></script>

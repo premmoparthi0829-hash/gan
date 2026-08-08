@@ -165,6 +165,9 @@ $settings     = get_all_settings();
                 <button type="button" class="admin-tab-btn active" data-tab="tab-bookings">
                     &#128221; Bookings Management
                 </button>
+                <button type="button" class="admin-tab-btn" data-tab="tab-paypal">
+                    💳 PayPal Live Gateway
+                </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-settings">
                     &#9881; Store Settings
                 </button>
@@ -219,6 +222,219 @@ $settings     = get_all_settings();
                 </div>
             </div>
 
+            <!-- TAB PAYPAL: DEDICATED PAYPAL LIVE GATEWAY SECTION -->
+            <div class="admin-tab-content admin-panel-card" id="tab-paypal" style="display:none; padding: 28px;">
+                
+                <!-- Section Top Header & Mode Badge Banner -->
+                <div style="background: linear-gradient(135deg, #003087 0%, #0070BA 100%); color: #FFFFFF; border-radius: 14px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0, 48, 135, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                            <span style="font-size: 1.8rem;">💳</span>
+                            <h2 style="font-size: 1.5rem; color: #FFFFFF; margin: 0; font-weight: 800; font-family: 'Outfit', sans-serif;">PayPal Live Credentials &amp; Gateway Configuration</h2>
+                        </div>
+                        <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0; max-width: 650px; line-height: 1.4;">
+                            Manage real-time PayPal API credentials, toggle between Sandbox testing and Live production, verify REST API authentication, and manage customer PayPal transactions.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.15); padding: 10px 18px; border-radius: 10px; backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <span style="font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: #FFFFFF;">Current Mode:</span>
+                        <?php $p_mode = $settings['paypal_mode'] ?? 'sandbox'; ?>
+                        <span id="paypal-mode-badge" style="<?php echo $p_mode === 'live' ? 'background: #10B981; color: #FFFFFF;' : 'background: #F59E0B; color: #FFFFFF;'; ?> padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <?php echo $p_mode === 'live' ? '🟢 LIVE PRODUCTION' : '🟡 SANDBOX TEST'; ?>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Easy 3-Step Setup Guide Banner -->
+                <div style="background: #F0F9FF; border: 1.5px solid #BAE6FD; border-radius: 12px; padding: 18px 22px; margin-bottom: 24px; color: #0369A1;">
+                    <div style="font-weight: 800; font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <span>💡 Easy 3-Step PayPal Setup Guide:</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; font-size: 0.85rem; line-height: 1.45;">
+                        <div style="background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #E0F2FE;">
+                            <strong style="color: #0284C7; display: block; margin-bottom: 4px;">1. Get API Credentials</strong>
+                            Log in to <a href="https://developer.paypal.com" target="_blank" style="color: #0284C7; font-weight: 700; text-decoration: underline;">developer.paypal.com</a> &rarr; Apps &amp; Credentials &rarr; Copy your Client ID &amp; Secret.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #E0F2FE;">
+                            <strong style="color: #0284C7; display: block; margin-bottom: 4px;">2. Paste &amp; Save Mode</strong>
+                            Paste keys below, choose <strong>Live Production Mode</strong> (real payments) or <strong>Sandbox Mode</strong>, then click <strong>💾 Save Credentials</strong>.
+                        </div>
+                        <div style="background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #E0F2FE;">
+                            <strong style="color: #0284C7; display: block; margin-bottom: 4px;">3. Test OAuth Connection</strong>
+                            Click <strong>⚡ Test API Connection</strong> button to instantly verify your API keys with PayPal servers!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Connectivity Test Alert Box (Hidden until test triggered) -->
+                <div id="paypal-api-test-result" style="display: none; margin-bottom: 24px; border-radius: 12px; padding: 16px 20px; font-size: 0.92rem; font-weight: 600;"></div>
+
+                <form id="admin-paypal-live-form">
+                    <input type="hidden" name="csrf_token" value="<?php echo escape_output($csrf_token); ?>">
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 28px;">
+                        
+                        <!-- Left Panel: Core Operating Credentials -->
+                        <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 22px;">
+                            <h3 style="color: #003087; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                🔑 Live &amp; Sandbox API Keys
+                            </h3>
+
+                            <!-- Operating Mode Selector -->
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_mode" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Operating Mode <span class="req">*</span></label>
+                                <select id="paypal_tab_mode" name="paypal_mode" style="width: 100%; padding: 11px 14px; border: 2px solid #0070BA; border-radius: 8px; font-weight: 800; font-size: 0.95rem; background: #FFFFFF; color: #003087;">
+                                    <option value="sandbox" <?php echo ($settings['paypal_mode'] ?? '') === 'sandbox' ? 'selected' : ''; ?>>🟡 Sandbox Mode (Testing / Mock Payments)</option>
+                                    <option value="live" <?php echo ($settings['paypal_mode'] ?? '') === 'live' ? 'selected' : ''; ?>>🟢 Live Production Mode (Real Customer Payments)</option>
+                                </select>
+                                <small style="color: #64748B; font-size: 0.78rem; margin-top: 5px; display: block;">
+                                    Switching to <strong>Live Production</strong> processes real credit card and PayPal payments via `api-m.paypal.com`.
+                                </small>
+                            </div>
+
+                            <!-- Live Client ID -->
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_client_id" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Client ID <span class="req">*</span></label>
+                                <div style="position: relative; display: flex; align-items: center;">
+                                    <input type="text" id="paypal_tab_client_id" name="paypal_client_id" value="<?php echo escape_output($settings['paypal_client_id'] ?? 'sb'); ?>" placeholder="Enter Client ID from developer.paypal.com" required style="width: 100%; padding-right: 40px; font-family: monospace; font-weight: 600;">
+                                    <button type="button" class="btn-copy-input-val" data-target="#paypal_tab_client_id" title="Copy Client ID" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #64748B; padding: 4px;">📋</button>
+                                </div>
+                                <small style="color: #64748B; font-size: 0.76rem; margin-top: 4px; display: block;">
+                                    Found in PayPal Developer Portal &rarr; Apps &amp; Credentials.
+                                </small>
+                            </div>
+
+                            <!-- Live Client Secret -->
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_client_secret" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Client Secret <span class="req">*</span></label>
+                                <div style="position: relative; display: flex; align-items: center;">
+                                    <input type="password" id="paypal_tab_client_secret" name="paypal_client_secret" value="<?php echo escape_output($settings['paypal_client_secret'] ?? ''); ?>" placeholder="Enter Client Secret" style="width: 100%; padding-right: 40px; font-family: monospace;">
+                                    <button type="button" id="btn-toggle-secret-visibility" title="Toggle Secret Visibility" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #64748B; padding: 4px;">👁️</button>
+                                </div>
+                                <small style="color: #64748B; font-size: 0.76rem; margin-top: 4px; display: block;">
+                                    Stored securely and used for server-side REST API order capture verification.
+                                </small>
+                            </div>
+
+                            <!-- Currency Selection -->
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_currency" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Store Payment Currency</label>
+                                <?php $curr = $settings['currency_code'] ?? 'GBP'; ?>
+                                <select id="paypal_tab_currency" name="currency_code" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700; background: #FFF;">
+                                    <option value="GBP" <?php echo $curr === 'GBP' ? 'selected' : ''; ?>>GBP (£) - UK Pound Sterling</option>
+                                    <option value="USD" <?php echo $curr === 'USD' ? 'selected' : ''; ?>>USD ($) - US Dollar</option>
+                                    <option value="EUR" <?php echo $curr === 'EUR' ? 'selected' : ''; ?>>EUR (€) - Euro</option>
+                                    <option value="INR" <?php echo $curr === 'INR' ? 'selected' : ''; ?>>INR (₹) - Indian Rupee</option>
+                                </select>
+                            </div>
+
+                            <!-- Delivery Fee / Shipping Charge -->
+                            <div class="admin-field-group">
+                                <label for="paypal_tab_shipping_charge" style="font-weight: 700; color: #0070BA; font-size: 0.9rem;">🚚 UK Doorstep Delivery Fee (&pound;) <span class="req">*</span></label>
+                                <input type="number" step="0.01" min="0" id="paypal_tab_shipping_charge" name="shipping_charge" value="<?php echo escape_output($settings['shipping_charge'] ?? '4.99'); ?>" placeholder="4.99" required style="width: 100%; padding: 10px 12px; border: 2px solid #0070BA; border-radius: 8px; font-weight: 800; font-size: 1rem; background: #FFFFFF; color: #003087;">
+                                <small style="color: #64748B; font-size: 0.76rem; margin-top: 4px; display: block;">
+                                    Delivery charge added to customer orders at checkout. Set to <code>0.00</code> for Free Delivery.
+                                </small>
+                            </div>
+
+                        </div>
+
+                        <!-- Right Panel: Merchant & Business Details -->
+                        <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 22px;">
+                            <h3 style="color: #003087; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                🏢 Merchant &amp; Business Profile
+                            </h3>
+
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_email" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Merchant Email</label>
+                                <input type="email" id="paypal_tab_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="payments@vklogistics.co.uk">
+                            </div>
+
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_account_name" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Business Account Holder Name</label>
+                                <input type="text" id="paypal_tab_account_name" name="paypal_account_name" value="<?php echo escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="VK LOGISTICS LTD">
+                            </div>
+
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="paypal_tab_id" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal ID / Handle</label>
+                                <input type="text" id="paypal_tab_id" name="paypal_id" value="<?php echo escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal'); ?>" placeholder="premmoparthi@paypal">
+                            </div>
+
+                            <div class="admin-field-group">
+                                <label for="paypal_tab_status" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Gateway Status</label>
+                                <?php $status = $settings['paypal_status'] ?? 'enabled'; ?>
+                                <select id="paypal_tab_status" name="paypal_status" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700; background: #FFF;">
+                                    <option value="enabled" <?php echo $status === 'enabled' ? 'selected' : ''; ?>>✅ Active &amp; Displayed at Checkout</option>
+                                    <option value="disabled" <?php echo $status === 'disabled' ? 'selected' : ''; ?>>🚫 Disabled (Hide PayPal from Checkout)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Action Buttons Toolbar -->
+                    <div style="margin-top: 28px; background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        
+                        <div>
+                            <button type="button" class="btn-danger-outline" id="btn-delete-paypal-credentials" style="background: #FEF2F2; color: #DC2626; border: 1.5px solid #FCA5A5; padding: 11px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                🗑️ Delete / Clear Credentials
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button type="button" class="btn-secondary" id="btn-test-paypal-api" style="background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #93C5FD; padding: 11px 22px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                ⚡ Test API Connection
+                            </button>
+
+                            <button type="submit" class="btn-gold" id="btn-save-paypal-live-credentials" style="background: linear-gradient(135deg, #0070BA 0%, #003087 100%); color: #FFFFFF; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 112, 186, 0.25);">
+                                💾 Save PayPal Live Credentials
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+
+                <!-- Dedicated PayPal Orders Table -->
+                <div style="margin-top: 36px; background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 14px; padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #F1F5F9; padding-bottom: 12px;">
+                        <div>
+                            <h3 style="color: #003087; font-size: 1.2rem; margin: 0; font-weight: 800;">
+                                📊 PayPal Live &amp; Completed Transactions
+                            </h3>
+                            <p style="color: #64748B; font-size: 0.85rem; margin: 4px 0 0 0;">Customer bookings paid directly through PayPal API</p>
+                        </div>
+                        <button type="button" id="btn-refresh-paypal-table" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; color: #475569;">
+                            🔄 Refresh Table
+                        </button>
+                    </div>
+
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="white-space:nowrap; text-align:center; width: 40px;">#</th>
+                                    <th style="white-space:nowrap; text-align:left;">Booking Ref / Date</th>
+                                    <th style="text-align:left;">Customer Details</th>
+                                    <th style="white-space:nowrap; text-align:center;">PayPal Order ID</th>
+                                    <th style="white-space:nowrap; text-align:center;">Capture Txn ID</th>
+                                    <th style="white-space:nowrap; text-align:right;">Amount (£)</th>
+                                    <th style="white-space:nowrap; text-align:center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paypal-orders-table-body">
+                                <tr>
+                                    <td colspan="7" style="text-align:center; padding: 30px; color: var(--color-text-muted);">
+                                        Loading PayPal transactions...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
             <!-- TAB 2: STORE & PRICING SETTINGS -->
             <div class="admin-tab-content admin-panel-card" id="tab-settings" style="display:none;">
                 <form id="admin-settings-form">
@@ -271,25 +487,59 @@ $settings     = get_all_settings();
                             </div>
                         </div>
 
-                        <!-- Section: PayPal & Support -->
+                        <!-- Section: PayPal Integration & Contact Support -->
                         <div>
-                            <h3 class="settings-section-title">&#128179; PayPal & Contact Support</h3>
+                            <h3 class="settings-section-title">&#128179; PayPal Live &amp; Sandbox Gateway Configuration</h3>
 
+                            <!-- Mode Selector Badge Card -->
+                            <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                                <label style="font-weight: 700; font-size: 0.9rem; color: #1E293B; margin-bottom: 6px; display: block;">PayPal Operating Mode</label>
+                                <?php $current_mode = $settings['paypal_mode'] ?? 'sandbox'; ?>
+                                <select id="setting_paypal_mode" name="paypal_mode" style="width: 100%; padding: 10px 12px; border: 1.5px solid #94A3B8; border-radius: 6px; font-weight: 700; font-size: 0.95rem; background: #FFFFFF; color: #0F172A;">
+                                    <option value="sandbox" <?php echo $current_mode === 'sandbox' ? 'selected' : ''; ?>>🟡 Sandbox Mode (Testing &amp; Development)</option>
+                                    <option value="live" <?php echo $current_mode === 'live' ? 'selected' : ''; ?>>🟢 Live Production Mode (Real Payments)</option>
+                                </select>
+                                <small style="color: #64748B; font-size: 0.78rem; margin-top: 6px; display: block; line-height: 1.4;">
+                                    Switching to <strong>Live Production Mode</strong> will activate real customer payment redirection using your Live API keys below.
+                                </small>
+                            </div>
+
+                            <!-- Live Client ID -->
                             <div class="admin-field-group">
-                                <label for="setting_paypal_id">PayPal ID (Receive Payments)</label>
-                                <input type="text" id="setting_paypal_id" name="paypal_id" value="<?php echo escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal'); ?>" placeholder="your-paypal-id">
+                                <label for="setting_paypal_client_id">PayPal Live Client ID</label>
+                                <input type="text" id="setting_paypal_client_id" name="paypal_client_id" value="<?php echo escape_output($settings['paypal_client_id'] ?? 'sb'); ?>" placeholder="A...">
+                                <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">From your PayPal Developer Dashboard &rarr; Apps &amp; Credentials &rarr; Live tab</small>
+                            </div>
+
+                            <!-- Live Client Secret with Eye Toggle -->
+                            <div class="admin-field-group">
+                                <label for="setting_paypal_client_secret">PayPal Live Client Secret</label>
+                                <div style="position: relative; display: flex; align-items: center;">
+                                    <input type="password" id="setting_paypal_client_secret" name="paypal_client_secret" value="<?php echo escape_output($settings['paypal_client_secret'] ?? ''); ?>" placeholder="E..." style="width: 100%; padding-right: 40px;">
+                                    <button type="button" id="toggle-paypal-secret-btn" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: #64748B; padding: 4px; display: flex; align-items: center;" title="Toggle secret visibility">
+                                        👁️
+                                    </button>
+                                </div>
+                                <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">Used server-side to capture and verify live payments securely</small>
+                            </div>
+
+                            <!-- Account Details -->
+                            <div class="admin-field-group">
+                                <label for="setting_paypal_account_name">PayPal Account / Business Name</label>
+                                <input type="text" id="setting_paypal_account_name" name="paypal_account_name" value="<?php echo escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="VK LOGISTICS LTD">
                             </div>
 
                             <div class="admin-field-group">
-                                <label for="setting_paypal_email">PayPal Email Address</label>
-                                <input type="email" id="setting_paypal_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="your-paypal@email.com">
-                                <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">Customers will send PayPal payments to this email address (Friends &amp; Family)</small>
+                                <label for="setting_paypal_id">PayPal ID / Handle</label>
+                                <input type="text" id="setting_paypal_id" name="paypal_id" value="<?php echo escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal'); ?>" placeholder="premmoparthi@paypal">
                             </div>
 
                             <div class="admin-field-group">
-                                <label for="setting_paypal_account_name">PayPal Account Holder Name</label>
-                                <input type="text" id="setting_paypal_account_name" name="paypal_account_name" value="<?php echo escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="Account holder name">
+                                <label for="setting_paypal_email">PayPal Merchant Email Address</label>
+                                <input type="email" id="setting_paypal_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="payments@vklogistics.co.uk">
                             </div>
+
+                            <h3 class="settings-section-title" style="margin-top: 24px;">&#128222; Customer Support &amp; Security</h3>
 
                             <div class="admin-field-group">
                                 <label for="setting_support_phone">UK Customer Support Helpline</label>
@@ -605,6 +855,8 @@ $settings     = get_all_settings();
                     
                     if (tabId === 'tab-catalog') {
                         loadCatalogData();
+                    } else if (tabId === 'tab-paypal') {
+                        loadPayPalOrdersTable();
                     }
                 });
             });
@@ -922,6 +1174,21 @@ $settings     = get_all_settings();
                 });
             });
 
+            // Toggle PayPal Secret Visibility
+            const btnTogglePaypalSecret = document.getElementById('toggle-paypal-secret-btn');
+            const inputPaypalSecret = document.getElementById('setting_paypal_client_secret');
+            if (btnTogglePaypalSecret && inputPaypalSecret) {
+                btnTogglePaypalSecret.addEventListener('click', function() {
+                    if (inputPaypalSecret.type === 'password') {
+                        inputPaypalSecret.type = 'text';
+                        btnTogglePaypalSecret.textContent = '🔒';
+                    } else {
+                        inputPaypalSecret.type = 'password';
+                        btnTogglePaypalSecret.textContent = '👁️';
+                    }
+                });
+            }
+
             // Save Settings Form
             document.getElementById('admin-settings-form').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -947,6 +1214,246 @@ $settings     = get_all_settings();
                     alert('Error saving settings');
                 });
             });
+
+            // =========================================================================
+            // PAYPAL LIVE MANAGEMENT MODULE (DEDICATED ADMIN TAB)
+            // =========================================================================
+
+            // 1. Toggle Secret Visibility Button in PayPal Live Tab
+            const btnToggleSecretVis = document.getElementById('btn-toggle-secret-visibility');
+            const inputPaypalTabSecret = document.getElementById('paypal_tab_client_secret');
+            if (btnToggleSecretVis && inputPaypalTabSecret) {
+                btnToggleSecretVis.addEventListener('click', function() {
+                    if (inputPaypalTabSecret.type === 'password') {
+                        inputPaypalTabSecret.type = 'text';
+                        btnToggleSecretVis.textContent = '🔒';
+                    } else {
+                        inputPaypalTabSecret.type = 'password';
+                        btnToggleSecretVis.textContent = '👁️';
+                    }
+                });
+            }
+
+            // 2. Copy Client ID Handler
+            document.querySelectorAll('.btn-copy-input-val').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetSelector = this.getAttribute('data-target');
+                    const inputEl = document.querySelector(targetSelector);
+                    if (inputEl && inputEl.value) {
+                        navigator.clipboard.writeText(inputEl.value).then(() => {
+                            alert('Copied PayPal Client ID to clipboard!');
+                        });
+                    }
+                });
+            });
+
+            // 3. Operating Mode Select Badge Update
+            const modeSelectEl = document.getElementById('paypal_tab_mode');
+            const modeBadgeEl = document.getElementById('paypal-mode-badge');
+            if (modeSelectEl && modeBadgeEl) {
+                modeSelectEl.addEventListener('change', function() {
+                    if (this.value === 'live') {
+                        modeBadgeEl.style.background = '#10B981';
+                        modeBadgeEl.style.color = '#FFFFFF';
+                        modeBadgeEl.innerHTML = '🟢 LIVE PRODUCTION';
+                    } else {
+                        modeBadgeEl.style.background = '#F59E0B';
+                        modeBadgeEl.style.color = '#FFFFFF';
+                        modeBadgeEl.innerHTML = '🟡 SANDBOX TEST';
+                    }
+                });
+            }
+
+            // 4. Save Dedicated PayPal Live Credentials & Settings Form
+            const formPaypalLive = document.getElementById('admin-paypal-live-form');
+            if (formPaypalLive) {
+                formPaypalLive.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const btn = document.getElementById('btn-save-paypal-live-credentials');
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ Saving Credentials...';
+
+                    const formData = new FormData(this);
+
+                    fetch('ajax/admin-actions.php?action=save_paypal_settings', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = '💾 Save PayPal Live Credentials';
+                        if (data.success) {
+                            alert('✅ ' + (data.message || 'PayPal Live credentials updated successfully!'));
+                            loadDashboardData();
+                        } else {
+                            alert('❌ ' + (data.message || 'Error saving PayPal settings.'));
+                        }
+                    })
+                    .catch(err => {
+                        btn.disabled = false;
+                        btn.innerHTML = '💾 Save PayPal Live Credentials';
+                        alert('❌ Server connection error while saving PayPal credentials.');
+                    });
+                });
+            }
+
+            // 5. Test PayPal REST API Connection
+            const btnTestPaypalApi = document.getElementById('btn-test-paypal-api');
+            const testResultBox = document.getElementById('paypal-api-test-result');
+            if (btnTestPaypalApi) {
+                btnTestPaypalApi.addEventListener('click', function() {
+                    btnTestPaypalApi.disabled = true;
+                    btnTestPaypalApi.innerHTML = '⏳ Testing Connection...';
+                    if (testResultBox) testResultBox.style.display = 'none';
+
+                    const mode = document.getElementById('paypal_tab_mode').value;
+                    const clientId = document.getElementById('paypal_tab_client_id').value.trim();
+                    const clientSecret = document.getElementById('paypal_tab_client_secret').value.trim();
+
+                    const formData = new FormData();
+                    formData.append('paypal_mode', mode);
+                    formData.append('paypal_client_id', clientId);
+                    formData.append('paypal_client_secret', clientSecret);
+                    formData.append('csrf_token', csrfToken);
+
+                    fetch('ajax/admin-actions.php?action=test_paypal_credentials', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        btnTestPaypalApi.disabled = false;
+                        btnTestPaypalApi.innerHTML = '⚡ Test API Connection';
+                        if (testResultBox) {
+                            testResultBox.style.display = 'block';
+                            if (data.success) {
+                                testResultBox.style.background = '#DEF7EC';
+                                testResultBox.style.color = '#03543F';
+                                testResultBox.style.border = '1.5px solid #31C48D';
+                                testResultBox.innerHTML = `
+                                    <div style="display:flex; align-items:center; gap:8px; font-weight:800; margin-bottom:4px;">
+                                        <span>✅ Authentication Successful!</span>
+                                    </div>
+                                    <div>${escapeHtml(data.message)}</div>
+                                    ${data.data ? `<div style="font-size:0.8rem; margin-top:6px; font-family:monospace; color:#046C4E;">App ID: ${data.data.app_id} | Token Expires In: ${data.data.expires_in}</div>` : ''}
+                                `;
+                            } else {
+                                testResultBox.style.background = '#FDE8E8';
+                                testResultBox.style.color = '#9B1C1C';
+                                testResultBox.style.border = '1.5px solid #F8B4B4';
+                                testResultBox.innerHTML = `
+                                    <div style="display:flex; align-items:center; gap:8px; font-weight:800; margin-bottom:4px;">
+                                        <span>❌ API Connection Failed</span>
+                                    </div>
+                                    <div>${escapeHtml(data.message)}</div>
+                                `;
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        btnTestPaypalApi.disabled = false;
+                        btnTestPaypalApi.innerHTML = '⚡ Test API Connection';
+                        if (testResultBox) {
+                            testResultBox.style.display = 'block';
+                            testResultBox.style.background = '#FDE8E8';
+                            testResultBox.style.color = '#9B1C1C';
+                            testResultBox.style.border = '1.5px solid #F8B4B4';
+                            testResultBox.innerHTML = `<strong>Network Error:</strong> Could not connect to backend server.`;
+                        }
+                    });
+                });
+            }
+
+            // 6. Delete / Clear PayPal API Credentials
+            const btnDeletePaypalCreds = document.getElementById('btn-delete-paypal-credentials');
+            if (btnDeletePaypalCreds) {
+                btnDeletePaypalCreds.addEventListener('click', function() {
+                    if (!confirm('⚠️ Are you sure you want to delete/reset your PayPal API Client ID and Secret credentials?')) {
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('csrf_token', csrfToken);
+
+                    fetch('ajax/admin-actions.php?action=delete_paypal_credentials', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('paypal_tab_client_id').value = '';
+                            document.getElementById('paypal_tab_client_secret').value = '';
+                            document.getElementById('paypal_tab_mode').value = 'sandbox';
+                            if (modeSelectEl) modeSelectEl.dispatchEvent(new Event('change'));
+                            alert('🗑️ PayPal API credentials have been deleted/reset successfully.');
+                        } else {
+                            alert('❌ ' + (data.message || 'Failed to delete credentials.'));
+                        }
+                    });
+                });
+            }
+
+            // 7. Load & Render PayPal Orders Table
+            function loadPayPalOrdersTable() {
+                const tbody = document.getElementById('paypal-orders-table-body');
+                if (!tbody) return;
+
+                const paypalBookings = loadedBookings.filter(b => b.payment_method === 'paypal' || b.paypal_order_id || b.paypal_transaction_id);
+
+                tbody.innerHTML = '';
+
+                if (paypalBookings.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748B;">No PayPal transactions recorded yet.</td></tr>`;
+                    return;
+                }
+
+                let serial = paypalBookings.length;
+                paypalBookings.forEach(b => {
+                    const tr = document.createElement('tr');
+                    
+                    let pBadge = `<span class="status-pill status-pending">${b.payment_status}</span>`;
+                    if (b.payment_status === 'PAID') {
+                        pBadge = `<span class="status-pill status-paid">PAID</span>`;
+                    } else if (b.payment_status === 'FAILED' || b.payment_status === 'CANCELLED') {
+                        pBadge = `<span class="status-pill status-cancelled">${b.payment_status}</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td style="text-align:center; font-weight:700; color:#475569; vertical-align:top; padding-top:12px;">${serial--}</td>
+                        <td style="white-space:nowrap; vertical-align:top; padding-top:12px;">
+                            <strong style="color:#003087; font-size:0.86rem; font-family:monospace;">${escapeHtml(b.booking_reference)}</strong>
+                            <span style="font-size:0.72rem; color:#64748B; display:block; margin-top:2px;">${(b.created_at || '').substring(0, 10)}</span>
+                        </td>
+                        <td style="vertical-align:top; padding-top:12px;">
+                            <div><strong style="color:#0F172A; font-size:0.88rem;">${escapeHtml(b.customer_name)}</strong></div>
+                            <div style="font-size:0.78rem; color:#64748B;">${escapeHtml(b.email || b.mobile)}</div>
+                        </td>
+                        <td style="text-align:center; font-family:monospace; font-size:0.82rem; vertical-align:top; padding-top:12px; color:#334155;">
+                            ${escapeHtml(b.paypal_order_id || 'N/A')}
+                        </td>
+                        <td style="text-align:center; font-family:monospace; font-size:0.82rem; vertical-align:top; padding-top:12px; color:#059669; font-weight:700;">
+                            ${escapeHtml(b.paypal_transaction_id || b.payment_reference || 'N/A')}
+                        </td>
+                        <td style="text-align:right; font-weight:800; color:#0F172A; vertical-align:top; padding-top:12px;">
+                            &pound;${parseFloat(b.total_amount).toFixed(2)}
+                        </td>
+                        <td style="text-align:center; vertical-align:top; padding-top:12px;">
+                            ${pBadge}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const btnRefreshPaypalTable = document.getElementById('btn-refresh-paypal-table');
+            if (btnRefreshPaypalTable) {
+                btnRefreshPaypalTable.addEventListener('click', function() {
+                    loadDashboardData();
+                    setTimeout(loadPayPalOrdersTable, 400);
+                });
+            }
 
             // Live Enterprise Telemetry Clock Widget
             function updateHeaderClock() {

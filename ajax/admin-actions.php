@@ -197,7 +197,8 @@ if ($action === 'save_settings') {
     $allowed_keys = [
         'unit_price', 'shipping_charge', 'bank_name', 'bank_account_name',
         'bank_sort_code', 'bank_account_number', 'paypal_client_id', 'paypal_mode',
-        'paypal_email', 'paypal_account_name', 'paypal_id', 'support_phone', 'support_email', 'admin_password'
+        'paypal_client_secret', 'paypal_email', 'paypal_account_name', 'paypal_id',
+        'support_phone', 'support_email', 'admin_password'
     ];
 
     $db = Database::getConnection();
@@ -227,6 +228,130 @@ if ($action === 'save_settings') {
 
     json_response(true, 'Settings updated successfully.');
 }
+
+// 3b. Save Dedicated PayPal Settings
+if ($action === 'save_paypal_settings') {
+    $allowed_keys = [
+        'paypal_client_id', 'paypal_mode', 'paypal_client_secret',
+        'paypal_email', 'paypal_account_name', 'paypal_id',
+        'currency_code', 'paypal_status', 'shipping_charge'
+    ];
+
+    $db = Database::getConnection();
+    $updated_count = 0;
+
+    foreach ($allowed_keys as $key) {
+        if (isset($_POST[$key])) {
+            $val = sanitize_input($_POST[$key]);
+            
+            // If secret is passed as '***' or empty string when updating, keep existing secret
+            if ($key === 'paypal_client_secret' && ($val === '***' || $val === '')) {
+                continue;
+            }
+
+            if ($db) {
+                try {
+                    $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)
+                        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+                    $stmt->execute([':k' => $key, ':v' => $val]);
+                    $updated_count++;
+                } catch (Exception $e) {
+                    log_system_error("Save PayPal setting error for '$key': " . $e->getMessage());
+                }
+            }
+        }
+    }
+
+    json_response(true, 'PayPal Live credentials and settings saved successfully.');
+}
+
+// 3c. Delete / Reset PayPal Credentials
+if ($action === 'delete_paypal_credentials') {
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $keys_to_clear = ['paypal_client_id', 'paypal_client_secret', 'paypal_mode'];
+            foreach ($keys_to_clear as $k) {
+                $val = ($k === 'paypal_mode') ? 'sandbox' : '';
+                $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)
+                    ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+                $stmt->execute([':k' => $k, ':v' => $val]);
+            }
+            json_response(true, 'PayPal API credentials have been deleted/reset successfully.');
+        } catch (Exception $e) {
+            json_response(false, 'Error resetting credentials: ' . $e->getMessage(), [], 500);
+        }
+    }
+    json_response(false, 'Database connection offline.', [], 500);
+}
+
+// 3d. Test PayPal API Connection (OAuth 2.0 Auth Check)
+if ($action === 'test_paypal_credentials') {
+    $mode          = sanitize_input($_POST['paypal_mode'] ?? get_setting('paypal_mode', 'sandbox'));
+    $client_id     = sanitize_input($_POST['paypal_client_id'] ?? get_setting('paypal_client_id', ''));
+    $client_secret = sanitize_input($_POST['paypal_client_secret'] ?? get_setting('paypal_client_secret', ''));
+
+    // If client_secret in POST is blank or hidden, pull from DB settings
+    if (empty($client_secret) || $client_secret === '***') {
+        $client_secret = get_setting('paypal_client_secret', '');
+    }
+
+    if (empty($client_id)) {
+        json_response(false, 'PayPal Client ID is missing. Please enter your Client ID.', [], 422);
+    }
+    if ($client_id === 'sb') {
+        json_response(true, 'PayPal is currently in Sandbox Test Mode with mock ID "sb". Replace with real Live Client ID for Live production.');
+    }
+    if (empty($client_secret)) {
+        json_response(false, 'PayPal Client Secret is required to test API connection.', [], 422);
+    }
+
+    $api_base = ($mode === 'live') ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+
+    $ch = curl_init($api_base . '/v1/oauth2/token');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => 'grant_type=client_credentials',
+        CURLOPT_USERPWD        => $client_id . ':' . $client_secret,
+        CURLOPT_HTTPHEADER     => [
+            'Accept: application/json',
+            'Accept-Language: en_US',
+        ],
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_SSL_VERIFYPEER => true
+    ]);
+    $response  = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_err  = curl_error($ch);
+    curl_close($ch);
+
+    if ($curl_err) {
+        json_response(false, 'Network connection to PayPal failed: ' . $curl_err, [], 502);
+    }
+
+    $data = json_decode($response, true);
+
+    if ($http_code === 200 && !empty($data['access_token'])) {
+        $app_id     = $data['app_id'] ?? 'N/A';
+        $expires_in = $data['expires_in'] ?? 32400;
+        $scope      = $data['scope'] ?? 'standard';
+        
+        json_response(true, "✅ PayPal OAuth 2.0 Authentication SUCCESSFUL! Connection established to PayPal (" . strtoupper($mode) . " Mode).", [
+            'mode'       => $mode,
+            'app_id'     => $app_id,
+            'expires_in' => $expires_in . ' seconds',
+            'scope'      => $scope
+        ]);
+    } else {
+        $error_desc = $data['error_description'] ?? $data['error'] ?? 'Invalid Client ID or Secret';
+        json_response(false, "❌ PayPal OAuth Authentication Failed (HTTP $http_code): " . $error_desc, [
+            'http_code' => $http_code,
+            'raw'       => $data
+        ], 400);
+    }
+}
+
 
 // 4. Export Bookings CSV
 if ($action === 'export_csv') {

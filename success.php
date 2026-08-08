@@ -224,7 +224,7 @@ $email = 'support@vklogisticshub.com';
                     <h3>Order &amp; Payment Summary</h3>
                     <div class="detail-item">
                         <span>Quantity:</span>
-                        <strong><?php echo (int)$booking['quantity']; ?> Statue(s)</strong>
+                        <strong><?php echo (int)$booking['quantity']; ?> Item(s)</strong>
                     </div>
                     <div class="detail-item">
                         <span>Total Amount:</span>
@@ -232,19 +232,43 @@ $email = 'support@vklogisticshub.com';
                     </div>
                     <div class="detail-item">
                         <span>Payment Method:</span>
-                        <strong style="text-transform:capitalize;"><?php echo str_replace('_', ' ', $booking['payment_method']); ?></strong>
+                        <strong style="text-transform:capitalize; color:#003087;"><?php echo str_replace('_', ' ', $booking['payment_method']); ?> Checkout</strong>
                     </div>
                     <div class="detail-item">
                         <span>Payment Status:</span>
-                        <strong style="color:#B45309;"><?php echo escape_output($booking['payment_status']); ?></strong>
+                        <?php if ($booking['payment_status'] === 'PAID'): ?>
+                            <strong style="background:#DEF7EC; color:#03543F; padding:4px 12px; border-radius:12px; font-size:0.85rem;">✅ PAID &amp; VERIFIED</strong>
+                        <?php else: ?>
+                            <strong style="background:#FEF3C7; color:#B45309; padding:4px 12px; border-radius:12px; font-size:0.85rem;"><?php echo escape_output($booking['payment_status']); ?></strong>
+                        <?php endif; ?>
                     </div>
+
+                    <?php if (!empty($booking['paypal_order_id'])): ?>
+                    <div class="detail-item" style="margin-top:8px;">
+                        <span>PayPal Order ID:</span>
+                        <strong style="font-family:monospace; font-size:0.82rem; color:#475569;"><?php echo escape_output($booking['paypal_order_id']); ?></strong>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php 
+                    $txn = $booking['paypal_transaction_id'] ?? $booking['payment_reference'] ?? '';
+                    if (!empty($txn)): 
+                    ?>
+                    <div class="detail-item">
+                        <span>Transaction / Capture ID:</span>
+                        <strong style="font-family:monospace; font-size:0.82rem; color:#059669;"><?php echo escape_output($txn); ?></strong>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
             </div>
 
-            <!-- Single Return Button -->
-            <div style="text-align: center; margin-top: 10px;">
+            <!-- Return Home & Print Receipt Buttons -->
+            <div style="text-align: center; margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                 <a href="index.php" class="btn-home">Return to Home</a>
+                <button type="button" onclick="window.print();" style="background:#F8FAFC; color:#0F172A; border:2px solid #CBD5E1; padding:12px 24px; border-radius:8px; font-size:0.95rem; font-weight:700; cursor:pointer;">
+                    🖨️ Print Payment Receipt
+                </button>
             </div>
 
             <!-- Support Note -->

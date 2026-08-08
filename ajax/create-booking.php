@@ -27,8 +27,18 @@ $county         = sanitize_input($_POST['county'] ?? '');
 $postcode       = sanitize_input($_POST['postcode'] ?? '');
 $cart_raw = $_POST['cart'] ?? '[]';
 $cart_items = json_decode($cart_raw, true);
-if (!is_array($cart_items)) {
-    $cart_items = [];
+if (!is_array($cart_items) || empty($cart_items)) {
+    $qty = (int)($_POST['quantity'] ?? 1);
+    if ($qty < 1) $qty = 1;
+    $unit_price = (float)get_setting('unit_price', 14.99);
+    $prod_name = get_setting('product_name', 'Ganesh Statue / Vinayaka Vigraha');
+    $cart_items = [[
+        'id' => 1,
+        'name' => $prod_name,
+        'product_name' => $prod_name,
+        'price' => $unit_price,
+        'quantity' => $qty
+    ]];
 }
 $payment_method = sanitize_input($_POST['payment_method'] ?? 'bank_transfer');
 
@@ -40,7 +50,7 @@ if (empty($customer_name) || strlen($customer_name) < 2) {
 }
 
 if (!validate_uk_mobile($mobile)) {
-    $errors[] = 'Please enter a valid UK mobile number (e.g. +44 7700 900000 or 07700900000).';
+    $errors[] = 'Please enter a valid mobile phone number.';
 }
 
 if (!validate_email($email)) {
@@ -56,7 +66,7 @@ if (empty($city)) {
 }
 
 if (!validate_uk_postcode($postcode)) {
-    $errors[] = 'Please enter a valid UK postcode (e.g. SW1A 1AA).';
+    $errors[] = 'Please enter a valid postcode.';
 }
 
 $total_qty = 0;
@@ -64,10 +74,8 @@ foreach ($cart_items as $item) {
     $total_qty += (int)($item['quantity'] ?? 0);
 }
 
-if (empty($cart_items) || $total_qty < 1) {
-    $errors[] = 'Your shopping cart is empty. Please select products to book.';
-} else if ($total_qty > 20) {
-    $errors[] = 'You can book a maximum of 20 items in a single order.';
+if ($total_qty > 50) {
+    $errors[] = 'You can book a maximum of 50 items in a single order.';
 }
 
 if (!in_array($payment_method, ['paypal', 'bank_transfer'])) {
@@ -81,14 +89,16 @@ if (!empty($errors)) {
 // Generate unique reference first so filename matches reference
 $booking_ref = generate_unique_booking_reference();
 
-// Receipt upload is mandatory
+// Receipt upload is mandatory ONLY for bank transfer payments
 $proof_image_path = null;
-if (!isset($_FILES['payment_proof']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
-    json_response(false, 'Payment proof screenshot or receipt photo is mandatory. Please upload one to complete your booking.', [], 422);
-}
-$proof_image_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
-if (!$proof_image_path) {
-    json_response(false, 'Failed to process receipt image. Please upload a valid image file (JPG, PNG, or WEBP).', [], 422);
+if ($payment_method === 'bank_transfer') {
+    if (!isset($_FILES['payment_proof']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
+        json_response(false, 'Payment proof screenshot or receipt photo is mandatory. Please upload your payment receipt to complete bank transfer booking.', [], 422);
+    }
+    $proof_image_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
+    if (!$proof_image_path) {
+        json_response(false, 'Failed to process receipt image. Please upload a valid image file (JPG, PNG, or WEBP).', [], 422);
+    }
 }
 
 // Data is valid. Create booking via backend
