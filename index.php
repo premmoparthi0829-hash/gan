@@ -76,27 +76,29 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                         <span id="header-phone-text"><?php echo $phone; ?></span>
                     </a>
                 </div>
-                <a href="#" class="btn-gold scroll-to-booking">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                    Book Now
-                </a>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <button type="button" class="btn-header-cart" id="header-cart-trigger">
+                        🛒 Cart <span class="header-cart-badge" id="nav-cart-badge">0</span>
+                    </button>
+                    <a href="#" class="btn-gold scroll-to-booking">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        Book Now
+                    </a>
+                </div>
             </div>
         </div>
     </header>
 
-
     <!-- ═══════════════════════════════════════════
-         MAIN SHOP PAGE
+         MAIN E-COMMERCE STORE FRONT
          ═══════════════════════════════════════════ -->
     <main class="shop-main" id="shop-catalog">
         <div class="container">
 
-            <!-- ── STEP 1: Category Selection ── -->
+            <!-- ── STEP 1: Category Selection (Single Screen View) ── -->
             <div id="catalog-step-categories">
                 <div class="shop-hero-text">
                     <h1 class="shop-page-title">Shop Our <span>Collections</span></h1>
-                    <p class="shop-page-subtitle">Choose a category to explore our handcrafted festive items — delivered
-                        to your door across the UK.</p>
                 </div>
 
                 <div class="cat-pick-grid">
@@ -115,7 +117,6 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                             data-cat-name="<?php echo escape_output($cat['name']); ?>" role="button" tabindex="0"
                             aria-label="Browse <?php echo escape_output($cat['name']); ?>">
 
-                            <!-- Clear product image -->
                             <div class="cat-clean-img-wrap">
                                 <?php if ($cat_img): ?>
                                     <img src="<?php echo escape_output($cat_img); ?>"
@@ -125,7 +126,6 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Name + button only -->
                             <div class="cat-clean-footer">
                                 <h2 class="cat-clean-name"><?php echo escape_output($cat['name']); ?></h2>
                                 <span class="cat-clean-btn">Shop Now &rarr;</span>
@@ -161,8 +161,14 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                     <div class="products-grid cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>"
                         style="display:none;">
                         <?php foreach ($cat_products as $prod): ?>
-                            <div class="product-card-item">
-                                <div class="prod-img-wrap">
+                            <div class="product-card-item"
+                                data-id="<?php echo $prod['id']; ?>"
+                                data-name="<?php echo escape_output($prod['name']); ?>"
+                                data-price="<?php echo $prod['price']; ?>"
+                                data-desc="<?php echo escape_output($prod['description']); ?>"
+                                data-img="<?php echo escape_output($prod['image_path']); ?>"
+                                data-cat="<?php echo escape_output($cat['name']); ?>">
+                                <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view product details">
                                     <img src="<?php echo escape_output($prod['image_path']); ?>"
                                         alt="<?php echo escape_output($prod['name']); ?>" loading="lazy">
                                     <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
@@ -170,12 +176,14 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                 <div class="prod-details">
                                     <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
                                     <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
-                                    <button type="button" class="btn-add-to-cart btn-gold" data-id="<?php echo $prod['id']; ?>"
-                                        data-name="<?php echo escape_output($prod['name']); ?>"
-                                        data-price="<?php echo $prod['price']; ?>"
-                                        data-img="<?php echo escape_output($prod['image_path']); ?>">
-                                        🛒 Add to Cart
-                                    </button>
+                                    <div class="prod-actions-row">
+                                        <button type="button" class="btn-add-to-cart btn-gold" data-id="<?php echo $prod['id']; ?>"
+                                            data-name="<?php echo escape_output($prod['name']); ?>"
+                                            data-price="<?php echo $prod['price']; ?>"
+                                            data-img="<?php echo escape_output($prod['image_path']); ?>">
+                                            🛒 Add to Cart
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -720,8 +728,44 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
         </div>
     </div>
 
-
-
+    <!-- PRODUCT INFO QUICK VIEW MODAL -->
+    <div class="prod-modal-overlay" id="product-info-modal-overlay">
+        <div class="prod-modal-card" id="product-info-modal">
+            <button type="button" class="prod-modal-close" id="btn-close-prod-modal" aria-label="Close">&times;</button>
+            <div class="prod-modal-grid">
+                <div class="prod-modal-media">
+                    <img id="pmodal-img" src="" alt="Product Image Preview">
+                    <span class="pmodal-price-tag" id="pmodal-price">&pound;0.00</span>
+                </div>
+                <div class="prod-modal-info">
+                    <div>
+                        <span class="pmodal-badge" id="pmodal-category">Festive Item</span>
+                        <h2 class="pmodal-title" id="pmodal-name">Product Name</h2>
+                        <div class="pmodal-desc-box">
+                            <h4>Product Description &amp; Details</h4>
+                            <p id="pmodal-desc">Detailed product description...</p>
+                        </div>
+                        <div class="pmodal-highlights">
+                            <div class="pm-highlight-item">
+                                <span class="pm-icon">🌱</span> 100% Eco-Friendly &amp; Handcrafted
+                            </div>
+                            <div class="pm-highlight-item">
+                                <span class="pm-icon">🚚</span> Doorstep UK Delivery Guaranteed
+                            </div>
+                            <div class="pm-highlight-item">
+                                <span class="pm-icon">🛡️</span> Breakage-Safe Protective Packaging
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pmodal-actions">
+                        <button type="button" class="btn-gold pmodal-add-btn" id="pmodal-add-cart-btn">
+                            🛒 Add to Cart &bull; <span id="pmodal-btn-price">&pound;0.00</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- FLOATING CART BUTTON -->
     <button type="button" class="floating-cart-toggle" id="cart-toggle-btn" aria-label="View Shopping Cart">
@@ -759,6 +803,20 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
             <button type="button" class="cart-checkout-btn" id="cart-checkout-btn" disabled>
                 Proceed to Booking Checkout
             </button>
+        </div>
+    </div>
+
+    <!-- TRACK ORDER MODAL -->
+    <div class="track-modal-overlay" id="track-modal-overlay">
+        <div class="track-modal-card">
+            <button type="button" class="track-modal-close" id="btn-close-track-modal" aria-label="Close">&times;</button>
+            <h3 class="track-modal-title">Track Your Booking Status</h3>
+            <p class="track-modal-sub">Enter your unique Booking Reference (e.g. VKG-2026-000101) to check real-time status.</p>
+            <div class="track-input-group">
+                <input type="text" id="track-ref-input" placeholder="VKG-2026-XXXXXX" uppercase>
+                <button type="button" class="btn-gold" id="btn-search-tracking">Search Status</button>
+            </div>
+            <div id="track-results-box" style="display:none; margin-top:20px;"></div>
         </div>
     </div>
 

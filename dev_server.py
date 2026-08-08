@@ -35,9 +35,9 @@ CATEGORIES = [
 ]
 
 PRODUCTS = [
-    {"id": 1, "name": "12-Inch Clay Eco Ganesh Idol", "price": 14.99, "category_id": 1, "description": "100% Biodegradable eco-friendly clay Ganesh statue for UK home celebrations."},
-    {"id": 2, "name": "18-Inch Royal Floral Ganesh", "price": 24.99, "category_id": 2, "description": "Hand-painted terracotta Idol with organic colors."},
-    {"id": 3, "name": "Complete Eco Visarjan Tank Kit", "price": 9.99, "category_id": 3, "description": "Special water bucket and sacred herbs for eco-friendly home visarjan."}
+    {"id": 1, "name": "12-Inch Clay Eco Ganesh Idol", "price": 14.99, "category_id": 1, "description": "100% Biodegradable eco-friendly clay Ganesh statue for UK home celebrations.", "image_path": "assets/images/ganesh_product_1.png"},
+    {"id": 2, "name": "18-Inch Royal Floral Ganesh", "price": 24.99, "category_id": 2, "description": "Hand-painted terracotta Idol with organic colors.", "image_path": "assets/images/ganesh_product_2.png"},
+    {"id": 3, "name": "Complete Eco Visarjan Tank Kit", "price": 9.99, "category_id": 3, "description": "Special water bucket and sacred herbs for eco-friendly home visarjan.", "image_path": "assets/images/ganesh_product_3.png"}
 ]
 
 # Sample seed bookings
@@ -471,22 +471,99 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Perform replacement for PHP variables
-        content = re.sub(r'<\?php.*?\?>', '', content, flags=re.DOTALL)
-        content = content.replace("<?php echo escape_output(APP_TITLE); ?>", SETTINGS['product_name'])
+        # --- Generate category card HTML (for cat-pick-grid section) ---
+        cat_cards_html = ''
+        for cat in CATEGORIES:
+            prods = [p for p in PRODUCTS if p['category_id'] == cat['id']]
+            cat_img = next((p.get('image_path','') for p in prods if p.get('image_path')), '')
+            img_html = f'<img src="{cat_img}" alt="{cat["name"]}">' if cat_img else '<div class="cat-clean-img-placeholder">🎁</div>'
+            cat_cards_html += f'''
+                        <div class="cat-clean-card" data-cat-id="{cat['id']}"
+                            data-cat-name="{cat['name']}" role="button" tabindex="0"
+                            aria-label="Browse {cat['name']}">
+                            <div class="cat-clean-img-wrap">
+                                {img_html}
+                            </div>
+                            <div class="cat-clean-footer">
+                                <h2 class="cat-clean-name">{cat['name']}</h2>
+                                <span class="cat-clean-btn">Shop Now &rarr;</span>
+                            </div>
+                        </div>'''
+
+        # --- Generate product panes per category ---
+        cat_panes_html = ''
+        for cat in CATEGORIES:
+            prods = [p for p in PRODUCTS if p['category_id'] == cat['id']]
+            prod_cards = ''
+            for prod in prods:
+                img = prod.get('image_path', 'assets/images/ganesh_hero.png')
+                prod_cards += f'''
+                            <div class="product-card-item"
+                                data-id="{prod['id']}"
+                                data-name="{prod['name']}"
+                                data-price="{prod['price']}"
+                                data-desc="{prod.get('description', '')}"
+                                data-img="{img}"
+                                data-cat="{cat['name']}">
+                                <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view product details">
+                                    <img src="{img}" alt="{prod['name']}" loading="lazy">
+                                    <span class="prod-price-badge">&pound;{prod['price']:.2f}</span>
+                                </div>
+                                <div class="prod-details">
+                                    <h3 class="prod-name">{prod['name']}</h3>
+                                    <p class="prod-desc">{prod.get('description', '')}</p>
+                                    <div class="prod-actions-row">
+                                        <button type="button" class="btn-add-to-cart btn-gold"
+                                            data-id="{prod['id']}"
+                                            data-name="{prod['name']}"
+                                            data-price="{prod['price']}"
+                                            data-img="{img}">
+                                            🛒 Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>'''
+            cat_panes_html += f'''
+                    <div class="products-grid cat-products-pane" id="products-pane-{cat['id']}" style="display:none;">
+                        {prod_cards}
+                    </div>'''
+
+        # Inject category cards: replace everything inside <div class="cat-pick-grid">...</div>
+        content = re.sub(
+            r'(<div class="cat-pick-grid">).*?(</div>\s*</div>\s*<!--\s*/catalog-step-categories-->)',
+            lambda m: m.group(1) + cat_cards_html + '\n                </div>\n            </div>\n            <!-- /catalog-step-categories-->',
+            content, flags=re.DOTALL, count=1
+        )
+
+        # Inject product panes: replace the PHP foreach block between the comment and the closing div
+        content = re.sub(
+            r'(<!-- Per-category product panes -->)\s*<\?php.*?endforeach; \?>\s*(\n\s*</div><!-- /catalog-step-products -->)',
+            lambda m: m.group(1) + '\n' + cat_panes_html + '\n\n            ' + m.group(2).strip(),
+            content, flags=re.DOTALL, count=1
+        )
+
+
+        # Replace simple PHP variable echoes
         content = content.replace("<?php echo escape_output($csrf_token); ?>", SETTINGS['csrf_token'])
         content = content.replace("<?php echo urlencode($paypal_client_id); ?>", SETTINGS['paypal_client_id'])
-        content = content.replace("<?php echo escape_output($settings['bank_account_name'] ?? 'VK LOGISTICS LTD'); ?>", SETTINGS['bank_account_name'])
-        content = content.replace("<?php echo escape_output($settings['bank_name'] ?? 'Barclays Bank UK'); ?>", SETTINGS['bank_name'])
-        content = content.replace("<?php echo escape_output($settings['bank_sort_code'] ?? '20-45-77'); ?>", SETTINGS['bank_sort_code'])
-        content = content.replace("<?php echo escape_output($settings['bank_account_number'] ?? '83920144'); ?>", SETTINGS['bank_account_number'])
-        content = content.replace("<?php echo escape_output($settings['support_phone'] ?? '+44 7700 900888'); ?>", SETTINGS['support_phone'])
-        content = content.replace("<?php echo escape_output($settings['support_email'] ?? 'bappa@vklogistics.co.uk'); ?>", SETTINGS['support_email'])
+        for field, val in SETTINGS.items():
+            content = content.replace(f"<?php echo escape_output($settings['{field}'] ?? ''); ?>", str(val))
+            content = content.replace(f"<?php echo escape_output($settings['{field}'] ?? '{val}'); ?>", str(val))
+            content = content.replace(f"<?php echo ${field}; ?>", str(val))
+        content = content.replace("<?php echo $bank_acc_name; ?>", SETTINGS['bank_account_name'])
+        content = content.replace("<?php echo $bank_name; ?>", SETTINGS['bank_name'])
+        content = content.replace("<?php echo $bank_sort; ?>", SETTINGS['bank_sort_code'])
+        content = content.replace("<?php echo $bank_acc_num; ?>", SETTINGS['bank_account_number'])
+        content = content.replace("<?php echo $phone; ?>", SETTINGS['support_phone'])
+
+        # Strip any remaining PHP tags
+        content = re.sub(r'<\?php.*?\?>', '', content, flags=re.DOTALL)
 
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
         self.end_headers()
         self.wfile.write(content.encode('utf-8'))
+
 
     def render_admin_php(self):
         file_path = os.path.join(DIRECTORY, 'admin.php')

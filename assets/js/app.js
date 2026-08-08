@@ -128,6 +128,40 @@ $(document).ready(function () {
         });
     });
 
+    // Product Info Quick View Modal Handler
+    $(document).on('click', '.prod-img-wrap', function(e) {
+        if ($(e.target).closest('.btn-add-to-cart').length) return;
+        
+        let card = $(this).closest('.product-card-item');
+
+        let id = card.data('id');
+        let name = card.data('name');
+        let price = parseFloat(card.data('price')).toFixed(2);
+        let desc = card.data('desc') || 'High quality handcrafted item delivered across the UK.';
+        let img = card.data('img');
+        let cat = card.data('cat') || 'Festive Collection';
+
+        $('#pmodal-img').attr('src', img);
+        $('#pmodal-name').text(name);
+        $('#pmodal-price').html(`&pound;${price}`);
+        $('#pmodal-btn-price').html(`&pound;${price}`);
+        $('#pmodal-desc').text(desc);
+        $('#pmodal-category').text(cat);
+
+        $('#pmodal-add-cart-btn').off('click').on('click', function() {
+            addToCart(id, name, parseFloat(price), img);
+            $('#product-info-modal-overlay').removeClass('active');
+        });
+
+        $('#product-info-modal-overlay').addClass('active');
+    });
+
+    $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function(e) {
+        if (e.target === this || $(this).hasClass('prod-modal-close')) {
+            $('#product-info-modal-overlay').removeClass('active');
+        }
+    });
+
     // Add to Cart Action
     $(document).on('click', '.btn-add-to-cart', function(e) {
         e.preventDefault();
@@ -262,6 +296,92 @@ $(document).ready(function () {
     $('#cart-toggle-btn').on('click', openCartSidebar);
     $('#cart-close-btn, #cart-overlay').on('click', closeCartSidebar);
 
+    // Navbar Cart Trigger
+    $('#header-cart-trigger').on('click', openCartSidebar);
+
+    // Category Filter Pills Handler
+    $(document).on('click', '.cat-pill-btn', function() {
+        $('.cat-pill-btn').removeClass('active');
+        $(this).addClass('active');
+
+        let catId = $(this).data('cat-id');
+        if (catId === 'all') {
+            $('.product-card-item').fadeIn(200);
+            $('#products-grid-heading').text('All Collections');
+            $('#products-count-badge').text(`${$('.product-card-item').length} Items Available`);
+        } else {
+            $('.product-card-item').hide();
+            let matched = $(`.product-card-item[data-cat-id="${catId}"]`);
+            matched.fadeIn(200);
+            let catName = $(this).text().replace(/[✨🐘🪔🎁]/g, '').trim();
+            $('#products-grid-heading').text(`${catName} Collection`);
+            $('#products-count-badge').text(`${matched.length} Items Available`);
+        }
+    });
+
+    // Track Order Modal Controls
+    $('#nav-track-order-btn').on('click', function(e) {
+        e.preventDefault();
+        $('#track-modal-overlay').addClass('active');
+        $('#track-ref-input').focus();
+    });
+
+    $('#btn-close-track-modal, #track-modal-overlay').on('click', function(e) {
+        if (e.target === this || $(this).hasClass('track-modal-close')) {
+            $('#track-modal-overlay').removeClass('active');
+        }
+    });
+
+    $('#btn-search-tracking').on('click', function() {
+        let ref = $('#track-ref-input').val().trim();
+        if (!ref) {
+            showToast('Please enter your Booking Reference (e.g. VKG-2026-000101)', 'error');
+            return;
+        }
+
+        let resBox = $('#track-results-box');
+        resBox.html('<div style="text-align:center; padding:15px; color:#4A0B17; font-weight:700;">🔍 Searching records...</div>').show();
+
+        $.ajax({
+            url: 'ajax/admin-actions.php',
+            type: 'POST',
+            dataType: 'json',
+            data: { action: 'get_booking_details', booking_ref: ref },
+            success: function(res) {
+                if (res.success && res.booking) {
+                    let b = res.booking;
+                    resBox.html(`
+                        <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:14px; padding:16px; font-family:'Plus Jakarta Sans',sans-serif;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:10px; margin-bottom:10px;">
+                                <strong style="color:#4A0B17; font-size:1.05rem;">Ref: ${b.booking_reference}</strong>
+                                <span style="background:#D4AF37; color:#4A0B17; font-weight:800; font-size:0.75rem; padding:3px 10px; border-radius:50px;">${b.booking_status}</span>
+                            </div>
+                            <div style="font-size:0.9rem; color:#334155; line-height:1.6;">
+                                <div><strong>Customer:</strong> ${b.customer_name}</div>
+                                <div><strong>Payment Status:</strong> <span style="color:#059669; font-weight:700;">${b.payment_status}</span></div>
+                                <div><strong>Delivery Address:</strong> ${b.address_line_1}, ${b.city}, ${b.postcode}</div>
+                                <div><strong>Total Amount:</strong> &pound;${parseFloat(b.total_amount).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    resBox.html(`
+                        <div style="background:#FEF2F2; border:1px solid #FCA5A5; color:#991B1B; padding:14px; border-radius:12px; font-size:0.9rem; text-align:center;">
+                            ❌ Booking Reference not found. Please check your reference number and try again.
+                        </div>
+                    `);
+                }
+            },
+            error: function() {
+                resBox.html(`
+                    <div style="background:#FEF2F2; border:1px solid #FCA5A5; color:#991B1B; padding:14px; border-radius:12px; font-size:0.9rem; text-align:center;">
+                        Unable to connect. Please verify your reference or try calling support.
+                    </div>
+                `);
+            }
+        });
+    });
+
     // Recalculate Totals
     function recalculateTotals() {
         let subtotal = 0.00;
@@ -275,6 +395,7 @@ $(document).ready(function () {
         
         // Update UI floats
         $('#cart-total-badge').text(totalQty);
+        $('#nav-cart-badge').text(totalQty);
         $('#cart-subtotal-val').text(currencySymbol + subtotal.toFixed(2));
         $('#cart-total-val').text(currencySymbol + total);
         
