@@ -785,6 +785,7 @@ $settings     = get_all_settings();
                         <label for="category-image-file" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Category Image</label>
                         <input type="hidden" id="category-current-image" name="current_image_path" value="">
                         <input type="file" id="category-image-file" name="category_image" accept="image/*" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box; background:#F8FAFC;">
+                        <small style="font-size:0.75rem; color:#64748B; display:block; margin-top:4px;">recommended ratio: 1:1 square (e.g. 1000x1000 px, max 10mb)</small>
                         <div id="category-image-preview-box" style="margin-top: 10px; display: none; align-items: center; gap: 10px; background: #F1F5F9; padding: 8px 12px; border-radius: 6px;">
                             <img id="category-image-preview-img" src="" alt="Category Image" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;">
                             <span style="font-size: 0.8rem; color: #475569; font-weight: 600;">Current Image</span>
@@ -831,7 +832,7 @@ $settings     = get_all_settings();
                     <div class="admin-field-group">
                         <label for="product-image-file">Product Image File</label>
                         <input type="file" id="product-image-file" name="product_image" accept="image/*" style="width:100%; padding:5px 0;">
-                        <span style="font-size:0.75rem; color:#64748B; display:block; margin-top:2px;">Upload a product photo. Keep blank to use current photo.</span>
+                        <small style="font-size:0.75rem; color:#64748B; display:block; margin-top:4px;">recommended ratio: 1:1 square (e.g. 1000x1000 px, max 10mb)</small>
                         <div id="product-image-preview-box" style="margin-top:10px; display:none;">
                             <img id="product-image-preview-el" src="" alt="Preview" style="max-width:100px; max-height:100px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0;">
                         </div>

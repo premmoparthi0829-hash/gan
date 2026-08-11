@@ -52,8 +52,8 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
         rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/animations.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/animations.css?v=<?php echo time(); ?>">
 
 
 </head>
@@ -95,16 +95,32 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
     <main class="shop-main" id="shop-catalog">
         <div class="container">
 
-            <!-- ── STEP 1: Category Selection (Single Screen View) ── -->
+            <!-- ── STEP 1: Shop Our Collections (100% Identical Product Card Design View) ── -->
             <div id="catalog-step-categories">
                 <div class="shop-hero-text">
                     <h1 class="shop-page-title">Shop Our <span>Collections</span></h1>
                 </div>
 
-                <div class="cat-pick-grid">
+                <div class="cat-2col-grid">
                     <?php foreach ($categories as $cat):
                         $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
                         $count = count($cat_products);
+                        $min_price = 14.99;
+                        if ($count > 0) {
+                            $prices = array_column($cat_products, 'price');
+                            $min_price = min($prices);
+                        }
+
+                        // Dynamic Price badge logic
+                        if (stripos($cat['name'], 'rakhi') !== false) {
+                            if ($min_price == 14.99) $min_price = 9.99;
+                        } elseif (stripos($cat['name'], 'pooja') !== false || stripos($cat['name'], 'kit') !== false) {
+                            if ($min_price == 14.99) $min_price = 9.99;
+                        } elseif (stripos($cat['name'], 'decor') !== false || stripos($cat['name'], 'thali') !== false) {
+                            if ($min_price == 14.99) $min_price = 19.99;
+                        }
+
+                        // Image fallback
                         $cat_img = !empty($cat['image_path']) ? $cat['image_path'] : '';
                         if (empty($cat_img)) {
                             foreach ($cat_products as $p) {
@@ -114,27 +130,42 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                 }
                             }
                         }
-                        $cat_desc = !empty($cat['description']) ? $cat['description'] : '';
-                        ?>
-                        <div class="cat-clean-card" data-cat-id="<?php echo $cat['id']; ?>"
-                            data-cat-name="<?php echo escape_output($cat['name']); ?>" role="button" tabindex="0"
-                            aria-label="Browse <?php echo escape_output($cat['name']); ?>">
 
-                            <div class="cat-clean-img-wrap">
+                        // Default description
+                        $cat_desc = !empty($cat['description']) ? $cat['description'] : '';
+                        if (empty($cat_desc)) {
+                            if (stripos($cat['name'], 'ganesh') !== false) {
+                                $cat_desc = 'Handcrafted eco-friendly clay Ganesh statue with complete Mukut & ornaments kit.';
+                            } elseif (stripos($cat['name'], 'rakhi') !== false) {
+                                $cat_desc = 'Exquisite designer handcrafted rakhis for brothers and family celebrations.';
+                            } elseif (stripos($cat['name'], 'pooja') !== false) {
+                                $cat_desc = 'Sacred eco-friendly visarjan buckets, organic turmeric, kumkum & puja kits.';
+                            } else {
+                                $cat_desc = 'Traditional handcrafted puja thalis, brass diyas & festive decorations.';
+                            }
+                        }
+                        ?>
+                        <div class="product-card-item cat-clean-card" data-cat-id="<?php echo $cat['id']; ?>"
+                            data-cat-name="<?php echo escape_output($cat['name']); ?>" role="button" tabindex="0"
+                            aria-label="Browse <?php echo escape_output($cat['name']); ?>" style="cursor:pointer;">
+
+                            <div class="prod-img-wrap">
                                 <?php if ($cat_img): ?>
                                     <img src="<?php echo escape_output($cat_img); ?>"
-                                        alt="<?php echo escape_output($cat['name']); ?>">
+                                        alt="<?php echo escape_output($cat['name']); ?>" loading="lazy">
                                 <?php else: ?>
-                                    <div class="cat-clean-img-placeholder">🎁</div>
+                                    <div class="cat-clean-img-placeholder" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:3rem; position:absolute; top:0; left:0;">🎁</div>
                                 <?php endif; ?>
                             </div>
 
-                            <div class="cat-clean-footer">
-                                <h2 class="cat-clean-name"><?php echo escape_output($cat['name']); ?></h2>
-                                <?php if ($cat_desc): ?>
-                                    <p style="font-size: 0.85rem; color: #64748B; margin: 4px 0 8px 0; line-height: 1.3; font-weight: 400; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo escape_output($cat_desc); ?></p>
-                                <?php endif; ?>
-                                <span class="cat-clean-btn">Shop Now &rarr;</span>
+                            <div class="prod-details">
+                                <h3 class="prod-name"><?php echo escape_output($cat['name']); ?></h3>
+                                <p class="prod-desc"><?php echo escape_output($cat_desc); ?></p>
+                                <div class="prod-actions-row">
+                                    <span class="btn-shop-collection btn-gold" style="width:100%; text-align:center; display:block;">
+                                        Shop Collection &rarr;
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -775,8 +806,8 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
     <!-- PayPal JS SDK — loads live or sandbox button asynchronously for ultra-fast page load -->
     <script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypal_client_id); ?>&currency=<?php echo urlencode($settings['currency_code'] ?? 'GBP'); ?>&intent=capture" data-namespace="paypal" async defer></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/paypal-integration.js"></script>
+    <script src="assets/js/app.js?v=<?php echo time(); ?>"></script>
+    <script src="assets/js/paypal-integration.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

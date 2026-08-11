@@ -112,10 +112,10 @@ $(document).ready(function () {
     }
 
     // Click on category card
-    $(document).on('click keypress', '.cat-clean-card', function(e) {
+    $(document).on('click keypress', '.cat-stylish-card, .cat-clean-card, .collection-card', function(e) {
         if (e.type === 'keypress' && e.which !== 13) return;
         let catId   = $(this).data('cat-id');
-        let catName = $(this).find('.cat-clean-name').text().trim();
+        let catName = $(this).data('cat-name') || $(this).find('.cat-stylish-title, .cat-clean-name, .collection-card-title').text().trim();
         showCategoryProducts(catId, catName);
     });
 
@@ -194,7 +194,6 @@ $(document).ready(function () {
         }
 
         renderCart();
-        showToast(`Added "${name}" to your cart!`, 'success');
         openCartSidebar();
     }
 
@@ -873,10 +872,10 @@ $(document).ready(function () {
         container.append(toast);
 
         setTimeout(function () {
-            toast.fadeOut(400, function () {
+            toast.fadeOut(250, function () {
                 $(this).remove();
             });
-        }, 4000);
+        }, 800);
     }
 
     // Helper: Fetch Dynamic Settings via AJAX
