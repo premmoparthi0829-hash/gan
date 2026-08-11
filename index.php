@@ -796,6 +796,20 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
             currency: "<?php echo escape_output($settings['currency_code'] ?? 'GBP'); ?>",
             status: "<?php echo escape_output($settings['paypal_status'] ?? 'enabled'); ?>"
         };
+        window.VK_GIFT_WRAP_CONFIG = {
+            enabled: <?php echo ($settings['gift_wrap_enabled'] ?? '1') == '1' ? 'true' : 'false'; ?>,
+            name: <?php echo json_encode(escape_output($settings['gift_wrap_name'] ?? '🎁 Festive Gift Wrapping & Greeting Card')); ?>,
+            desc: <?php echo json_encode(escape_output($settings['gift_wrap_desc'] ?? 'Luxury golden gift wrap with customized festive greeting card')); ?>,
+            price: <?php echo (float) ($settings['gift_wrap_price'] ?? 1.99); ?>,
+            image: <?php echo json_encode(escape_output($settings['gift_wrap_image'] ?? 'assets/images/products/rakhi-1.jpg')); ?>
+        };
+        window.VK_CHOC_BOX_CONFIG = {
+            enabled: <?php echo ($settings['choc_box_enabled'] ?? '1') == '1' ? 'true' : 'false'; ?>,
+            name: <?php echo json_encode(escape_output($settings['choc_box_name'] ?? '🍫 Premium Cadbury Celebrations Chocolate Box')); ?>,
+            desc: <?php echo json_encode(escape_output($settings['choc_box_desc'] ?? 'Luxury assorted Cadbury chocolates & dry fruit sweets box')); ?>,
+            price: <?php echo (float) ($settings['choc_box_price'] ?? 3.99); ?>,
+            image: <?php echo json_encode(escape_output($settings['choc_box_image'] ?? 'assets/images/products/rakhi-2.jpg')); ?>
+        };
     </script>
     <!-- PayPal JS SDK — loads live or sandbox button asynchronously for ultra-fast page load -->
     <script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypal_client_id); ?>&currency=<?php echo urlencode($settings['currency_code'] ?? 'GBP'); ?>&intent=capture" data-namespace="paypal" async defer></script>

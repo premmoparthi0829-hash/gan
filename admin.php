@@ -371,6 +371,72 @@ $settings     = get_all_settings();
                             </div>
                         </div>
 
+                        <!-- Panel 3: Festive Gift Wrapping Settings -->
+                        <div style="grid-column: 1 / -1; background: #FFFDF9; border: 1.5px solid #FCD34D; border-radius: 14px; padding: 22px; margin-top: 10px;">
+                            <h3 style="color: #92400E; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #FEF3C7; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                🎁 Add-On 1: Festive Gift Wrapping &amp; Card
+                            </h3>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <div class="admin-field-group">
+                                    <label for="gift_wrap_enabled" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Add-On Status</label>
+                                    <?php $gw_enabled = $settings['gift_wrap_enabled'] ?? '1'; ?>
+                                    <select id="gift_wrap_enabled" name="gift_wrap_enabled" style="width: 100%; padding: 10px 12px; border: 1.5px solid #FCD34D; border-radius: 8px; font-weight: 700; background: #FFF;">
+                                        <option value="1" <?php echo $gw_enabled == '1' ? 'selected' : ''; ?>>✅ Active &amp; Displayed inside Cart</option>
+                                        <option value="0" <?php echo $gw_enabled == '0' ? 'selected' : ''; ?>>🚫 Disabled (Hide from Cart)</option>
+                                    </select>
+                                </div>
+
+                                <div class="admin-field-group">
+                                    <label for="gift_wrap_price" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Add-On Price (&pound;)</label>
+                                    <input type="number" step="0.01" min="0" id="gift_wrap_price" name="gift_wrap_price" value="<?php echo escape_output($settings['gift_wrap_price'] ?? '1.99'); ?>" placeholder="1.99" style="width: 100%; padding: 10px 12px; border: 1.5px solid #FCD34D; border-radius: 8px; font-weight: 700;">
+                                </div>
+
+                                <div class="admin-field-group" style="grid-column: 1 / -1;">
+                                    <label for="gift_wrap_name" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Add-On Title</label>
+                                    <input type="text" id="gift_wrap_name" name="gift_wrap_name" value="<?php echo escape_output($settings['gift_wrap_name'] ?? '🎁 Festive Gift Wrapping & Greeting Card'); ?>" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                                </div>
+
+                                <div class="admin-field-group" style="grid-column: 1 / -1;">
+                                    <label for="gift_wrap_desc" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Short Description</label>
+                                    <textarea id="gift_wrap_desc" name="gift_wrap_desc" rows="2" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-family: inherit; resize: vertical;"><?php echo escape_output($settings['gift_wrap_desc'] ?? 'Luxury golden gift wrap with customized festive greeting card'); ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel 4: Premium Chocolate Box Settings -->
+                        <div style="grid-column: 1 / -1; background: #FDF2F8; border: 1.5px solid #F472B6; border-radius: 14px; padding: 22px; margin-top: 14px;">
+                            <h3 style="color: #9D174D; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #FBCFE8; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                🍫 Add-On 2: Premium Chocolate &amp; Sweet Box
+                            </h3>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                                <div class="admin-field-group">
+                                    <label for="choc_box_enabled" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Add-On Status</label>
+                                    <?php $cb_enabled = $settings['choc_box_enabled'] ?? '1'; ?>
+                                    <select id="choc_box_enabled" name="choc_box_enabled" style="width: 100%; padding: 10px 12px; border: 1.5px solid #F472B6; border-radius: 8px; font-weight: 700; background: #FFF;">
+                                        <option value="1" <?php echo $cb_enabled == '1' ? 'selected' : ''; ?>>✅ Active &amp; Displayed inside Cart</option>
+                                        <option value="0" <?php echo $cb_enabled == '0' ? 'selected' : ''; ?>>🚫 Disabled (Hide from Cart)</option>
+                                    </select>
+                                </div>
+
+                                <div class="admin-field-group">
+                                    <label for="choc_box_price" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Add-On Price (&pound;)</label>
+                                    <input type="number" step="0.01" min="0" id="choc_box_price" name="choc_box_price" value="<?php echo escape_output($settings['choc_box_price'] ?? '3.99'); ?>" placeholder="3.99" style="width: 100%; padding: 10px 12px; border: 1.5px solid #F472B6; border-radius: 8px; font-weight: 700;">
+                                </div>
+
+                                <div class="admin-field-group" style="grid-column: 1 / -1;">
+                                    <label for="choc_box_name" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Add-On Title</label>
+                                    <input type="text" id="choc_box_name" name="choc_box_name" value="<?php echo escape_output($settings['choc_box_name'] ?? '🍫 Premium Cadbury Celebrations Chocolate Box'); ?>" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                                </div>
+
+                                <div class="admin-field-group" style="grid-column: 1 / -1;">
+                                    <label for="choc_box_desc" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Short Description</label>
+                                    <textarea id="choc_box_desc" name="choc_box_desc" rows="2" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-family: inherit; resize: vertical;"><?php echo escape_output($settings['choc_box_desc'] ?? 'Luxury assorted Cadbury chocolates & dry fruit sweets box'); ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Action Buttons Toolbar -->

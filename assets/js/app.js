@@ -244,19 +244,22 @@ $(document).ready(function () {
         }
 
         cart.forEach(item => {
+            let isAddon = item.id === 99998 || item.id === 99999;
             let row = $(`
-                <div class="cart-item-row">
+                <div class="cart-item-row ${isAddon ? 'cart-item-gift-row' : ''}" style="${isAddon ? 'background:#FFFDF5; border:1px solid #FCD34D;' : ''}">
                     <img src="${item.image}" alt="${item.name}" class="cart-item-img">
                     <div class="cart-item-info">
                         <div class="cart-item-name">${item.name}</div>
                         <div class="cart-item-price">${currencySymbol}${item.price.toFixed(2)}</div>
                     </div>
                     <div class="cart-item-actions">
-                        <div class="cart-qty-ctrl">
-                            <button type="button" class="cart-qty-btn cart-minus" data-id="${item.id}">&minus;</button>
-                            <span class="cart-qty-val">${item.quantity}</span>
-                            <button type="button" class="cart-qty-btn cart-plus" data-id="${item.id}">&plus;</button>
-                        </div>
+                        ${!isAddon ? `
+                            <div class="cart-qty-ctrl">
+                                <button type="button" class="cart-qty-btn cart-minus" data-id="${item.id}">&minus;</button>
+                                <span class="cart-qty-val">${item.quantity}</span>
+                                <button type="button" class="cart-qty-btn cart-plus" data-id="${item.id}">&plus;</button>
+                            </div>
+                        ` : ''}
                         <button type="button" class="cart-remove-btn" data-id="${item.id}">Remove</button>
                     </div>
                 </div>
@@ -264,10 +267,86 @@ $(document).ready(function () {
             listContainer.append(row);
         });
 
+        // 1. Render Festive Gift Wrapping Add-On Banner if enabled and not in cart
+        let hasGiftWrap = cart.some(item => item.id === 99998);
+        if (window.VK_GIFT_WRAP_CONFIG && window.VK_GIFT_WRAP_CONFIG.enabled && !hasGiftWrap) {
+            let gwConfig = window.VK_GIFT_WRAP_CONFIG;
+            let wrapCardHtml = `
+                <div class="cart-gift-box-upsell" style="background:#FFFDF5; border:1.5px dashed #FCD34D; border-radius:14px; padding:12px 14px; margin:14px 0 8px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(217,119,6,0.06);">
+                    <img src="${gwConfig.image}" alt="${gwConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FDE68A;">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:800; font-size:0.86rem; color:#92400E; line-height:1.2;">${gwConfig.name}</div>
+                        <div style="font-size:0.74rem; color:#78350F; margin-top:2px; line-height:1.3;">${gwConfig.desc}</div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-add-gift-wrap" style="background:#D97706; color:#FFFFFF; border:none; padding:6px 12px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(217,119,6,0.3); white-space:nowrap;">
+                            + Add (+${currencySymbol}${gwConfig.price.toFixed(2)})
+                        </button>
+                    </div>
+                </div>
+            `;
+            listContainer.append(wrapCardHtml);
+        }
+
+        // 2. Render Premium Chocolate Box Add-On Banner if enabled and not in cart
+        let hasChocBox = cart.some(item => item.id === 99999);
+        if (window.VK_CHOC_BOX_CONFIG && window.VK_CHOC_BOX_CONFIG.enabled && !hasChocBox) {
+            let cbConfig = window.VK_CHOC_BOX_CONFIG;
+            let chocCardHtml = `
+                <div class="cart-gift-box-upsell" style="background:#FDF2F8; border:1.5px dashed #F472B6; border-radius:14px; padding:12px 14px; margin:8px 0 10px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(157,23,77,0.06);">
+                    <img src="${cbConfig.image}" alt="${cbConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FBCFE8;">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:800; font-size:0.86rem; color:#9D174D; line-height:1.2;">${cbConfig.name}</div>
+                        <div style="font-size:0.74rem; color:#831843; margin-top:2px; line-height:1.3;">${cbConfig.desc}</div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-add-choc-box" style="background:#DB2777; color:#FFFFFF; border:none; padding:6px 12px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(219,39,119,0.3); white-space:nowrap;">
+                            + Add (+${currencySymbol}${cbConfig.price.toFixed(2)})
+                        </button>
+                    </div>
+                </div>
+            `;
+            listContainer.append(chocCardHtml);
+        }
+
         recalculateTotals();
     }
 
-    // Plus/Minus/Remove Event Listeners
+    // Gift Wrap Add-On Listener
+    $(document).on('click', '.btn-add-gift-wrap', function() {
+        if (!window.VK_GIFT_WRAP_CONFIG) return;
+        let gwConfig = window.VK_GIFT_WRAP_CONFIG;
+        let existing = cart.find(item => item.id === 99998);
+        if (!existing) {
+            cart.push({
+                id: 99998,
+                name: gwConfig.name,
+                price: parseFloat(gwConfig.price),
+                image: gwConfig.image,
+                quantity: 1,
+                isAddon: true
+            });
+        }
+        renderCart();
+    });
+
+    // Chocolate Box Add-On Listener
+    $(document).on('click', '.btn-add-choc-box', function() {
+        if (!window.VK_CHOC_BOX_CONFIG) return;
+        let cbConfig = window.VK_CHOC_BOX_CONFIG;
+        let existing = cart.find(item => item.id === 99999);
+        if (!existing) {
+            cart.push({
+                id: 99999,
+                name: cbConfig.name,
+                price: parseFloat(cbConfig.price),
+                image: cbConfig.image,
+                quantity: 1,
+                isAddon: true
+            });
+        }
+        renderCart();
+    });
     $(document).on('click', '.cart-plus', function() {
         let id = parseInt($(this).data('id'));
         updateCartQty(id, 1);

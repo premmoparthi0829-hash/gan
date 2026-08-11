@@ -234,7 +234,9 @@ if ($action === 'save_paypal_settings') {
     $allowed_keys = [
         'paypal_client_id', 'paypal_mode', 'paypal_client_secret',
         'paypal_email', 'paypal_account_name', 'paypal_id',
-        'currency_code', 'paypal_status', 'shipping_charge'
+        'currency_code', 'paypal_status', 'shipping_charge',
+        'gift_wrap_enabled', 'gift_wrap_name', 'gift_wrap_desc', 'gift_wrap_price', 'gift_wrap_image',
+        'choc_box_enabled', 'choc_box_name', 'choc_box_desc', 'choc_box_price', 'choc_box_image'
     ];
 
     $db = Database::getConnection();
