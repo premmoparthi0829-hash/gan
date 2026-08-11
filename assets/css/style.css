@@ -4605,6 +4605,31 @@ body.modal-open { overflow: hidden; }
 }
 
 /* ============================================================
+   2-COLUMN CATEGORY GRID (SIDE-BY-SIDE WIDE CARDS + DOWNSIDE WRAP)
+   ============================================================ */
+.cat-2col-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 32px !important;
+  max-width: 1140px !important;
+  margin: 28px auto 15px auto !important;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.cat-2col-grid .prod-img-wrap {
+  padding-top: 65% !important; /* Wide landscape image ratio (16:10) for wider cards */
+}
+
+@media (max-width: 768px) {
+  .cat-2col-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    max-width: 580px !important;
+  }
+}
+
+/* ============================================================
    PRODUCT-CARD MATCHED STYLISH CATEGORY CARDS
    ============================================================ */
 

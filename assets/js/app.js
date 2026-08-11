@@ -232,9 +232,11 @@ $(document).ready(function () {
 
         if (cart.length === 0) {
             listContainer.html(`
-                <div class="cart-empty-state">
-                    <span style="font-size:3rem; display:block; margin-bottom:12px;">🛒</span>
-                    Your cart is empty.<br>Add items from the catalog above!
+                <div class="cart-empty-state" style="padding: 35px 20px; text-align: center;">
+                    <span style="font-size:3.2rem; display:block; margin-bottom:12px; opacity:0.8;">🛒</span>
+                    <div style="font-weight:700; font-size:1.05rem; color:#1E293B; margin-bottom:6px;">Your cart is empty</div>
+                    <p style="font-size:0.85rem; color:#64748B; margin-bottom:18px;">Browse our festival collections and add items to your cart.</p>
+                    <button type="button" class="btn-gold" id="btn-cart-browse" onclick="$('#cart-close-btn').click();" style="padding:10px 22px; border-radius:50px; font-weight:700; border:none; cursor:pointer;">Browse Collections &rarr;</button>
                 </div>
             `);
             recalculateTotals();
@@ -390,18 +392,20 @@ $(document).ready(function () {
             subtotal += item.price * item.quantity;
         });
         
-        let total = (subtotal + shippingCharge).toFixed(2);
+        let activeShipping = (totalQty > 0) ? shippingCharge : 0.00;
+        let total = (subtotal + activeShipping).toFixed(2);
         
         // Update UI floats
         $('#cart-total-badge').text(totalQty);
         $('#nav-cart-badge').text(totalQty);
         $('#cart-subtotal-val').text(currencySymbol + subtotal.toFixed(2));
+        $('#cart-shipping-val').text(currencySymbol + activeShipping.toFixed(2));
         $('#cart-total-val').text(currencySymbol + total);
         
         if (totalQty > 0) {
-            $('#cart-checkout-btn').prop('disabled', false);
+            $('#cart-checkout-btn').prop('disabled', false).css('opacity', '1');
         } else {
-            $('#cart-checkout-btn').prop('disabled', true);
+            $('#cart-checkout-btn').prop('disabled', true).css('opacity', '0.5');
         }
         
         // Update checkout modal displays
@@ -409,7 +413,7 @@ $(document).ready(function () {
         $('#step1-grand-total').text(currencySymbol + subtotal.toFixed(2));
         $('.display-qty').text(totalQty);
         $('.display-subtotal').text(currencySymbol + subtotal.toFixed(2));
-        $('.display-shipping').text(currencySymbol + shippingCharge.toFixed(2));
+        $('.display-shipping').text(currencySymbol + activeShipping.toFixed(2));
         $('.display-total').text(currencySymbol + total);
     }
 

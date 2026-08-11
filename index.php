@@ -664,14 +664,8 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                     </div>
                                 </div>
 
-                                <!-- Live PayPal Smart Buttons Container -->
+                                 <!-- Live PayPal Smart Buttons Container -->
                                 <div id="paypal-button-container" style="min-height:48px; margin-bottom:12px;"></div>
-
-                                <!-- High Visibility Direct PayPal Checkout Button -->
-                                <button type="button" class="bm-submit-btn" id="btn-submit-paypal" style="background: linear-gradient(135deg, #FFC439 0%, #FFB703 100%); color: #003087; font-weight: 800; font-size: 1.05rem; border: none; box-shadow: 0 4px 14px rgba(255, 196, 57, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .761-.645h6.637c3.15 0 5.48.665 6.435 2.1.84 1.258.825 2.92.008 4.777-.923 2.1-2.736 3.49-5.184 3.49H10.15a.77.77 0 0 0-.76.645l-.76 4.814a.641.641 0 0 1-.633.536z"/></svg>
-                                    Pay Now with PayPal
-                                </button>
 
                                 <p style="text-align:center; font-size:0.78rem; color:#64748B; margin-top:12px;">
                                     🔒 You will be securely redirected to PayPal's encrypted payment checkout. No card details are stored on this site.
@@ -761,11 +755,11 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
             </div>
             <div class="cart-summary-row">
                 <span>UK Shipping:</span>
-                <span id="cart-shipping-val">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
+                <span id="cart-shipping-val">&pound;0.00</span>
             </div>
             <div class="cart-summary-row total">
                 <span>Total Payable:</span>
-                <span id="cart-total-val">&pound;<?php echo number_format($shipping_charge, 2); ?></span>
+                <span id="cart-total-val">&pound;0.00</span>
             </div>
             <button type="button" class="cart-checkout-btn" id="cart-checkout-btn" disabled>
                 Proceed to Booking Checkout
