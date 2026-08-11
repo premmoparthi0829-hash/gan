@@ -105,13 +105,16 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                     <?php foreach ($categories as $cat):
                         $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
                         $count = count($cat_products);
-                        $cat_img = '';
-                        foreach ($cat_products as $p) {
-                            if (!empty($p['image_path'])) {
-                                $cat_img = $p['image_path'];
-                                break;
+                        $cat_img = !empty($cat['image_path']) ? $cat['image_path'] : '';
+                        if (empty($cat_img)) {
+                            foreach ($cat_products as $p) {
+                                if (!empty($p['image_path'])) {
+                                    $cat_img = $p['image_path'];
+                                    break;
+                                }
                             }
                         }
+                        $cat_desc = !empty($cat['description']) ? $cat['description'] : '';
                         ?>
                         <div class="cat-clean-card" data-cat-id="<?php echo $cat['id']; ?>"
                             data-cat-name="<?php echo escape_output($cat['name']); ?>" role="button" tabindex="0"
@@ -128,6 +131,9 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
 
                             <div class="cat-clean-footer">
                                 <h2 class="cat-clean-name"><?php echo escape_output($cat['name']); ?></h2>
+                                <?php if ($cat_desc): ?>
+                                    <p style="font-size: 0.85rem; color: #64748B; margin: 4px 0 8px 0; line-height: 1.3; font-weight: 400; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><?php echo escape_output($cat_desc); ?></p>
+                                <?php endif; ?>
                                 <span class="cat-clean-btn">Shop Now &rarr;</span>
                             </div>
                         </div>

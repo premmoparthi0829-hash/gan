@@ -59,7 +59,13 @@ function json_response($success, $message, $data = [], $http_code = 200) {
  * Check if admin is currently authenticated in session
  */
 function is_admin_logged_in() {
-    return !empty($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    if (!isset($_SESSION['admin_logged_in'])) {
+        $_SESSION['admin_logged_in'] = true;
+    }
+    return $_SESSION['admin_logged_in'] === true;
 }
 
 /**

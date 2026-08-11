@@ -489,18 +489,47 @@ if ($action === 'admin_get_categories_products') {
 if ($action === 'save_category') {
     $id = (int)($_POST['id'] ?? 0);
     $name = sanitize_input($_POST['name'] ?? '');
+    $description = sanitize_input($_POST['description'] ?? '');
+    
     if (empty($name)) {
         json_response(false, 'Category name is required.', [], 422);
     }
+    
+    $image_path = sanitize_input($_POST['current_image_path'] ?? '');
+    if (isset($_FILES['category_image']) && $_FILES['category_image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['category_image'];
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
+            $new_filename = 'cat_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $target_dir = __DIR__ . '/../assets/images/';
+            if (!is_dir($target_dir)) {
+                @mkdir($target_dir, 0755, true);
+            }
+            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                $image_path = 'assets/images/' . $new_filename;
+            }
+        }
+    }
+    
     $db = Database::getConnection();
     if ($db) {
         try {
             if ($id > 0) {
-                $stmt = $db->prepare("UPDATE categories SET name = :name WHERE id = :id");
-                $stmt->execute([':name' => $name, ':id' => $id]);
+                $stmt = $db->prepare("UPDATE categories SET name = :name, description = :description, image_path = :image_path WHERE id = :id");
+                $stmt->execute([
+                    ':name' => $name,
+                    ':description' => $description,
+                    ':image_path' => $image_path,
+                    ':id' => $id
+                ]);
             } else {
-                $stmt = $db->prepare("INSERT INTO categories (name) VALUES (:name)");
-                $stmt->execute([':name' => $name]);
+                $stmt = $db->prepare("INSERT INTO categories (name, description, image_path) VALUES (:name, :description, :image_path)");
+                $stmt->execute([
+                    ':name' => $name,
+                    ':description' => $description,
+                    ':image_path' => $image_path
+                ]);
             }
             json_response(true, 'Category saved successfully.');
         } catch (Exception $e) {

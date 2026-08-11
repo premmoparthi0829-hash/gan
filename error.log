@@ -429,3 +429,20 @@
 [2026-08-08 10:41:06] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it). Operating with default system fallback.
 [2026-08-08 10:41:12] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it). Operating with default system fallback.
 [2026-08-08 10:41:18] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it). Operating with default system fallback.
+[2026-08-11 10:38:40] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:40] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:40] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:41] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:41] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:41] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:41] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:41] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:38:41] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:41:17] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:41:17] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:41:17] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:41:35] Database Connection Notice: MySQL not connected (SQLSTATE[HY000] [2002] No such file or directory). Operating with default system fallback.
+[2026-08-11 10:52:50] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.
+[2026-08-11 10:53:06] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.
+[2026-08-11 10:53:19] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.
+[2026-08-11 10:53:31] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.

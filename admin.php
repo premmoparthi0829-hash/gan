@@ -631,8 +631,10 @@ $settings     = get_all_settings();
                             <table class="admin-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 80px; text-align: center;">ID</th>
+                                        <th style="width: 60px; text-align: center;">ID</th>
+                                        <th style="width: 70px; text-align: center;">Image</th>
                                         <th style="text-align: left;">Category Name</th>
+                                        <th style="text-align: left;">Short Description</th>
                                         <th style="width: 150px; text-align: center;">Actions</th>
                                     </tr>
                                 </thead>
@@ -772,8 +774,21 @@ $settings     = get_all_settings();
                 <input type="hidden" id="category-id" name="id" value="0">
                 <div class="admin-modal-body" style="padding: 20px;">
                     <div class="admin-field-group">
-                        <label for="category-name">Category Name</label>
-                        <input type="text" id="category-name" name="name" placeholder="e.g. Rakhi" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                        <label for="category-name" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Category Name</label>
+                        <input type="text" id="category-name" name="name" placeholder="e.g. Eco Ganesh Statues" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div class="admin-field-group" style="margin-top: 15px;">
+                        <label for="category-description" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Short Description</label>
+                        <textarea id="category-description" name="description" placeholder="Brief overview of items in this category..." rows="3" style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box; resize:vertical;"></textarea>
+                    </div>
+                    <div class="admin-field-group" style="margin-top: 15px;">
+                        <label for="category-image-file" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Category Image</label>
+                        <input type="hidden" id="category-current-image" name="current_image_path" value="">
+                        <input type="file" id="category-image-file" name="category_image" accept="image/*" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box; background:#F8FAFC;">
+                        <div id="category-image-preview-box" style="margin-top: 10px; display: none; align-items: center; gap: 10px; background: #F1F5F9; padding: 8px 12px; border-radius: 6px;">
+                            <img id="category-image-preview-img" src="" alt="Category Image" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;">
+                            <span style="font-size: 0.8rem; color: #475569; font-weight: 600;">Current Image</span>
+                        </div>
                     </div>
                 </div>
                 <div class="admin-modal-footer">
@@ -1636,17 +1651,22 @@ $settings     = get_all_settings();
                 tbody.innerHTML = '';
                 
                 if (catalogCategories.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:15px; color:#64748B;">No categories found.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748B;">No categories found.</td></tr>';
                     return;
                 }
 
                 catalogCategories.forEach(cat => {
                     const tr = document.createElement('tr');
+                    const imgThumb = cat.image_path ? `<img src="${cat.image_path}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">` : '<span style="font-size:1.2rem;">📁</span>';
+                    const descText = cat.description ? escapeHtml(cat.description) : '<span style="color:#94A3B8; font-style:italic;">No description</span>';
+                    
                     tr.innerHTML = `
                         <td style="text-align:center; font-weight:700;">${cat.id}</td>
+                        <td style="text-align:center;">${imgThumb}</td>
                         <td><strong style="color:#4A0B17;">${escapeHtml(cat.name)}</strong></td>
+                        <td style="font-size:0.85rem; color:#475569;">${descText}</td>
                         <td style="text-align:center;">
-                            <button type="button" class="btn-action-sm btn-edit-category" data-id="${cat.id}" data-name="${escapeHtml(cat.name)}" style="padding: 4px 8px; font-size:0.72rem; cursor:pointer;">Edit ✏️</button>
+                            <button type="button" class="btn-action-sm btn-edit-category" data-id="${cat.id}" style="padding: 4px 8px; font-size:0.72rem; cursor:pointer;">Edit ✏️</button>
                             <button type="button" class="btn-action-sm btn-delete-category" data-id="${cat.id}" style="padding: 4px 8px; font-size:0.72rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
                         </td>
                     `;
@@ -1655,10 +1675,25 @@ $settings     = get_all_settings();
 
                 document.querySelectorAll('.btn-edit-category').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        const name = this.getAttribute('data-name');
-                        document.getElementById('category-id').value = id;
-                        document.getElementById('category-name').value = name;
+                        const id = parseInt(this.getAttribute('data-id'));
+                        const cat = catalogCategories.find(c => c.id == id);
+                        if (!cat) return;
+                        
+                        document.getElementById('category-id').value = cat.id;
+                        document.getElementById('category-name').value = cat.name || '';
+                        document.getElementById('category-description').value = cat.description || '';
+                        document.getElementById('category-current-image').value = cat.image_path || '';
+                        document.getElementById('category-image-file').value = '';
+                        
+                        const prevBox = document.getElementById('category-image-preview-box');
+                        const prevImg = document.getElementById('category-image-preview-img');
+                        if (cat.image_path) {
+                            prevImg.src = cat.image_path;
+                            prevBox.style.display = 'flex';
+                        } else {
+                            prevBox.style.display = 'none';
+                        }
+
                         document.getElementById('category-modal-title').textContent = 'Edit Category';
                         document.getElementById('category-modal').style.display = 'flex';
                     });
@@ -1788,6 +1823,10 @@ $settings     = get_all_settings();
             document.getElementById('btn-add-category').addEventListener('click', () => {
                 document.getElementById('category-id').value = '0';
                 document.getElementById('category-name').value = '';
+                document.getElementById('category-description').value = '';
+                document.getElementById('category-current-image').value = '';
+                document.getElementById('category-image-file').value = '';
+                document.getElementById('category-image-preview-box').style.display = 'none';
                 document.getElementById('category-modal-title').textContent = 'Add Category';
                 document.getElementById('category-modal').style.display = 'flex';
             });
