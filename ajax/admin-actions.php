@@ -473,18 +473,40 @@ if ($action === 'admin_get_categories_products') {
     $db = Database::getConnection();
     $categories = [];
     $products = [];
+    $settings = [];
     if ($db) {
         try {
             $categories = $db->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
             $products = $db->query("SELECT p.*, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
+            $settings = get_all_settings();
         } catch (Exception $e) {
             log_system_error("Admin get categories/products error: " . $e->getMessage());
         }
     }
     json_response(true, 'Categories and products fetched', [
         'categories' => $categories,
-        'products' => $products
+        'products' => $products,
+        'settings' => $settings
     ]);
+}
+
+// 6b. Toggle Addon Status
+if ($action === 'toggle_addon') {
+    $addon = sanitize_input($_POST['addon'] ?? ''); // gift_wrap or choc_box
+    $status = (int)($_POST['status'] ?? 1);
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $key1 = ($addon === 'gift_wrap') ? 'gift_wrap_enabled' : 'choc_box_enabled';
+            $key2 = ($addon === 'gift_wrap') ? 'enable_gift_wrap' : 'enable_choc_box';
+            $val = $status ? '1' : '0';
+            $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k1, :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':k1' => $key1, ':v' => $val]);
+            $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k2, :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':k2' => $key2, ':v' => $val]);
+            json_response(true, 'Add-on status updated successfully.', ['status' => $status]);
+        } catch (Exception $e) {
+            json_response(false, 'Error updating add-on status: ' . $e->getMessage(), [], 500);
+        }
+    }
 }
 
 // 7. Save Category
@@ -607,6 +629,37 @@ if ($action === 'save_product') {
                     ':image_path' => $image_path
                 ]);
             }
+            // Auto-sync settings table if product is an Add-On
+            $addon_enabled = isset($_POST['addon_enabled']) ? ($_POST['addon_enabled'] == '1' ? '1' : '0') : null;
+
+            if (stripos($name, 'Gift Wrap') !== false || stripos($name, 'Wrapping') !== false || $id == 7) {
+                $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('gift_wrap_name', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $name]);
+                $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('gift_wrap_price', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => sprintf('%.2f', $price)]);
+                if (!empty($description)) {
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('gift_wrap_desc', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $description]);
+                }
+                if (!empty($image_path)) {
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('gift_wrap_image', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $image_path]);
+                }
+                if ($addon_enabled !== null) {
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('gift_wrap_enabled', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $addon_enabled]);
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('enable_gift_wrap', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $addon_enabled]);
+                }
+            } elseif (stripos($name, 'Chocolate') !== false || stripos($name, 'Sweet') !== false || $id == 8) {
+                $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('choc_box_name', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $name]);
+                $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('choc_box_price', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => sprintf('%.2f', $price)]);
+                if (!empty($description)) {
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('choc_box_desc', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $description]);
+                }
+                if (!empty($image_path)) {
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('choc_box_image', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $image_path]);
+                }
+                if ($addon_enabled !== null) {
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('choc_box_enabled', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $addon_enabled]);
+                    $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('enable_choc_box', :v) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([':v' => $addon_enabled]);
+                }
+            }
+
             json_response(true, 'Product saved successfully.');
         } catch (Exception $e) {
             json_response(false, 'Error saving product: ' . $e->getMessage(), [], 500);

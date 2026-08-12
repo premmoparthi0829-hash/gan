@@ -19,6 +19,20 @@ if ($db) {
     }
 }
 
+// Filter main categories for shop front (hide Add-Ons category from main grid)
+$shop_categories = array_filter($categories, fn($c) => stripos($c['name'], 'Add-On') === false);
+
+// Locate dynamic Add-On products for Cart
+$gift_wrap_prod = null;
+$choc_box_prod = null;
+foreach ($products as $p) {
+    if (stripos($p['name'], 'Gift Wrap') !== false || stripos($p['name'], 'Wrapping') !== false || $p['id'] == 7) {
+        $gift_wrap_prod = $p;
+    } elseif (stripos($p['name'], 'Chocolate') !== false || stripos($p['name'], 'Sweet') !== false || $p['id'] == 8) {
+        $choc_box_prod = $p;
+    }
+}
+
 $settings = get_all_settings();
 $unit_price = (float) ($settings['unit_price'] ?? 14.99);
 $shipping_charge = (float) ($settings['shipping_charge'] ?? 3.99);
@@ -102,7 +116,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                 </div>
 
                 <div class="cat-2col-grid">
-                    <?php foreach ($categories as $cat):
+                    <?php foreach ($shop_categories as $cat):
                         $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
                         $count = count($cat_products);
                         $min_price = 14.99;
@@ -185,7 +199,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                 <p class="section-subtitle" id="cat-products-subtitle"></p>
 
                 <!-- Per-category product panes -->
-                <?php foreach ($categories as $cat):
+                <?php foreach ($shop_categories as $cat):
                     $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
                     if (stripos($cat['name'], 'ganesh') !== false) {
                         $accent = '#E85D04';
@@ -797,18 +811,18 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
             status: "<?php echo escape_output($settings['paypal_status'] ?? 'enabled'); ?>"
         };
         window.VK_GIFT_WRAP_CONFIG = {
-            enabled: <?php echo ($settings['gift_wrap_enabled'] ?? '1') == '1' ? 'true' : 'false'; ?>,
-            name: <?php echo json_encode(escape_output($settings['gift_wrap_name'] ?? '🎁 Festive Gift Wrapping & Greeting Card')); ?>,
-            desc: <?php echo json_encode(escape_output($settings['gift_wrap_desc'] ?? 'Luxury golden gift wrap with customized festive greeting card')); ?>,
-            price: <?php echo (float) ($settings['gift_wrap_price'] ?? 1.99); ?>,
-            image: <?php echo json_encode(escape_output($settings['gift_wrap_image'] ?? 'assets/images/products/rakhi-1.jpg')); ?>
+            enabled: <?php echo (($settings['gift_wrap_enabled'] ?? $settings['enable_gift_wrap'] ?? '1') !== '0') ? 'true' : 'false'; ?>,
+            name: <?php echo json_encode($gift_wrap_prod['name'] ?? $settings['gift_wrap_name'] ?? '🎁 Add-On 1: Festive Gift Wrapping & Card'); ?>,
+            desc: <?php echo json_encode($gift_wrap_prod['description'] ?? $settings['gift_wrap_desc'] ?? 'Luxury golden gift wrap with customized festive greeting card'); ?>,
+            price: <?php echo (float) ($gift_wrap_prod['price'] ?? $settings['gift_wrap_price'] ?? 1.99); ?>,
+            image: <?php echo json_encode(($gift_wrap_prod['image_path'] ?? '') ?: ($settings['gift_wrap_image'] ?? 'assets/images/rakhi_rudraksha.png')); ?>
         };
         window.VK_CHOC_BOX_CONFIG = {
-            enabled: <?php echo ($settings['choc_box_enabled'] ?? '1') == '1' ? 'true' : 'false'; ?>,
-            name: <?php echo json_encode(escape_output($settings['choc_box_name'] ?? '🍫 Premium Cadbury Celebrations Chocolate Box')); ?>,
-            desc: <?php echo json_encode(escape_output($settings['choc_box_desc'] ?? 'Luxury assorted Cadbury chocolates & dry fruit sweets box')); ?>,
-            price: <?php echo (float) ($settings['choc_box_price'] ?? 3.99); ?>,
-            image: <?php echo json_encode(escape_output($settings['choc_box_image'] ?? 'assets/images/products/rakhi-2.jpg')); ?>
+            enabled: <?php echo (($settings['choc_box_enabled'] ?? $settings['enable_choc_box'] ?? '1') !== '0') ? 'true' : 'false'; ?>,
+            name: <?php echo json_encode($choc_box_prod['name'] ?? $settings['choc_box_name'] ?? '🍫 Add-On 2: Premium Chocolate & Sweets Box'); ?>,
+            desc: <?php echo json_encode($choc_box_prod['description'] ?? $settings['choc_box_desc'] ?? 'Luxury assorted Cadbury chocolates & dry fruit sweets box'); ?>,
+            price: <?php echo (float) ($choc_box_prod['price'] ?? $settings['choc_box_price'] ?? 3.99); ?>,
+            image: <?php echo json_encode(($choc_box_prod['image_path'] ?? '') ?: ($settings['choc_box_image'] ?? 'assets/images/rakhi_peacock.png')); ?>
         };
     </script>
     <!-- PayPal JS SDK — loads live or sandbox button asynchronously for ultra-fast page load -->

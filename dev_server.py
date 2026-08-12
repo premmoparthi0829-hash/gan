@@ -5,7 +5,7 @@ import json
 import re
 import os
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", 3306))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 # Global store state
@@ -34,15 +34,18 @@ SETTINGS = {
 }
 
 CATEGORIES = [
-    {"id": 1, "name": "Standard Eco Ganesh Idols"},
-    {"id": 2, "name": "Premium Handcrafted Statues"},
-    {"id": 3, "name": "Pooja Accessories & Kits"}
+    {"id": 1, "name": "Ganesh Statues"},
+    {"id": 2, "name": "Designer Rakhis"},
+    {"id": 3, "name": "Festive Add-Ons & Gift Kits"}
 ]
 
 PRODUCTS = [
-    {"id": 1, "name": "12-Inch Clay Eco Ganesh Idol", "price": 14.99, "category_id": 1, "description": "100% Biodegradable eco-friendly clay Ganesh statue for UK home celebrations.", "image_path": "assets/images/ganesh_product_1.png"},
-    {"id": 2, "name": "18-Inch Royal Floral Ganesh", "price": 24.99, "category_id": 2, "description": "Hand-painted terracotta Idol with organic colors.", "image_path": "assets/images/ganesh_product_2.png"},
-    {"id": 3, "name": "Complete Eco Visarjan Tank Kit", "price": 9.99, "category_id": 3, "description": "Special water bucket and sacred herbs for eco-friendly home visarjan.", "image_path": "assets/images/ganesh_product_3.png"}
+    {"id": 1, "name": "Ganesh Statue / Vinayaka Vigraha", "price": 14.99, "category_id": 1, "description": "Handcrafted eco-friendly clay Ganesh statue with complete Mukut & ornaments kit.", "image_path": "assets/images/ganesh_hero.png"},
+    {"id": 2, "name": "Premium Golden Ganesh Idol", "price": 24.99, "category_id": 1, "description": "Exquisite golden-painted eco-friendly clay idol with velvet base.", "image_path": "assets/images/ganesh_product_2.png"},
+    {"id": 3, "name": "Designer Rudraksha Rakhi", "price": 4.99, "category_id": 2, "description": "Beautifully crafted pure Rudraksha Rakhi with gold-plated beads.", "image_path": "assets/images/rakhi_rudraksha.png"},
+    {"id": 4, "name": "Silver Plated Peacock Rakhi", "price": 6.99, "category_id": 2, "description": "Elegant silver-plated peacock designer Rakhi with premium thread.", "image_path": "assets/images/rakhi_peacock.png"},
+    {"id": 7, "name": "🎁 Add-On 1: Festive Gift Wrapping & Card", "price": 1.99, "category_id": 3, "description": "Luxury golden gift wrap with customized festive greeting card", "image_path": "assets/images/products/rakhi-1.jpg"},
+    {"id": 8, "name": "🍫 Add-On 2: Premium Chocolate & Sweet Box", "price": 3.99, "category_id": 3, "description": "Luxury assorted Cadbury chocolates & dry fruit sweets box", "image_path": "assets/images/products/rakhi-2.jpg"}
 ]
 
 # Sample seed bookings
@@ -137,6 +140,9 @@ def generate_ref():
 class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
+
+    def do_HEAD(self):
+        self.do_GET()
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)

@@ -371,70 +371,19 @@ $settings     = get_all_settings();
                             </div>
                         </div>
 
-                        <!-- Panel 3: Festive Gift Wrapping Settings -->
-                        <div style="grid-column: 1 / -1; background: #FFFDF9; border: 1.5px solid #FCD34D; border-radius: 14px; padding: 22px; margin-top: 10px;">
-                            <h3 style="color: #92400E; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #FEF3C7; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                🎁 Add-On 1: Festive Gift Wrapping &amp; Card
-                            </h3>
-
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                                <div class="admin-field-group">
-                                    <label for="gift_wrap_enabled" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Add-On Status</label>
-                                    <?php $gw_enabled = $settings['gift_wrap_enabled'] ?? '1'; ?>
-                                    <select id="gift_wrap_enabled" name="gift_wrap_enabled" style="width: 100%; padding: 10px 12px; border: 1.5px solid #FCD34D; border-radius: 8px; font-weight: 700; background: #FFF;">
-                                        <option value="1" <?php echo $gw_enabled == '1' ? 'selected' : ''; ?>>✅ Active &amp; Displayed inside Cart</option>
-                                        <option value="0" <?php echo $gw_enabled == '0' ? 'selected' : ''; ?>>🚫 Disabled (Hide from Cart)</option>
-                                    </select>
-                                </div>
-
-                                <div class="admin-field-group">
-                                    <label for="gift_wrap_price" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Add-On Price (&pound;)</label>
-                                    <input type="number" step="0.01" min="0" id="gift_wrap_price" name="gift_wrap_price" value="<?php echo escape_output($settings['gift_wrap_price'] ?? '1.99'); ?>" placeholder="1.99" style="width: 100%; padding: 10px 12px; border: 1.5px solid #FCD34D; border-radius: 8px; font-weight: 700;">
-                                </div>
-
-                                <div class="admin-field-group" style="grid-column: 1 / -1;">
-                                    <label for="gift_wrap_name" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Add-On Title</label>
-                                    <input type="text" id="gift_wrap_name" name="gift_wrap_name" value="<?php echo escape_output($settings['gift_wrap_name'] ?? '🎁 Festive Gift Wrapping & Greeting Card'); ?>" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
-                                </div>
-
-                                <div class="admin-field-group" style="grid-column: 1 / -1;">
-                                    <label for="gift_wrap_desc" style="font-weight: 700; color: #92400E; font-size: 0.9rem;">Gift Wrap Short Description</label>
-                                    <textarea id="gift_wrap_desc" name="gift_wrap_desc" rows="2" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-family: inherit; resize: vertical;"><?php echo escape_output($settings['gift_wrap_desc'] ?? 'Luxury golden gift wrap with customized festive greeting card'); ?></textarea>
-                                </div>
+                        <!-- Info Banner: Festive Add-Ons & Products Management -->
+                        <div style="grid-column: 1 / -1; background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 14px; padding: 20px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                            <div>
+                                <h3 style="color: #1E293B; font-size: 1.05rem; margin: 0 0 6px 0; font-weight: 800;">
+                                    🎁 Festive Add-Ons &amp; Products Management
+                                </h3>
+                                <p style="color: #64748B; font-size: 0.88rem; margin: 0;">
+                                    Gift wrapping, chocolate boxes, and store items are now managed dynamically under <strong>Products &amp; Categories</strong>.
+                                </p>
                             </div>
-                        </div>
-
-                        <!-- Panel 4: Premium Chocolate Box Settings -->
-                        <div style="grid-column: 1 / -1; background: #FDF2F8; border: 1.5px solid #F472B6; border-radius: 14px; padding: 22px; margin-top: 14px;">
-                            <h3 style="color: #9D174D; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #FBCFE8; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                🍫 Add-On 2: Premium Chocolate &amp; Sweet Box
-                            </h3>
-
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                                <div class="admin-field-group">
-                                    <label for="choc_box_enabled" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Add-On Status</label>
-                                    <?php $cb_enabled = $settings['choc_box_enabled'] ?? '1'; ?>
-                                    <select id="choc_box_enabled" name="choc_box_enabled" style="width: 100%; padding: 10px 12px; border: 1.5px solid #F472B6; border-radius: 8px; font-weight: 700; background: #FFF;">
-                                        <option value="1" <?php echo $cb_enabled == '1' ? 'selected' : ''; ?>>✅ Active &amp; Displayed inside Cart</option>
-                                        <option value="0" <?php echo $cb_enabled == '0' ? 'selected' : ''; ?>>🚫 Disabled (Hide from Cart)</option>
-                                    </select>
-                                </div>
-
-                                <div class="admin-field-group">
-                                    <label for="choc_box_price" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Add-On Price (&pound;)</label>
-                                    <input type="number" step="0.01" min="0" id="choc_box_price" name="choc_box_price" value="<?php echo escape_output($settings['choc_box_price'] ?? '3.99'); ?>" placeholder="3.99" style="width: 100%; padding: 10px 12px; border: 1.5px solid #F472B6; border-radius: 8px; font-weight: 700;">
-                                </div>
-
-                                <div class="admin-field-group" style="grid-column: 1 / -1;">
-                                    <label for="choc_box_name" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Add-On Title</label>
-                                    <input type="text" id="choc_box_name" name="choc_box_name" value="<?php echo escape_output($settings['choc_box_name'] ?? '🍫 Premium Cadbury Celebrations Chocolate Box'); ?>" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
-                                </div>
-
-                                <div class="admin-field-group" style="grid-column: 1 / -1;">
-                                    <label for="choc_box_desc" style="font-weight: 700; color: #9D174D; font-size: 0.9rem;">Chocolate Box Short Description</label>
-                                    <textarea id="choc_box_desc" name="choc_box_desc" rows="2" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-family: inherit; resize: vertical;"><?php echo escape_output($settings['choc_box_desc'] ?? 'Luxury assorted Cadbury chocolates & dry fruit sweets box'); ?></textarea>
-                                </div>
-                            </div>
+                            <button type="button" onclick="document.querySelector('[data-tab=\'tab-catalog\']').click();" style="background: #4A0B17; color: #FFF; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                                🛒 Manage Add-Ons &amp; Products &rarr;
+                            </button>
                         </div>
 
                     </div>
@@ -679,17 +628,38 @@ $settings     = get_all_settings();
                         <h2 style="font-size: 1.6rem; color: #4A0B17; margin: 0; font-weight:800;">Catalog Management</h2>
                         <p style="color: #64748B; font-size: 0.88rem; margin: 4px 0 0 0;">Manage your store categories, products, and pricing.</p>
                     </div>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="button" class="btn-gold" id="btn-add-category" style="padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #D4AF37;">
                             📁 Add Category
                         </button>
+                        <button type="button" id="btn-add-addon" style="background:#9D174D; color:#fff; border:1px solid #9D174D; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                            🍫 Add Festive Add-On
+                        </button>
                         <button type="button" class="btn-modal-save" id="btn-add-product" style="background:#4A0B17; color:#fff; border:1px solid #4A0B17; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                            🛒 Add Product
+                            🛒 Add Product / Item
                         </button>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
+                    <!-- Festive Cart Add-Ons Status Panel -->
+                    <div style="background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border: 1.5px solid #FCD34D; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px dashed #F59E0B; padding-bottom: 10px;">
+                            <h3 style="color: #92400E; font-size: 1.15rem; margin: 0; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                                🎁 Festive Cart Add-Ons Status &amp; Live Controls
+                            </h3>
+                            <span style="background: #D97706; color: #FFF; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 20px;">
+                                ✅ Active in Customer Cart
+                            </span>
+                        </div>
+                        <p style="color: #78350F; font-size: 0.86rem; margin: 0 0 16px 0; line-height: 1.4;">
+                            These add-ons are displayed inside the shopping cart. You can edit their title, price, description, or image icon directly here.
+                        </p>
+                        <div id="admin-addons-status-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                            <!-- Dynamically populated by renderAddonsPanel() -->
+                        </div>
+                    </div>
+
                     <!-- Categories Management -->
                     <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:12px; padding:20px;">
                         <h3 style="color:#4A0B17; font-size:1.15rem; margin-top:0; margin-bottom:15px; border-bottom:1px dashed #CBD5E1; padding-bottom:8px;">📁 Shop Categories</h3>
@@ -877,6 +847,12 @@ $settings     = get_all_settings();
                 <input type="hidden" id="product-id" name="id" value="0">
                 <input type="hidden" id="product-current-image" name="current_image_path" value="">
                 <div class="admin-modal-body" style="padding: 20px; max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:15px; box-sizing:border-box;">
+                    <div class="admin-field-group" id="addon-status-toggle-group" style="display:none; background:#FFFDF5; border:1px solid #FCD34D; padding:12px; border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#92400E; cursor:pointer; font-size:0.88rem; margin:0;">
+                            <input type="checkbox" id="product-addon-enabled" name="addon_enabled" value="1" checked style="width:18px; height:18px; cursor:pointer;">
+                            <span>Enable this Festive Add-On in Customer Shopping Cart</span>
+                        </label>
+                    </div>
                     <div class="admin-field-group">
                         <label for="product-category">Category</label>
                         <select id="product-category" name="category_id" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
@@ -1092,6 +1068,11 @@ $settings     = get_all_settings();
                             </td>
                             <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;">${bBadge}</td>
                             <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px; display: flex; gap: 4px; justify-content: center; align-items: center; border: none;">
+                                <button type="button" class="btn-action-sm btn-view-items" 
+                                    data-ref="${b.booking_reference}"
+                                    style="background:#D97706 !important; color:#fff !important; border-color:#D97706 !important; padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
+                                    📦 Items (${b.items ? b.items.length : b.quantity})
+                                </button>
                                 <button type="button" class="btn-action-sm btn-view-booking" 
                                     data-ref="${b.booking_reference}"
                                     style="background:#0F172A !important; color:#fff !important; border-color:#0F172A !important; padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
@@ -1646,27 +1627,58 @@ $settings     = get_all_settings();
                         </div>
 
                         <!-- Booking Items List -->
-                        <div style="margin-top:10px; margin-bottom:12px; border:1px solid #E2E8F0; border-radius:8px; overflow:hidden;">
+                        <div style="margin-top:10px; margin-bottom:12px; border:1px solid #CBD5E1; border-radius:8px; overflow:hidden;">
+                            <div style="background:#4A0B17; color:#FFFFFF; font-weight:800; font-size:0.8rem; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>📦 BOOKED ITEMS IN ORDER (${b.items ? b.items.length : 1} UNIQUE ITEM(S))</span>
+                                <span>TOTAL QTY: ${b.quantity}</span>
+                            </div>
                             <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
                                 <thead>
-                                    <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
-                                        <th style="padding:8px; text-align:left; color:#475569;">Product</th>
-                                        <th style="padding:8px; text-align:center; color:#475569; width:60px;">Qty</th>
-                                        <th style="padding:8px; text-align:right; color:#475569; width:85px;">Price</th>
+                                    <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0; text-transform:uppercase; font-size:0.7rem;">
+                                        <th style="padding:8px 10px; text-align:left; color:#475569;">Item / Image</th>
+                                        <th style="padding:8px; text-align:center; color:#475569; width:50px;">Qty</th>
+                                        <th style="padding:8px; text-align:right; color:#475569; width:80px;">Unit Price</th>
+                                        <th style="padding:8px 10px; text-align:right; color:#475569; width:85px;">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${b.items && b.items.length > 0 ? b.items.map(item => `
+                                    ${b.items && b.items.length > 0 ? b.items.map(item => {
+                                        let img = item.image_path || 'assets/images/ganesh_hero.png';
+                                        if (!item.image_path) {
+                                            if (item.product_name.includes('Wrapping') || item.product_name.includes('Add-On 1')) img = 'assets/images/rakhi_rudraksha.png';
+                                            else if (item.product_name.includes('Chocolate') || item.product_name.includes('Sweet') || item.product_name.includes('Add-On 2')) img = 'assets/images/rakhi_peacock.png';
+                                        }
+                                        let badge = '<span style="background:#E0F2FE; color:#0369A1; font-size:0.65rem; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px;">PRODUCT</span>';
+                                        if (item.product_name.includes('Wrapping') || item.product_name.includes('Add-On 1')) badge = '<span style="background:#FEF3C7; color:#92400E; font-size:0.65rem; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px;">🎁 ADD-ON 1</span>';
+                                        else if (item.product_name.includes('Chocolate') || item.product_name.includes('Sweet') || item.product_name.includes('Add-On 2')) badge = '<span style="background:#FCE7F3; color:#9D174D; font-size:0.65rem; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px;">🍫 ADD-ON 2</span>';
+                                        let itemSub = (item.quantity * parseFloat(item.price)).toFixed(2);
+
+                                        return `
                                         <tr style="border-bottom:1px solid #F1F5F9;">
-                                            <td style="padding:8px; color:#0F172A; font-weight:600;">${escapeHtml(item.product_name)}</td>
-                                            <td style="padding:8px; text-align:center; color:#0F172A; font-weight:700;">${item.quantity}</td>
-                                            <td style="padding:8px; text-align:right; color:#0F172A; font-weight:700;">&pound;${parseFloat(item.price).toFixed(2)}</td>
+                                            <td style="padding:8px 10px; color:#0F172A;">
+                                                <div style="display:flex; align-items:center; gap:8px;">
+                                                    <img src="${escapeHtml(img)}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">
+                                                    <div>
+                                                        ${badge}
+                                                        <strong style="color:#0F172A; font-size:0.83rem;">${escapeHtml(item.product_name)}</strong>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="padding:8px; text-align:center; color:#0F172A; font-weight:800;">${item.quantity}</td>
+                                            <td style="padding:8px; text-align:right; color:#475569;">&pound;${parseFloat(item.price).toFixed(2)}</td>
+                                            <td style="padding:8px 10px; text-align:right; color:#4A0B17; font-weight:800;">&pound;${itemSub}</td>
                                         </tr>
-                                    `).join('') : `
+                                    `}).join('') : `
                                         <tr style="border-bottom:1px solid #F1F5F9;">
-                                            <td style="padding:8px; color:#0F172A; font-weight:600;">Legacy Product Item</td>
-                                            <td style="padding:8px; text-align:center; color:#0F172A; font-weight:700;">${b.quantity}</td>
-                                            <td style="padding:8px; text-align:right; color:#0F172A; font-weight:700;">&pound;${parseFloat(b.unit_price).toFixed(2)}</td>
+                                            <td style="padding:8px 10px; color:#0F172A;">
+                                                <div style="display:flex; align-items:center; gap:8px;">
+                                                    <img src="assets/images/ganesh_hero.png" style="width:36px; height:36px; object-fit:cover; border-radius:6px;">
+                                                    <div><strong style="color:#0F172A;">Ganesh Statue / Vinayaka Vigraha</strong></div>
+                                                </div>
+                                            </td>
+                                            <td style="padding:8px; text-align:center; color:#0F172A; font-weight:800;">${b.quantity}</td>
+                                            <td style="padding:8px; text-align:right; color:#475569;">&pound;${parseFloat(b.unit_price).toFixed(2)}</td>
+                                            <td style="padding:8px 10px; text-align:right; color:#4A0B17; font-weight:800;">&pound;${(b.quantity * parseFloat(b.unit_price)).toFixed(2)}</td>
                                         </tr>
                                     `}
                                 </tbody>
@@ -1682,7 +1694,7 @@ $settings     = get_all_settings();
                                 <span>Shipping Fee</span>
                                 <strong>&pound;${parseFloat(b.shipping_charge).toFixed(2)}</strong>
                             </div>
-                            <div style="display:flex; justify-content:space-between; font-size:1.05rem; font-weight:800; color:#4A0B17;">
+<div style="display:flex; justify-content:space-between; font-size:1.05rem; font-weight:800; color:#4A0B17;">
                                 <span>Total Paid/Payable</span>
                                 <strong>&pound;${parseFloat(b.total_amount).toFixed(2)}</strong>
                             </div>
@@ -1697,6 +1709,7 @@ $settings     = get_all_settings();
             // Catalog Management functions
             let catalogCategories = [];
             let catalogProducts = [];
+            let adminSettings = {};
 
             function loadCatalogData() {
                 fetch('ajax/admin-actions.php?action=admin_get_categories_products')
@@ -1705,10 +1718,81 @@ $settings     = get_all_settings();
                     if (!data.success) return;
                     catalogCategories = data.categories || [];
                     catalogProducts = data.products || [];
+                    adminSettings = data.settings || {};
 
                     renderCategoriesTable();
                     renderProductsTable();
+                    renderAddonsPanel();
                     populateCategoryDropdown();
+                });
+            }
+
+            function renderAddonsPanel() {
+                const container = document.getElementById('admin-addons-status-cards');
+                if (!container) return;
+                container.innerHTML = '';
+
+                let addon1 = catalogProducts.find(p => p.id == 7 || p.name.includes('Wrapping') || p.name.includes('Add-On 1'));
+                let addon2 = catalogProducts.find(p => p.id == 8 || p.name.includes('Chocolate') || p.name.includes('Sweet') || p.name.includes('Sweets') || p.name.includes('Add-On 2'));
+
+                let isGwEnabled = (adminSettings.gift_wrap_enabled !== '0' && adminSettings.enable_gift_wrap !== '0');
+                let isCbEnabled = (adminSettings.choc_box_enabled !== '0' && adminSettings.enable_choc_box !== '0');
+
+                let addons = [
+                    {
+                        key: 'Add-On 1',
+                        addonKey: 'gift_wrap',
+                        badge: '🎁 ADD-ON 1',
+                        defaultName: '🎁 Add-On 1: Festive Gift Wrapping & Card',
+                        defaultDesc: 'Luxury golden gift wrap with customized festive greeting card',
+                        defaultPrice: 1.99,
+                        defaultImg: 'assets/images/rakhi_rudraksha.png',
+                        isEnabled: isGwEnabled,
+                        data: addon1
+                    },
+                    {
+                        key: 'Add-On 2',
+                        addonKey: 'choc_box',
+                        badge: '🍫 ADD-ON 2',
+                        defaultName: '🍫 Add-On 2: Premium Chocolate & Sweets Box',
+                        defaultDesc: 'Luxury assorted Cadbury chocolates & dry fruit sweets box',
+                        defaultPrice: 3.99,
+                        defaultImg: 'assets/images/rakhi_peacock.png',
+                        isEnabled: isCbEnabled,
+                        data: addon2
+                    }
+                ];
+
+                addons.forEach(item => {
+                    let p = item.data;
+                    let name = p ? p.name : item.defaultName;
+                    let price = p ? parseFloat(p.price).toFixed(2) : item.defaultPrice.toFixed(2);
+                    let img = p && p.image_path ? p.image_path : item.defaultImg;
+                    let isEnabled = item.isEnabled;
+
+                    let card = document.createElement('div');
+                    card.style.cssText = `background:#FFFFFF; border:1.5px solid ${isEnabled ? '#FCD34D' : '#CBD5E1'}; border-radius:10px; padding:14px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(0,0,0,0.04);`;
+                    card.innerHTML = `
+                        <img src="${escapeHtml(img)}" style="width:54px; height:54px; object-fit:cover; border-radius:8px; border:1px solid #E2E8F0;">
+                        <div style="flex-grow:1;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="background:#FEF3C7; color:#92400E; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:4px; text-transform:uppercase;">${item.badge}</span>
+                                ${isEnabled ? 
+                                    '<span style="background:#D1FAE5; color:#065F46; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:12px;">🟢 Active in Cart</span>' : 
+                                    '<span style="background:#FEE2E2; color:#991B1B; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:12px;">🔴 Disabled in Cart</span>'
+                                }
+                            </div>
+                            <strong style="color:#1E293B; font-size:0.92rem; display:block; margin-top:4px;">${escapeHtml(name)}</strong>
+                            <div style="color:#4A0B17; font-weight:800; font-size:0.9rem; margin-top:2px;">&pound;${price}</div>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button type="button" class="btn-toggle-addon" data-addon="${item.addonKey}" data-status="${isEnabled ? '0' : '1'}" style="background:${isEnabled ? '#EF4444' : '#10B981'}; color:#fff; border:none; padding:6px 12px; border-radius:6px; font-weight:700; font-size:0.75rem; cursor:pointer;">
+                                ${isEnabled ? 'Disable 🔴' : 'Enable 🟢'}
+                            </button>
+                            ${p ? `<button type="button" class="btn-action-sm btn-edit-product" data-id="${p.id}" style="padding: 6px 12px; font-weight:700; cursor:pointer;">Edit ✏️</button>` : `<button type="button" class="btn-gold" id="btn-add-addon" style="padding:6px 12px; font-size:0.75rem; font-weight:700;">+ Create</button>`}
+                        </div>
+                    `;
+                    container.appendChild(card);
                 });
             }
 
@@ -1717,12 +1801,15 @@ $settings     = get_all_settings();
                 if (!tbody) return;
                 tbody.innerHTML = '';
                 
-                if (catalogCategories.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748B;">No categories found.</td></tr>';
+                // Exclude Add-On category from main categories table (Add-Ons have dedicated status panel)
+                let mainCategories = catalogCategories.filter(cat => !cat.name.includes('Add-On'));
+
+                if (mainCategories.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748B;">No shop categories found.</td></tr>';
                     return;
                 }
 
-                catalogCategories.forEach(cat => {
+                mainCategories.forEach(cat => {
                     const tr = document.createElement('tr');
                     const imgThumb = cat.image_path ? `<img src="${cat.image_path}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">` : '<span style="font-size:1.2rem;">📁</span>';
                     const descText = cat.description ? escapeHtml(cat.description) : '<span style="color:#94A3B8; font-style:italic;">No description</span>';
@@ -1739,55 +1826,6 @@ $settings     = get_all_settings();
                     `;
                     tbody.appendChild(tr);
                 });
-
-                document.querySelectorAll('.btn-edit-category').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = parseInt(this.getAttribute('data-id'));
-                        const cat = catalogCategories.find(c => c.id == id);
-                        if (!cat) return;
-                        
-                        document.getElementById('category-id').value = cat.id;
-                        document.getElementById('category-name').value = cat.name || '';
-                        document.getElementById('category-description').value = cat.description || '';
-                        document.getElementById('category-current-image').value = cat.image_path || '';
-                        document.getElementById('category-image-file').value = '';
-                        
-                        const prevBox = document.getElementById('category-image-preview-box');
-                        const prevImg = document.getElementById('category-image-preview-img');
-                        if (cat.image_path) {
-                            prevImg.src = cat.image_path;
-                            prevBox.style.display = 'flex';
-                        } else {
-                            prevBox.style.display = 'none';
-                        }
-
-                        document.getElementById('category-modal-title').textContent = 'Edit Category';
-                        document.getElementById('category-modal').style.display = 'flex';
-                    });
-                });
-
-                document.querySelectorAll('.btn-delete-category').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        if (confirm('Are you sure you want to delete this category? All products in it will also be deleted.')) {
-                            let fd = new FormData();
-                            fd.append('id', id);
-                            fd.append('csrf_token', csrfToken);
-                            fetch('ajax/admin-actions.php?action=delete_category', {
-                                method: 'POST',
-                                body: fd
-                            })
-                            .then(res => res.json())
-                            .then(res => {
-                                if (res.success) {
-                                    loadCatalogData();
-                                } else {
-                                    alert(res.message);
-                                }
-                            });
-                        }
-                    });
-                });
             }
 
             function renderProductsTable() {
@@ -1795,12 +1833,15 @@ $settings     = get_all_settings();
                 if (!tbody) return;
                 tbody.innerHTML = '';
 
-                if (catalogProducts.length === 0) {
+                // Exclude Add-On items from main products table (Add-Ons have dedicated status panel & belong in Cart)
+                let shopProducts = catalogProducts.filter(p => p.id != 7 && p.id != 8 && (!p.category_name || !p.category_name.includes('Add-On')));
+
+                if (shopProducts.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No products found.</td></tr>';
                     return;
                 }
 
-                catalogProducts.forEach(p => {
+                shopProducts.forEach(p => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="text-align:center; vertical-align:middle;">
@@ -1823,55 +1864,6 @@ $settings     = get_all_settings();
                     `;
                     tbody.appendChild(tr);
                 });
-
-                document.querySelectorAll('.btn-edit-product').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = parseInt(this.getAttribute('data-id'));
-                        const p = catalogProducts.find(x => x.id === id);
-                        if (!p) return;
-
-                        document.getElementById('product-id').value = p.id;
-                        document.getElementById('product-category').value = p.category_id;
-                        document.getElementById('product-name').value = p.name;
-                        document.getElementById('product-price').value = p.price;
-                        document.getElementById('product-description').value = p.description || '';
-                        document.getElementById('product-current-image').value = p.image_path || '';
-                        
-                        const previewEl = document.getElementById('product-image-preview-el');
-                        if (p.image_path) {
-                            previewEl.src = p.image_path;
-                            document.getElementById('product-image-preview-box').style.display = 'block';
-                        } else {
-                            document.getElementById('product-image-preview-box').style.display = 'none';
-                        }
-                        
-                        document.getElementById('product-modal-title').textContent = 'Edit Product';
-                        document.getElementById('product-modal').style.display = 'flex';
-                    });
-                });
-
-                document.querySelectorAll('.btn-delete-product').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        if (confirm('Are you sure you want to delete this product?')) {
-                            let fd = new FormData();
-                            fd.append('id', id);
-                            fd.append('csrf_token', csrfToken);
-                            fetch('ajax/admin-actions.php?action=delete_product', {
-                                method: 'POST',
-                                body: fd
-                            })
-                            .then(res => res.json())
-                            .then(res => {
-                                if (res.success) {
-                                    loadCatalogData();
-                                } else {
-                                    alert(res.message);
-                                }
-                            });
-                        }
-                    });
-                });
             }
 
             function populateCategoryDropdown() {
@@ -1886,39 +1878,256 @@ $settings     = get_all_settings();
                 });
             }
 
-            // Modal triggers
-            document.getElementById('btn-add-category').addEventListener('click', () => {
-                document.getElementById('category-id').value = '0';
-                document.getElementById('category-name').value = '';
-                document.getElementById('category-description').value = '';
-                document.getElementById('category-current-image').value = '';
-                document.getElementById('category-image-file').value = '';
-                document.getElementById('category-image-preview-box').style.display = 'none';
-                document.getElementById('category-modal-title').textContent = 'Add Category';
-                document.getElementById('category-modal').style.display = 'flex';
+            // Pure Vanilla JS Global Event Delegation for ALL Catalog & Booking Buttons
+            document.addEventListener('click', function(e) {
+                // View Booked Items / View Booking Button
+                let btnViewItems = e.target.closest('.btn-view-items') || e.target.closest('.btn-view-booking');
+                if (btnViewItems) {
+                    e.preventDefault();
+                    let ref = btnViewItems.getAttribute('data-ref');
+                    if (ref) {
+                        viewBookingDetails(ref);
+                        document.getElementById('view-details-modal').style.display = 'flex';
+                    }
+                    return;
+                }
+                // 0. Toggle Addon Status Button
+                let btnToggleAddon = e.target.closest('.btn-toggle-addon');
+                if (btnToggleAddon) {
+                    e.preventDefault();
+                    let addonKey = btnToggleAddon.getAttribute('data-addon');
+                    let newStatus = btnToggleAddon.getAttribute('data-status');
+                    let fd = new FormData();
+                    fd.append('addon', addonKey);
+                    fd.append('status', newStatus);
+                    fd.append('csrf_token', csrfToken);
+                    fetch('ajax/admin-actions.php?action=toggle_addon', {
+                        method: 'POST',
+                        body: fd
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            loadCatalogData();
+                        } else {
+                            alert(res.message || 'Error toggling add-on status');
+                        }
+                    });
+                    return;
+                }
+
+                // 1. Add Category Button
+                let btnAddCat = e.target.closest('#btn-add-category');
+                if (btnAddCat) {
+                    e.preventDefault();
+                    document.getElementById('category-id').value = '0';
+                    document.getElementById('category-name').value = '';
+                    document.getElementById('category-description').value = '';
+                    document.getElementById('category-current-image').value = '';
+                    document.getElementById('category-image-file').value = '';
+                    document.getElementById('category-image-preview-box').style.display = 'none';
+                    document.getElementById('category-modal-title').textContent = 'Add Category';
+                    document.getElementById('category-modal').style.display = 'flex';
+                    return;
+                }
+
+                // 2. Add Product Button
+                let btnAddProd = e.target.closest('#btn-add-product');
+                if (btnAddProd) {
+                    e.preventDefault();
+                    document.getElementById('product-id').value = '0';
+                    document.getElementById('product-name').value = '';
+                    document.getElementById('product-price').value = '';
+                    document.getElementById('product-description').value = '';
+                    document.getElementById('product-current-image').value = '';
+                    document.getElementById('product-image-file').value = '';
+                    document.getElementById('product-image-preview-box').style.display = 'none';
+                    document.getElementById('addon-status-toggle-group').style.display = 'none';
+                    populateCategoryDropdown();
+                    document.getElementById('product-modal-title').textContent = 'Add Product / Item';
+                    document.getElementById('product-modal').style.display = 'flex';
+                    return;
+                }
+
+                // 3. Add Festive Add-On Shortcut Button
+                let btnAddAddon = e.target.closest('#btn-add-addon');
+                if (btnAddAddon) {
+                    e.preventDefault();
+                    document.getElementById('product-id').value = '0';
+                    document.getElementById('product-name').value = '🍫 Add-On 2: Premium Chocolate & Sweets Box';
+                    document.getElementById('product-price').value = '3.99';
+                    document.getElementById('product-description').value = 'Luxury assorted Cadbury chocolates & dry fruit sweets box';
+                    document.getElementById('product-current-image').value = 'assets/images/rakhi_peacock.png';
+                    document.getElementById('product-image-file').value = '';
+                    
+                    populateCategoryDropdown();
+                    const select = document.getElementById('product-category');
+                    const addonCat = catalogCategories.find(c => c.name.includes('Add-On'));
+                    if (addonCat && select) {
+                        select.value = addonCat.id;
+                    }
+                    
+                    const prevBox = document.getElementById('product-image-preview-box');
+                    const prevImg = document.getElementById('product-image-preview-el');
+                    if (prevBox && prevImg) {
+                        prevImg.src = 'assets/images/rakhi_peacock.png';
+                        prevBox.style.display = 'block';
+                    }
+                    
+                    document.getElementById('addon-status-toggle-group').style.display = 'block';
+                    document.getElementById('product-addon-enabled').checked = true;
+                    document.getElementById('product-modal-title').textContent = 'Add Festive Add-On Product';
+                    document.getElementById('product-modal').style.display = 'flex';
+                    return;
+                }
+
+                // 4. Edit Product / Add-On Button
+                let btnEditProd = e.target.closest('.btn-edit-product');
+                if (btnEditProd) {
+                    e.preventDefault();
+                    const id = parseInt(btnEditProd.getAttribute('data-id'));
+                    const p = catalogProducts.find(x => x.id == id || parseInt(x.id) === id);
+                    if (!p) {
+                        alert('Product data not found.');
+                        return;
+                    }
+
+                    populateCategoryDropdown();
+
+                    document.getElementById('product-id').value = p.id;
+                    document.getElementById('product-category').value = p.category_id;
+                    document.getElementById('product-name').value = p.name;
+                    document.getElementById('product-price').value = p.price;
+                    document.getElementById('product-description').value = p.description || '';
+                    document.getElementById('product-current-image').value = p.image_path || '';
+                    document.getElementById('product-image-file').value = '';
+                    
+                    let isAddon = p.id == 7 || p.id == 8 || (p.name && (p.name.includes('Wrapping') || p.name.includes('Chocolate') || p.name.includes('Add-On')));
+                    let toggleGroup = document.getElementById('addon-status-toggle-group');
+                    if (isAddon && toggleGroup) {
+                        toggleGroup.style.display = 'block';
+                        let isEnabled = true;
+                        if (p.id == 7 || (p.name && p.name.includes('Wrapping'))) {
+                            isEnabled = (adminSettings.gift_wrap_enabled !== '0' && adminSettings.enable_gift_wrap !== '0');
+                        } else {
+                            isEnabled = (adminSettings.choc_box_enabled !== '0' && adminSettings.enable_choc_box !== '0');
+                        }
+                        document.getElementById('product-addon-enabled').checked = isEnabled;
+                    } else if (toggleGroup) {
+                        toggleGroup.style.display = 'none';
+                    }
+                    
+                    const previewEl = document.getElementById('product-image-preview-el');
+                    const previewBox = document.getElementById('product-image-preview-box');
+                    if (p.image_path && previewEl && previewBox) {
+                        previewEl.src = p.image_path;
+                        previewBox.style.display = 'block';
+                    } else if (previewBox) {
+                        previewBox.style.display = 'none';
+                    }
+                    
+                    document.getElementById('product-modal-title').textContent = 'Edit Product / Add-On';
+                    document.getElementById('product-modal').style.display = 'flex';
+                    return;
+                }
+
+                // 5. Edit Category Button
+                let btnEditCat = e.target.closest('.btn-edit-category');
+                if (btnEditCat) {
+                    e.preventDefault();
+                    const id = parseInt(btnEditCat.getAttribute('data-id'));
+                    const cat = catalogCategories.find(c => c.id == id || parseInt(c.id) === id);
+                    if (!cat) return;
+                    
+                    document.getElementById('category-id').value = cat.id;
+                    document.getElementById('category-name').value = cat.name || '';
+                    document.getElementById('category-description').value = cat.description || '';
+                    document.getElementById('category-current-image').value = cat.image_path || '';
+                    document.getElementById('category-image-file').value = '';
+                    
+                    const prevBox = document.getElementById('category-image-preview-box');
+                    const prevImg = document.getElementById('category-image-preview-img');
+                    if (cat.image_path && prevBox && prevImg) {
+                        prevImg.src = cat.image_path;
+                        prevBox.style.display = 'flex';
+                    } else if (prevBox) {
+                        prevBox.style.display = 'none';
+                    }
+
+                    document.getElementById('category-modal-title').textContent = 'Edit Category';
+                    document.getElementById('category-modal').style.display = 'flex';
+                    return;
+                }
+
+                // 6. Delete Product Button
+                let btnDelProd = e.target.closest('.btn-delete-product');
+                if (btnDelProd) {
+                    e.preventDefault();
+                    const id = btnDelProd.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this product?')) {
+                        let fd = new FormData();
+                        fd.append('id', id);
+                        fd.append('csrf_token', csrfToken);
+                        fetch('ajax/admin-actions.php?action=delete_product', {
+                            method: 'POST',
+                            body: fd
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.success) {
+                                loadCatalogData();
+                            } else {
+                                alert(res.message);
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                // 7. Delete Category Button
+                let btnDelCat = e.target.closest('.btn-delete-category');
+                if (btnDelCat) {
+                    e.preventDefault();
+                    const id = btnDelCat.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this category? All products in it will also be deleted.')) {
+                        let fd = new FormData();
+                        fd.append('id', id);
+                        fd.append('csrf_token', csrfToken);
+                        fetch('ajax/admin-actions.php?action=delete_category', {
+                            method: 'POST',
+                            body: fd
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.success) {
+                                loadCatalogData();
+                            } else {
+                                alert(res.message);
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                // 8. Close Category Modal
+                if (e.target.closest('#category-modal-close-btn') || e.target.closest('#category-modal-cancel-btn')) {
+                    e.preventDefault();
+                    document.getElementById('category-modal').style.display = 'none';
+                    return;
+                }
+
+                // 9. Close Product Modal
+                if (e.target.closest('#product-modal-close-btn') || e.target.closest('#product-modal-cancel-btn')) {
+                    e.preventDefault();
+                    document.getElementById('product-modal').style.display = 'none';
+                    return;
+                }
             });
 
-            document.getElementById('btn-add-product').addEventListener('click', () => {
-                document.getElementById('product-id').value = '0';
-                document.getElementById('product-name').value = '';
-                document.getElementById('product-price').value = '';
-                document.getElementById('product-description').value = '';
-                document.getElementById('product-current-image').value = '';
-                document.getElementById('product-image-file').value = '';
-                document.getElementById('product-image-preview-box').style.display = 'none';
-                document.getElementById('product-modal-title').textContent = 'Add Product';
-                document.getElementById('product-modal').style.display = 'flex';
-            });
-
+            // Form submissions
             const closeCategoryModal = () => document.getElementById('category-modal').style.display = 'none';
-            document.getElementById('category-modal-close-btn').addEventListener('click', closeCategoryModal);
-            document.getElementById('category-modal-cancel-btn').addEventListener('click', closeCategoryModal);
-
             const closeProductModal = () => document.getElementById('product-modal').style.display = 'none';
-            document.getElementById('product-modal-close-btn').addEventListener('click', closeProductModal);
-            document.getElementById('product-modal-cancel-btn').addEventListener('click', closeProductModal);
 
-            // Forms submits
             document.getElementById('category-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 let fd = new FormData(this);

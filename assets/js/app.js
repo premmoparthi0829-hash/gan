@@ -218,12 +218,58 @@ $(document).ready(function () {
     }
 
     function removeFromCart(id) {
-        cart = cart.filter(i => i.id !== id);
+        cart = cart.filter(i => i.id !== id && parseInt(i.id) !== parseInt(id));
         renderCart();
     }
 
     function getCartTotalQty() {
         return cart.reduce((sum, item) => sum + item.quantity, 0);
+    }
+
+    function renderCartAddonUpsells(listContainer) {
+        // 1. Render Festive Gift Wrapping Add-On Banner if enabled and not in cart
+        let hasGiftWrap = cart.some(item => item.id === 7 || item.id === 99998 || (item.name && (item.name.indexOf('Wrapping') !== -1 || item.name.indexOf('Gift Wrap') !== -1 || item.name.indexOf('Add-On 1') !== -1)));
+        let isGwEnabled = window.VK_GIFT_WRAP_CONFIG && (window.VK_GIFT_WRAP_CONFIG.enabled === true || window.VK_GIFT_WRAP_CONFIG.enabled == '1' || window.VK_GIFT_WRAP_CONFIG.enabled == 'true');
+        if (isGwEnabled && !hasGiftWrap) {
+            let gwConfig = window.VK_GIFT_WRAP_CONFIG;
+            let wrapCardHtml = `
+                <div class="cart-gift-box-upsell" style="background:#FFFDF5; border:1.5px dashed #FCD34D; border-radius:14px; padding:12px 14px; margin:14px 0 8px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(217,119,6,0.06);">
+                    <img src="${gwConfig.image}" alt="${gwConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FDE68A;">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:800; font-size:0.86rem; color:#92400E; line-height:1.2;">${gwConfig.name}</div>
+                        <div style="font-size:0.74rem; color:#78350F; margin-top:2px; line-height:1.3;">${gwConfig.desc}</div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-add-gift-wrap" style="background:#D97706; color:#FFFFFF; border:none; padding:6px 14px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(217,119,6,0.3); white-space:nowrap;">
+                            + Add (+${currencySymbol}${parseFloat(gwConfig.price).toFixed(2)})
+                        </button>
+                    </div>
+                </div>
+            `;
+            listContainer.append(wrapCardHtml);
+        }
+
+        // 2. Render Premium Chocolate Box Add-On Banner if enabled and not in cart
+        let hasChocBox = cart.some(item => item.id === 8 || item.id === 99999 || (item.name && (item.name.indexOf('Chocolate') !== -1 || item.name.indexOf('Sweet') !== -1 || item.name.indexOf('Add-On 2') !== -1)));
+        let isCbEnabled = window.VK_CHOC_BOX_CONFIG && (window.VK_CHOC_BOX_CONFIG.enabled === true || window.VK_CHOC_BOX_CONFIG.enabled == '1' || window.VK_CHOC_BOX_CONFIG.enabled == 'true');
+        if (isCbEnabled && !hasChocBox) {
+            let cbConfig = window.VK_CHOC_BOX_CONFIG;
+            let chocCardHtml = `
+                <div class="cart-gift-box-upsell" style="background:#FDF2F8; border:1.5px dashed #F472B6; border-radius:14px; padding:12px 14px; margin:8px 0 10px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(157,23,77,0.06);">
+                    <img src="${cbConfig.image}" alt="${cbConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FBCFE8;">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:800; font-size:0.86rem; color:#9D174D; line-height:1.2;">${cbConfig.name}</div>
+                        <div style="font-size:0.74rem; color:#831843; margin-top:2px; line-height:1.3;">${cbConfig.desc}</div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-add-choc-box" style="background:#DB2777; color:#FFFFFF; border:none; padding:6px 14px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(219,39,119,0.3); white-space:nowrap;">
+                            + Add (+${currencySymbol}${parseFloat(cbConfig.price).toFixed(2)})
+                        </button>
+                    </div>
+                </div>
+            `;
+            listContainer.append(chocCardHtml);
+        }
     }
 
     function renderCart() {
@@ -232,25 +278,38 @@ $(document).ready(function () {
 
         if (cart.length === 0) {
             listContainer.html(`
-                <div class="cart-empty-state" style="padding: 35px 20px; text-align: center;">
+                <div class="cart-empty-state" style="padding: 25px 20px; text-align: center;">
                     <span style="font-size:3.2rem; display:block; margin-bottom:12px; opacity:0.8;">🛒</span>
                     <div style="font-weight:700; font-size:1.05rem; color:#1E293B; margin-bottom:6px;">Your cart is empty</div>
-                    <p style="font-size:0.85rem; color:#64748B; margin-bottom:18px;">Browse our festival collections and add items to your cart.</p>
-                    <button type="button" class="btn-gold" id="btn-cart-browse" onclick="$('#cart-close-btn').click();" style="padding:10px 22px; border-radius:50px; font-weight:700; border:none; cursor:pointer;">Browse Collections &rarr;</button>
+                    <p style="font-size:0.85rem; color:#64748B; margin-bottom:12px;">Browse our festival collections or add festive add-ons below.</p>
                 </div>
             `);
+            renderCartAddonUpsells(listContainer);
             recalculateTotals();
             return;
         }
 
         cart.forEach(item => {
-            let isAddon = item.id === 99998 || item.id === 99999;
+            let isAddon1 = item.id === 7 || item.id === 99998 || (item.name && (item.name.indexOf('Wrapping') !== -1 || item.name.indexOf('Add-On 1') !== -1));
+            let isAddon2 = item.id === 8 || item.id === 99999 || (item.name && (item.name.indexOf('Chocolate') !== -1 || item.name.indexOf('Add-On 2') !== -1));
+            let isAddon = item.isAddon || isAddon1 || isAddon2;
+
+            let addonBadgeHtml = '';
+            if (isAddon1) {
+                addonBadgeHtml = `<span style="display:inline-block; background:#FEF3C7; color:#92400E; font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; margin-right:4px;">🎁 Add-On 1</span>`;
+            } else if (isAddon2) {
+                addonBadgeHtml = `<span style="display:inline-block; background:#FCE7F3; color:#9D174D; font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; margin-right:4px;">🍫 Add-On 2</span>`;
+            }
+
+            let fallbackImg = isAddon1 ? 'assets/images/rakhi_rudraksha.png' : (isAddon2 ? 'assets/images/rakhi_peacock.png' : 'assets/images/ganesh_hero.png');
+            let itemImg = (item.image && item.image.length > 5) ? item.image : fallbackImg;
+
             let row = $(`
                 <div class="cart-item-row ${isAddon ? 'cart-item-gift-row' : ''}" style="${isAddon ? 'background:#FFFDF5; border:1px solid #FCD34D;' : ''}">
-                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <img src="${itemImg}" alt="${item.name}" class="cart-item-img" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #CBD5E1;">
                     <div class="cart-item-info">
-                        <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">${currencySymbol}${item.price.toFixed(2)}</div>
+                        <div class="cart-item-name" style="font-weight:700; color:#1E293B; line-height:1.3;">${addonBadgeHtml}${item.name}</div>
+                        <div class="cart-item-price" style="font-weight:800; color:#4A0B17; margin-top:2px;">${currencySymbol}${item.price.toFixed(2)}</div>
                     </div>
                     <div class="cart-item-actions">
                         ${!isAddon ? `
@@ -267,48 +326,7 @@ $(document).ready(function () {
             listContainer.append(row);
         });
 
-        // 1. Render Festive Gift Wrapping Add-On Banner if enabled and not in cart
-        let hasGiftWrap = cart.some(item => item.id === 99998);
-        if (window.VK_GIFT_WRAP_CONFIG && window.VK_GIFT_WRAP_CONFIG.enabled && !hasGiftWrap) {
-            let gwConfig = window.VK_GIFT_WRAP_CONFIG;
-            let wrapCardHtml = `
-                <div class="cart-gift-box-upsell" style="background:#FFFDF5; border:1.5px dashed #FCD34D; border-radius:14px; padding:12px 14px; margin:14px 0 8px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(217,119,6,0.06);">
-                    <img src="${gwConfig.image}" alt="${gwConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FDE68A;">
-                    <div style="flex-grow:1;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#92400E; line-height:1.2;">${gwConfig.name}</div>
-                        <div style="font-size:0.74rem; color:#78350F; margin-top:2px; line-height:1.3;">${gwConfig.desc}</div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn-add-gift-wrap" style="background:#D97706; color:#FFFFFF; border:none; padding:6px 12px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(217,119,6,0.3); white-space:nowrap;">
-                            + Add (+${currencySymbol}${gwConfig.price.toFixed(2)})
-                        </button>
-                    </div>
-                </div>
-            `;
-            listContainer.append(wrapCardHtml);
-        }
-
-        // 2. Render Premium Chocolate Box Add-On Banner if enabled and not in cart
-        let hasChocBox = cart.some(item => item.id === 99999);
-        if (window.VK_CHOC_BOX_CONFIG && window.VK_CHOC_BOX_CONFIG.enabled && !hasChocBox) {
-            let cbConfig = window.VK_CHOC_BOX_CONFIG;
-            let chocCardHtml = `
-                <div class="cart-gift-box-upsell" style="background:#FDF2F8; border:1.5px dashed #F472B6; border-radius:14px; padding:12px 14px; margin:8px 0 10px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(157,23,77,0.06);">
-                    <img src="${cbConfig.image}" alt="${cbConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FBCFE8;">
-                    <div style="flex-grow:1;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#9D174D; line-height:1.2;">${cbConfig.name}</div>
-                        <div style="font-size:0.74rem; color:#831843; margin-top:2px; line-height:1.3;">${cbConfig.desc}</div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn-add-choc-box" style="background:#DB2777; color:#FFFFFF; border:none; padding:6px 12px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(219,39,119,0.3); white-space:nowrap;">
-                            + Add (+${currencySymbol}${cbConfig.price.toFixed(2)})
-                        </button>
-                    </div>
-                </div>
-            `;
-            listContainer.append(chocCardHtml);
-        }
-
+        renderCartAddonUpsells(listContainer);
         recalculateTotals();
     }
 
@@ -316,10 +334,10 @@ $(document).ready(function () {
     $(document).on('click', '.btn-add-gift-wrap', function() {
         if (!window.VK_GIFT_WRAP_CONFIG) return;
         let gwConfig = window.VK_GIFT_WRAP_CONFIG;
-        let existing = cart.find(item => item.id === 99998);
+        let existing = cart.find(item => item.id === 7 || item.id === 99998 || (item.name && item.name.indexOf('Wrapping') !== -1));
         if (!existing) {
             cart.push({
-                id: 99998,
+                id: 7,
                 name: gwConfig.name,
                 price: parseFloat(gwConfig.price),
                 image: gwConfig.image,
@@ -328,16 +346,17 @@ $(document).ready(function () {
             });
         }
         renderCart();
+        showToast('Added ' + gwConfig.name + ' to your cart!', 'success');
     });
 
     // Chocolate Box Add-On Listener
     $(document).on('click', '.btn-add-choc-box', function() {
         if (!window.VK_CHOC_BOX_CONFIG) return;
         let cbConfig = window.VK_CHOC_BOX_CONFIG;
-        let existing = cart.find(item => item.id === 99999);
+        let existing = cart.find(item => item.id === 8 || item.id === 99999 || (item.name && item.name.indexOf('Chocolate') !== -1));
         if (!existing) {
             cart.push({
-                id: 99999,
+                id: 8,
                 name: cbConfig.name,
                 price: parseFloat(cbConfig.price),
                 image: cbConfig.image,
@@ -346,6 +365,7 @@ $(document).ready(function () {
             });
         }
         renderCart();
+        showToast('Added ' + cbConfig.name + ' to your cart!', 'success');
     });
     $(document).on('click', '.cart-plus', function() {
         let id = parseInt($(this).data('id'));

@@ -71,19 +71,46 @@ function calculate_order_totals($cart_items) {
     foreach ($cart_items as $item) {
         $id = (int)($item['id'] ?? 0);
         $qty = max(1, (int)($item['quantity'] ?? 1));
+        $item_name = sanitize_input($item['name'] ?? $item['product_name'] ?? '');
         
         $product = get_product_by_id($id);
+        $price = 0.0;
+        $name = '';
+        $img_path = '';
+
         if ($product) {
             $price = (float)$product['price'];
+            $name = $product['name'];
+            $img_path = $product['image_path'];
+        } elseif ($id === 99998 || stripos($item_name, 'Wrapping') !== false || stripos($item_name, 'Gift Wrap') !== false) {
+            $product = get_product_by_id(7);
+            $price = $product ? (float)$product['price'] : (float)get_setting('gift_wrap_price', 1.99);
+            $name = $product ? $product['name'] : (get_setting('gift_wrap_name') ?: '🎁 Add-On 1: Festive Gift Wrapping & Card');
+            $img_path = $product ? $product['image_path'] : (get_setting('gift_wrap_image') ?: 'assets/images/rakhi_rudraksha.png');
+            $id = $product ? (int)$product['id'] : 7;
+        } elseif ($id === 99999 || stripos($item_name, 'Chocolate') !== false || stripos($item_name, 'Sweet') !== false) {
+            $product = get_product_by_id(8);
+            $price = $product ? (float)$product['price'] : (float)get_setting('choc_box_price', 3.99);
+            $name = $product ? $product['name'] : (get_setting('choc_box_name') ?: '🍫 Add-On 2: Premium Chocolate & Sweets Box');
+            $img_path = $product ? $product['image_path'] : (get_setting('choc_box_image') ?: 'assets/images/rakhi_peacock.png');
+            $id = $product ? (int)$product['id'] : 8;
+        } elseif (isset($item['price']) && (float)$item['price'] > 0) {
+            $price = (float)$item['price'];
+            $name = !empty($item_name) ? $item_name : 'Shop Product';
+            $img_path = sanitize_input($item['image'] ?? $item['image_path'] ?? 'assets/images/ganesh_hero.png');
+        }
+
+        if ($price > 0 || !empty($name)) {
             $item_subtotal = round($qty * $price, 2);
             $subtotal += $item_subtotal;
             $total_quantity += $qty;
             
             $validated_items[] = [
-                'product_id' => $product['id'],
-                'product_name' => $product['name'],
+                'product_id' => $id,
+                'product_name' => $name,
                 'quantity' => $qty,
                 'price' => $price,
+                'image_path' => $img_path,
                 'subtotal' => $item_subtotal
             ];
         }
@@ -100,6 +127,7 @@ function calculate_order_totals($cart_items) {
             'product_name' => $product ? $product['name'] : 'Ganesh Statue / Vinayaka Vigraha',
             'quantity' => 1,
             'price' => $price,
+            'image_path' => $product ? $product['image_path'] : 'assets/images/ganesh_hero.png',
             'subtotal' => $price
         ];
     }
