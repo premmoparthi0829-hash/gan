@@ -62,10 +62,7 @@ function is_admin_logged_in() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
-    if (!isset($_SESSION['admin_logged_in'])) {
-        $_SESSION['admin_logged_in'] = true;
-    }
-    return $_SESSION['admin_logged_in'] === true;
+    return !empty($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 
 /**
@@ -80,6 +77,9 @@ function verify_admin_password($passcode) {
  * Mark admin authenticated state in session
  */
 function set_admin_logged_in($status = true) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     $_SESSION['admin_logged_in'] = (bool)$status;
 }
 
@@ -87,6 +87,14 @@ function set_admin_logged_in($status = true) {
  * Destroy admin session
  */
 function admin_logout() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $_SESSION['admin_logged_in'] = false;
     unset($_SESSION['admin_logged_in']);
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
 }
+
 

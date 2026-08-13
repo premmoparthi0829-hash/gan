@@ -153,6 +153,9 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.render_index_php()
             return
         elif path == '/admin.php':
+            if query.get('action', [''])[0] == 'logout':
+                global ADMIN_LOGGED_IN
+                ADMIN_LOGGED_IN = False
             self.render_admin_php()
             return
         elif path == '/success.php':

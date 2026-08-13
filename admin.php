@@ -7,6 +7,12 @@ header('Content-Type: text/html; charset=UTF-8');
 
 require_once __DIR__ . '/includes/booking-functions.php';
 
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    admin_logout();
+    header('Location: admin.php');
+    exit;
+}
+
 $is_logged_in = is_admin_logged_in();
 $csrf_token   = get_csrf_token();
 $settings     = get_all_settings();
@@ -980,16 +986,25 @@ $settings     = get_all_settings();
                 });
             }
 
-            // Logout Button
-            const logoutBtn = document.getElementById('btn-admin-logout');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    fetch('ajax/admin-actions.php?action=logout')
-                    .then(() => {
-                        window.location.reload();
-                    });
+            // Logout Buttons Event Listeners
+            function performAdminLogout() {
+                fetch('ajax/admin-actions.php?action=logout')
+                .then(res => res.json())
+                .then(() => {
+                    window.location.href = 'admin.php';
+                })
+                .catch(() => {
+                    window.location.reload();
                 });
             }
+
+            const logoutElements = document.querySelectorAll('#btn-admin-logout, .btn-simple-logout, .btn-admin-logout, [data-action="logout"], .logout-btn');
+            logoutElements.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    performAdminLogout();
+                });
+            });
 
             // Fetch & Render Dashboard Data
             function loadDashboardData() {
