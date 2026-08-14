@@ -85,20 +85,23 @@ $(document).ready(function () {
 
 
     // ── 2-Step Category Picker ──────────────────────────────────
-    // Store category name info from PHP rendered data attributes
-    function showCategoryProducts(catId) {
-        // Find the picked card to read name
-        let $card = $(`.cat-pick-card[data-cat-id="${catId}"]`);
-        let catName = $card.find('.cat-pick-name').text().trim();
+    function showCategoryProducts(catId, customCatName) {
+        let $card = $(`[data-cat-id="${catId}"]`);
+        let catName = customCatName || $card.data('cat-name') || $card.find('.prod-name, .cat-clean-name, .cat-pick-name').text().trim() || 'Selected Category';
 
         // Update heading labels
         $('#cat-products-title').html(`${catName} <span>Collection</span>`);
         $('#cat-products-subtitle').text(`Browse our ${catName} items below and add them to your cart.`);
         $('#active-cat-label').text(`Shop › ${catName}`);
 
-        // Hide all product panes, show only selected
+        // Hide all product panes, show only selected category pane
         $('.cat-products-pane').hide();
-        $(`#products-pane-${catId}`).show();
+        let targetPane = $(`#products-pane-${catId}`);
+        if (targetPane.length > 0) {
+            targetPane.show();
+        } else {
+            $('.cat-products-pane').first().show();
+        }
 
         // Swap panels with animation
         $('body').removeClass('single-view-mode');
@@ -128,9 +131,55 @@ $(document).ready(function () {
         });
     });
 
-    // Product Info Quick View Modal Handler (3 Images Gallery)
+    // ── Grid Product Cards Auto-Scroll Slideshow ──
+    let gridCardsAutoScrollTimer = null;
+
+    function startGridCardsAutoScroll() {
+        if (gridCardsAutoScrollTimer) clearInterval(gridCardsAutoScrollTimer);
+        gridCardsAutoScrollTimer = setInterval(function() {
+            $('.cat-products-pane:visible .product-card-item').each(function() {
+                let card = $(this);
+                let track = card.find('.grid-card-carousel-track');
+                if (!track.length) return;
+                
+                let count = parseInt(track.attr('data-count')) || 1;
+                if (count <= 1) return;
+
+                let activeIdx = parseInt(track.attr('data-active-idx')) || 0;
+                let nextIdx = (activeIdx + 1) % count;
+
+                track.attr('data-active-idx', nextIdx);
+                let slideShift = nextIdx * (100 / count);
+                track.css('transform', `translateX(-${slideShift}%)`);
+            });
+        }, 1800); // Automatically slides every 1.8 seconds
+    }
+
+    startGridCardsAutoScroll();
+
+    // Product Info Quick View Modal Handler (3 Images Gallery with Auto-Scroll Slideshow)
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
+    let galleryAutoScrollTimer = null;
+    let isAutoScrollPaused = false;
+
+    function stopGalleryAutoScroll() {
+        if (galleryAutoScrollTimer) {
+            clearInterval(galleryAutoScrollTimer);
+            galleryAutoScrollTimer = null;
+        }
+    }
+
+    function startGalleryAutoScroll() {
+        stopGalleryAutoScroll();
+        if (currentGalleryImages.length > 1) {
+            galleryAutoScrollTimer = setInterval(function() {
+                if (!isAutoScrollPaused) {
+                    setGalleryActiveImage(currentGalleryIndex + 1);
+                }
+            }, 1400); // Fast auto-scrolls every 1.4 seconds
+        }
+    }
 
     function setGalleryActiveImage(index) {
         if (!currentGalleryImages || currentGalleryImages.length === 0) return;
@@ -138,31 +187,34 @@ $(document).ready(function () {
         if (index >= currentGalleryImages.length) index = 0;
         
         currentGalleryIndex = index;
-        let activeSrc = currentGalleryImages[index];
 
-        $('#pmodal-img').css('opacity', 0.4);
-        setTimeout(function() {
-            $('#pmodal-img').attr('src', activeSrc).css('opacity', 1);
-        }, 120);
+        // Perform fast horizontal sliding transform on carousel track
+        const slideShift = index * 33.333333;
+        $('#pmodal-carousel-track').css('transform', `translateX(-${slideShift}%)`);
+
+        // Update photo counter badge
+        $('#pmodal-photo-counter').text(`Photo ${index + 1} of ${currentGalleryImages.length}`);
 
         $('.pmodal-thumb-item').each(function(i) {
             if (i === index) {
                 $(this).addClass('active').css({
-                    'border': '2.5px solid #D4AF37',
-                    'transform': 'scale(1.05)',
-                    'box-shadow': '0 4px 10px rgba(212,175,55,0.3)'
+                    'border': '3.5px solid #D4AF37',
+                    'transform': 'scale(1.08)',
+                    'box-shadow': '0 6px 16px rgba(212,175,55,0.4)',
+                    'opacity': '1'
                 });
             } else {
                 $(this).removeClass('active').css({
-                    'border': '1.5px solid #CBD5E1',
+                    'border': '2px solid #CBD5E1',
                     'transform': 'scale(1)',
-                    'box-shadow': 'none'
+                    'box-shadow': 'none',
+                    'opacity': '0.65'
                 });
             }
         });
     }
 
-    $(document).on('click', '.prod-img-wrap', function(e) {
+    $(document).on('click', '.cat-products-pane .prod-img-wrap', function(e) {
         if ($(e.target).closest('.btn-add-to-cart').length) return;
         
         let card = $(this).closest('.product-card-item');
@@ -181,19 +233,23 @@ $(document).ready(function () {
         if (img2) currentGalleryImages.push(img2);
         if (img3) currentGalleryImages.push(img3);
 
-        // Render thumbnails
+        // Render carousel slide images into track
         for (let i = 0; i < 3; i++) {
+            let slideImgEl = $(`#pmodal-slide-img-${i}`);
             let thumbEl = $(`#pmodal-thumb-${i}`);
             let thumbImgEl = $(`#pmodal-thumb-img-${i}`);
+            
             if (i < currentGalleryImages.length) {
+                slideImgEl.attr('src', currentGalleryImages[i]);
                 thumbImgEl.attr('src', currentGalleryImages[i]);
                 thumbEl.show();
             } else {
+                slideImgEl.attr('src', currentGalleryImages[0]);
                 thumbEl.hide();
             }
         }
 
-        // Show/Hide Nav Prev/Next controls if multiple images exist
+        // Show/Hide Nav Controls
         if (currentGalleryImages.length > 1) {
             $('#pmodal-btn-prev, #pmodal-btn-next, #pmodal-thumbs-box').show();
         } else {
@@ -210,31 +266,49 @@ $(document).ready(function () {
 
         $('#pmodal-add-cart-btn').off('click').on('click', function() {
             addToCart(id, name, parseFloat(price), currentGalleryImages[0]);
+            stopGalleryAutoScroll();
             $('#product-info-modal-overlay').removeClass('active');
         });
 
+        isAutoScrollPaused = false;
+        startGalleryAutoScroll();
+
         $('#product-info-modal-overlay').addClass('active');
+    });
+
+    // Pause Auto Scroll on Mouse Hover over gallery container
+    $(document).on('mouseenter', '#product-info-modal', function() {
+        isAutoScrollPaused = true;
+    }).on('mouseleave', '#product-info-modal', function() {
+        isAutoScrollPaused = false;
     });
 
     // Gallery Thumbnail Clicks
     $(document).on('click', '.pmodal-thumb-item', function() {
         let idx = parseInt($(this).data('index'));
+        isAutoScrollPaused = true;
         setGalleryActiveImage(idx);
+        setTimeout(function() { isAutoScrollPaused = false; }, 2000);
     });
 
     // Gallery Next / Prev Clicks
     $(document).on('click', '#pmodal-btn-prev', function(e) {
         e.stopPropagation();
+        isAutoScrollPaused = true;
         setGalleryActiveImage(currentGalleryIndex - 1);
+        setTimeout(function() { isAutoScrollPaused = false; }, 2000);
     });
 
     $(document).on('click', '#pmodal-btn-next', function(e) {
         e.stopPropagation();
+        isAutoScrollPaused = true;
         setGalleryActiveImage(currentGalleryIndex + 1);
+        setTimeout(function() { isAutoScrollPaused = false; }, 2000);
     });
 
     $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function(e) {
         if (e.target === this || $(this).hasClass('prod-modal-close')) {
+            stopGalleryAutoScroll();
             $('#product-info-modal-overlay').removeClass('active');
         }
     });
