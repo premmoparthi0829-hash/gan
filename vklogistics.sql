@@ -159,6 +159,8 @@ CREATE TABLE IF NOT EXISTS `products` (
   `description` TEXT NULL,
   `price` DECIMAL(10,2) NOT NULL DEFAULT 14.99,
   `image_path` VARCHAR(255) NULL,
+  `image_path_2` VARCHAR(255) NULL,
+  `image_path_3` VARCHAR(255) NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -186,22 +188,22 @@ INSERT INTO `categories` (`id`, `name`) VALUES
 (2, 'Rakhi')
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
--- Seed initial products
-INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`) VALUES
-(1, 1, 'Ganesh Statue / Vinayaka Vigraha', 'Handcrafted eco-friendly clay Ganesh statue with complete Mukut & ornaments kit.', 14.99, 'assets/images/ganesh_hero.png')
-ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`);
+-- Seed initial products (with 3 photos each)
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES
+(1, 1, 'Ganesh Statue / Vinayaka Vigraha', 'Handcrafted eco-friendly clay Ganesh statue with complete Mukut & ornaments kit.', 14.99, 'assets/images/ganesh_hero.png', 'assets/images/ganesh_product_2.png', 'assets/images/products/rakhi-1.jpg')
+ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`), `image_path_2` = VALUES(`image_path_2`), `image_path_3` = VALUES(`image_path_3`);
 
-INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`) VALUES
-(2, 1, 'Premium Golden Ganesh Idol', 'Exquisite golden-painted eco-friendly clay idol with velvet base.', 24.99, 'assets/images/ganesh_product_2.png')
-ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`);
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES
+(2, 1, 'Premium Golden Ganesh Idol', 'Exquisite golden-painted eco-friendly clay idol with velvet base.', 24.99, 'assets/images/ganesh_product_2.png', 'assets/images/ganesh_hero.png', 'assets/images/products/rakhi-2.jpg')
+ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`), `image_path_2` = VALUES(`image_path_2`), `image_path_3` = VALUES(`image_path_3`);
 
-INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`) VALUES
-(3, 2, 'Designer Rudraksha Rakhi', 'Beautifully crafted pure Rudraksha Rakhi with gold-plated beads.', 4.99, 'assets/images/rakhi_rudraksha.png')
-ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`);
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES
+(3, 2, 'Designer Rudraksha Rakhi', 'Beautifully crafted pure Rudraksha Rakhi with gold-plated beads.', 4.99, 'assets/images/rakhi_rudraksha.png', 'assets/images/products/rakhi-1.jpg', 'assets/images/rakhi_peacock.png')
+ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`), `image_path_2` = VALUES(`image_path_2`), `image_path_3` = VALUES(`image_path_3`);
 
-INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`) VALUES
-(4, 2, 'Silver Plated Peacock Rakhi', 'Elegant silver-plated peacock designer Rakhi with premium thread.', 6.99, 'assets/images/rakhi_peacock.png')
-ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`);
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES
+(4, 2, 'Silver Plated Peacock Rakhi', 'Elegant silver-plated peacock designer Rakhi with premium thread.', 6.99, 'assets/images/rakhi_peacock.png', 'assets/images/products/rakhi-2.jpg', 'assets/images/rakhi_rudraksha.png')
+ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`), `image_path_2` = VALUES(`image_path_2`), `image_path_3` = VALUES(`image_path_3`);
 
 -- Migrate existing bookings to booking_items (backward compatibility)
 INSERT INTO `booking_items` (`booking_id`, `product_id`, `product_name`, `quantity`, `price`)

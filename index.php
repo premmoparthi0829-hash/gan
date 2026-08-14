@@ -211,18 +211,30 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                     ?>
                     <div class="products-grid cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>"
                         style="display:none;">
-                        <?php foreach ($cat_products as $prod): ?>
+                        <?php foreach ($cat_products as $prod): 
+                            $img1 = $prod['image_path'] ?? '';
+                            $img2 = $prod['image_path_2'] ?? '';
+                            $img3 = $prod['image_path_3'] ?? '';
+                            $photo_count = count(array_filter([$img1, $img2, $img3]));
+                        ?>
                             <div class="product-card-item"
                                 data-id="<?php echo $prod['id']; ?>"
                                 data-name="<?php echo escape_output($prod['name']); ?>"
                                 data-price="<?php echo $prod['price']; ?>"
                                 data-desc="<?php echo escape_output($prod['description']); ?>"
-                                data-img="<?php echo escape_output($prod['image_path']); ?>"
+                                data-img="<?php echo escape_output($img1); ?>"
+                                data-img2="<?php echo escape_output($img2); ?>"
+                                data-img3="<?php echo escape_output($img3); ?>"
                                 data-cat="<?php echo escape_output($cat['name']); ?>">
-                                <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view product details">
-                                    <img src="<?php echo escape_output($prod['image_path']); ?>"
+                                <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view all 3 product photos">
+                                    <img src="<?php echo escape_output($img1); ?>"
                                         alt="<?php echo escape_output($prod['name']); ?>" loading="lazy">
                                     <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
+                                    <?php if ($photo_count > 1): ?>
+                                        <span style="position:absolute; bottom:10px; left:10px; background:rgba(15,23,42,0.85); color:#F8FAFC; font-size:0.7rem; font-weight:800; padding:3px 8px; border-radius:12px; backdrop-filter:blur(4px); display:flex; align-items:center; gap:4px; border:1px solid rgba(255,255,255,0.2);">
+                                            📸 <?php echo $photo_count; ?> Photos
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="prod-details">
                                     <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
@@ -708,9 +720,29 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
         <div class="prod-modal-card" id="product-info-modal">
             <button type="button" class="prod-modal-close" id="btn-close-prod-modal" aria-label="Close">&times;</button>
             <div class="prod-modal-grid">
-                <div class="prod-modal-media">
-                    <img id="pmodal-img" src="" alt="Product Image Preview">
-                    <span class="pmodal-price-tag" id="pmodal-price">&pound;0.00</span>
+                <div class="prod-modal-media" style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Main Hero Image Box with Prev/Next Controls -->
+                    <div class="pmodal-hero-container" style="position:relative; width:100%; border-radius:12px; overflow:hidden; background:#F8FAFC; border:1px solid #E2E8F0; aspect-ratio:1/1;">
+                        <img id="pmodal-img" src="" alt="Product Image Preview" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s ease, opacity 0.25s ease;">
+                        <span class="pmodal-price-tag" id="pmodal-price">&pound;0.00</span>
+                        
+                        <!-- Nav Prev/Next Buttons -->
+                        <button type="button" class="pmodal-nav-btn pmodal-prev-btn" id="pmodal-btn-prev" aria-label="Previous Photo" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); background:rgba(15,23,42,0.7); color:#FFFFFF; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); font-size:1.1rem; z-index:5;">&lsaquo;</button>
+                        <button type="button" class="pmodal-nav-btn pmodal-next-btn" id="pmodal-btn-next" aria-label="Next Photo" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:rgba(15,23,42,0.7); color:#FFFFFF; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); font-size:1.1rem; z-index:5;">&rsaquo;</button>
+                    </div>
+
+                    <!-- 3 Thumbnails Gallery Switcher -->
+                    <div class="pmodal-thumbnails-wrapper" id="pmodal-thumbs-box" style="display:flex; gap:10px; justify-content:center; align-items:center; padding:4px 0;">
+                        <div class="pmodal-thumb-item active" data-index="0" id="pmodal-thumb-0" style="width:64px; height:64px; border-radius:8px; overflow:hidden; border:2.5px solid #D4AF37; cursor:pointer; background:#F1F5F9; transition:all 0.2s ease;">
+                            <img id="pmodal-thumb-img-0" src="" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <div class="pmodal-thumb-item" data-index="1" id="pmodal-thumb-1" style="width:64px; height:64px; border-radius:8px; overflow:hidden; border:1.5px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.2s ease;">
+                            <img id="pmodal-thumb-img-1" src="" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                        <div class="pmodal-thumb-item" data-index="2" id="pmodal-thumb-2" style="width:64px; height:64px; border-radius:8px; overflow:hidden; border:1.5px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.2s ease;">
+                            <img id="pmodal-thumb-img-2" src="" style="width:100%; height:100%; object-fit:cover;">
+                        </div>
+                    </div>
                 </div>
                 <div class="prod-modal-info">
                     <div>

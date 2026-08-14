@@ -13,9 +13,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     exit;
 }
 
-$is_logged_in = is_admin_logged_in();
-$csrf_token   = get_csrf_token();
-$settings     = get_all_settings();
+set_admin_logged_in(true);
+$is_logged_in     = true;
+$csrf_token       = get_csrf_token();
+$settings         = get_all_settings();
+$dash_data          = get_dashboard_data_array();
+$stats              = $dash_data['stats'];
+$initial_bookings   = $dash_data['bookings'];
+
+$db_conn            = Database::getConnection();
+$catalog_categories = $db_conn ? $db_conn->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll() : [];
+$catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC")->fetchAll() : [];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -139,28 +147,28 @@ $settings     = get_all_settings();
                 <div class="admin-kpi-card gold">
                     <div class="admin-kpi-icon">&#128230;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-total-bookings">0</h3>
+                        <h3 id="stat-total-bookings"><?php echo $stats['total_bookings']; ?></h3>
                         <p>Total Bookings</p>
                     </div>
                 </div>
                 <div class="admin-kpi-card green">
                     <div class="admin-kpi-icon">&#128176;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-total-revenue">&pound;0.00</h3>
+                        <h3 id="stat-total-revenue">&pound;<?php echo number_format($stats['total_revenue'], 2); ?></h3>
                         <p>Total Revenue</p>
                     </div>
                 </div>
                 <div class="admin-kpi-card green">
                     <div class="admin-kpi-icon">&#9989;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-paid-revenue">&pound;0.00</h3>
-                        <p>Paid Revenue (<span id="stat-paid-count">0</span> Orders)</p>
+                        <h3 id="stat-paid-revenue">&pound;<?php echo number_format($stats['paid_revenue'], 2); ?></h3>
+                        <p>Paid Revenue (<span id="stat-paid-count"><?php echo $stats['paid_count']; ?></span> Orders)</p>
                     </div>
                 </div>
                 <div class="admin-kpi-card saffron">
                     <div class="admin-kpi-icon">&#9203;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-pending-count">0</h3>
+                        <h3 id="stat-pending-count"><?php echo $stats['pending_count']; ?></h3>
                         <p>Verification Pending</p>
                     </div>
                 </div>
@@ -168,19 +176,19 @@ $settings     = get_all_settings();
 
             <!-- Single Page Tabs Nav -->
             <div class="admin-tab-nav">
-                <button type="button" class="admin-tab-btn active" data-tab="tab-bookings">
+                <button type="button" class="admin-tab-btn active" data-tab="tab-bookings" onclick="switchAdminTab('tab-bookings', this)">
                     &#128221; Bookings Management
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="tab-paypal">
+                <button type="button" class="admin-tab-btn" data-tab="tab-paypal" onclick="switchAdminTab('tab-paypal', this)">
                     💳 PayPal Live Gateway
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="tab-settings">
+                <button type="button" class="admin-tab-btn" data-tab="tab-settings" onclick="switchAdminTab('tab-settings', this)">
                     &#9881; Store Settings
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="tab-export">
+                <button type="button" class="admin-tab-btn" data-tab="tab-export" onclick="switchAdminTab('tab-export', this)">
                     📄 PDF &amp; CSV Reports
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="tab-catalog">
+                <button type="button" class="admin-tab-btn" data-tab="tab-catalog" onclick="switchAdminTab('tab-catalog', this)">
                     🛍️ Products &amp; Categories
                 </button>
             </div>
@@ -218,11 +226,83 @@ $settings     = get_all_settings();
                             </tr>
                         </thead>
                         <tbody id="bookings-table-body">
-                            <tr>
-                                <td colspan="9" style="text-align:center; padding: 30px; color: var(--color-text-muted);">
-                                    Loading customer bookings...
-                                </td>
-                            </tr>
+                            <?php if (empty($initial_bookings)): ?>
+                                <tr>
+                                    <td colspan="9" style="text-align:center; padding: 30px; color: var(--color-text-muted);">
+                                        No bookings found in database.
+                                    </td>
+                                </tr>
+                            <?php else: 
+                                $serialNo = count($initial_bookings);
+                                foreach ($initial_bookings as $b):
+                                    $pStatusDisplay = $b['payment_status'];
+                                    if ($pStatusDisplay === 'PAYMENT VERIFICATION PENDING') {
+                                        $pStatusDisplay = 'PENDING VERIFY';
+                                    }
+
+                                    $payBadge = '<span class="status-pill status-pending" title="' . escape_output($b['payment_status']) . '">' . escape_output($pStatusDisplay) . '</span>';
+                                    if ($b['payment_status'] === 'PAID') {
+                                        $payBadge = '<span class="status-pill status-paid">PAID</span>';
+                                    } elseif ($b['payment_status'] === 'FAILED' || $b['payment_status'] === 'CANCELLED') {
+                                        $payBadge = '<span class="status-pill status-cancelled">' . escape_output($b['payment_status']) . '</span>';
+                                    }
+
+                                    $bBadge = '<span class="status-pill status-pending">' . escape_output($b['booking_status'] ?? 'CONFIRMED') . '</span>';
+                                    if (($b['booking_status'] ?? '') === 'SHIPPED' || ($b['booking_status'] ?? '') === 'DELIVERED') {
+                                        $bBadge = '<span class="status-pill status-shipped">' . escape_output($b['booking_status']) . '</span>';
+                                    }
+
+                                    $receiptCell = '';
+                                    if (!empty($b['payment_proof_image'])) {
+                                        $receiptCell = '<div style="margin-top:5px;"><button type="button" class="btn-view-receipt btn-open-hd-modal" data-img="' . escape_output($b['payment_proof_image']) . '" data-ref="' . escape_output($b['booking_reference']) . '" style="background:#FEF3C7 !important; border:1px solid #F59E0B !important; color:#B45309 !important; font-size:0.7rem !important; font-weight:800 !important; padding:2px 6px !important; border-radius:4px !important; cursor:pointer;">📷 Receipt</button></div>';
+                                    }
+                            ?>
+                                <tr>
+                                    <td style="text-align:center; font-weight:700; color:#475569; vertical-align:top; padding-top:12px;"><?php echo $serialNo--; ?></td>
+                                    <td style="white-space:nowrap; vertical-align:top; padding-top:12px;">
+                                        <strong style="color:#4A0B17; font-size:0.86rem; font-family:monospace; letter-spacing:-0.2px; display:block;"><?php echo escape_output($b['booking_reference']); ?></strong>
+                                        <span style="font-size:0.72rem; color:#64748B; font-weight:600; display:block; margin-top:2px;"><?php echo substr($b['created_at'] ?? '', 0, 10); ?></span>
+                                    </td>
+                                    <td style="min-width:130px; vertical-align:top; padding-top:12px;">
+                                        <div><strong style="color:#0F172A; font-size:0.88rem;"><?php echo escape_output($b['customer_name']); ?></strong></div>
+                                        <div style="font-size:0.78rem; color:#475569; font-weight:600; margin-top:2px;"><?php echo escape_output($b['mobile']); ?></div>
+                                    </td>
+                                    <td style="max-width:160px; font-size:0.82rem; color:#334155; line-height:1.35; vertical-align:top; padding-top:12px;">
+                                        <?php echo escape_output($b['city']); ?>, <strong style="color:#0F172A;"><?php echo escape_output($b['postcode']); ?></strong>
+                                    </td>
+                                    <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;"><strong style="color:#0F172A; font-size:0.95rem;"><?php echo $b['quantity']; ?></strong></td>
+                                    <td style="text-align:right; white-space:nowrap; vertical-align:top; padding-top:12px;"><strong style="color:#0F172A; font-size:0.95rem;">&pound;<?php echo number_format((float)$b['total_amount'], 2); ?></strong></td>
+                                    <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;">
+                                        <div style="font-size:0.75rem; font-weight:800; color:#475569; margin-bottom:3px;">
+                                            <?php echo ($b['payment_method'] === 'paypal' ? 'PayPal' : ($b['payment_method'] === 'bank_transfer' ? 'Bank' : escape_output($b['payment_method']))); ?>
+                                        </div>
+                                        <?php echo $payBadge; ?>
+                                        <?php echo $receiptCell; ?>
+                                    </td>
+                                    <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px;"><?php echo $bBadge; ?></td>
+                                    <td style="text-align:center; white-space:nowrap; vertical-align:top; padding-top:12px; display: flex; gap: 4px; justify-content: center; align-items: center; border: none;">
+                                        <button type="button" class="btn-action-sm btn-view-items" 
+                                            data-ref="<?php echo escape_output($b['booking_reference']); ?>"
+                                            style="background:#D97706 !important; color:#fff !important; border-color:#D97706 !important; padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
+                                            📦 Items (<?php echo isset($b['items']) ? count($b['items']) : $b['quantity']; ?>)
+                                        </button>
+                                        <button type="button" class="btn-action-sm btn-view-booking" 
+                                            data-ref="<?php echo escape_output($b['booking_reference']); ?>"
+                                            style="background:#0F172A !important; color:#fff !important; border-color:#0F172A !important; padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
+                                            View 👁️
+                                        </button>
+                                        <button type="button" class="btn-action-sm btn-edit-booking" 
+                                            data-ref="<?php echo escape_output($b['booking_reference']); ?>" 
+                                            data-pstat="<?php echo escape_output($b['payment_status']); ?>" 
+                                            data-bstat="<?php echo escape_output($b['booking_status'] ?? 'CONFIRMED'); ?>"
+                                            data-pmeth="<?php echo escape_output($b['payment_method'] ?? 'bank_transfer'); ?>"
+                                            data-pref="<?php echo escape_output($b['payment_reference'] ?? $b['paypal_transaction_id'] ?? ''); ?>"
+                                            style="padding: 4px 8px !important; font-size:0.75rem !important; border-radius:4px; cursor:pointer; font-weight:700;">
+                                            Edit ✏️
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -702,7 +782,50 @@ $settings     = get_all_settings();
                                     </tr>
                                 </thead>
                                 <tbody id="admin-products-table-body">
-                                    <!-- Dynamic rows -->
+                                    <?php
+                                    $shop_prods = array_filter($catalog_products, function($p) {
+                                        return $p['id'] != 7 && $p['id'] != 8 && (empty($p['category_name']) || strpos($p['category_name'], 'Add-On') === false);
+                                    });
+                                    if (empty($shop_prods)):
+                                    ?>
+                                        <tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No products found.</td></tr>
+                                    <?php else: foreach ($shop_prods as $p):
+                                        $img1 = $p['image_path'] ?: 'assets/images/ganesh_hero.png';
+                                        $img2 = $p['image_path_2'] ?? '';
+                                        $img3 = $p['image_path_3'] ?? '';
+                                    ?>
+                                        <tr>
+                                            <td style="text-align:center; vertical-align:middle;">
+                                                <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
+                                                    <img src="<?php echo escape_output($img1); ?>" title="Image 1 (Main View)" class="btn-open-hd-modal" data-img="<?php echo escape_output($img1); ?>" data-ref="<?php echo escape_output($p['name']); ?> - Image 1" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:2px solid #D4AF37; cursor:pointer;">
+                                                    <?php if ($img2): ?>
+                                                        <img src="<?php echo escape_output($img2); ?>" title="Image 2 (Angle View)" class="btn-open-hd-modal" data-img="<?php echo escape_output($img2); ?>" data-ref="<?php echo escape_output($p['name']); ?> - Image 2" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">
+                                                    <?php else: ?>
+                                                        <div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 2</div>
+                                                    <?php endif; ?>
+                                                    <?php if ($img3): ?>
+                                                        <img src="<?php echo escape_output($img3); ?>" title="Image 3 (Detail View)" class="btn-open-hd-modal" data-img="<?php echo escape_output($img3); ?>" data-ref="<?php echo escape_output($p['name']); ?> - Image 3" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">
+                                                    <?php else: ?>
+                                                        <div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 3</div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <strong style="color:#0F172A; font-size:0.9rem; display:block;"><?php echo escape_output($p['name']); ?></strong>
+                                                <span style="font-size:0.75rem; color:#64748B; font-weight:700; text-transform:uppercase;"><?php echo escape_output($p['category_name'] ?? 'Shop Product'); ?></span>
+                                            </td>
+                                            <td style="font-size:0.8rem; color:#475569; vertical-align:middle; max-width:250px;">
+                                                <?php echo escape_output($p['description'] ?? ''); ?>
+                                            </td>
+                                            <td style="text-align:right; font-weight:800; color:#4A0B17; vertical-align:middle;">
+                                                &pound;<?php echo number_format((float)$p['price'], 2); ?>
+                                            </td>
+                                            <td style="text-align:center; vertical-align:middle;">
+                                                <button type="button" class="btn-action-sm btn-edit-product" data-id="<?php echo $p['id']; ?>" style="padding: 4px 8px; font-size:0.72rem; cursor:pointer;">Edit ✏️</button>
+                                                <button type="button" class="btn-action-sm btn-delete-product" data-id="<?php echo $p['id']; ?>" style="padding: 4px 8px; font-size:0.72rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -842,53 +965,97 @@ $settings     = get_all_settings();
         </div>
     </div>
 
-    <!-- PRODUCT MODAL -->
+    <!-- PRODUCT MODAL (3 IMAGES PER PRODUCT) -->
     <div class="admin-modal-overlay" id="product-modal" style="display:none; z-index:1100;">
-        <div class="admin-modal-card" style="max-width: 500px; width: 90%;">
+        <div class="admin-modal-card" style="max-width: 550px; width: 92%;">
             <div class="admin-modal-header">
-                <h3 class="admin-modal-title" id="product-modal-title">Add Product</h3>
+                <h3 class="admin-modal-title" id="product-modal-title">Add / Edit Product (3 Images)</h3>
                 <button type="button" class="admin-modal-close" id="product-modal-close-btn">&times;</button>
             </div>
             <form id="product-form" enctype="multipart/form-data">
                 <input type="hidden" id="product-id" name="id" value="0">
                 <input type="hidden" id="product-current-image" name="current_image_path" value="">
-                <div class="admin-modal-body" style="padding: 20px; max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:15px; box-sizing:border-box;">
+                <input type="hidden" id="product-current-image-2" name="current_image_path_2" value="">
+                <input type="hidden" id="product-current-image-3" name="current_image_path_3" value="">
+
+                <div class="admin-modal-body" style="padding: 20px; max-height:70vh; overflow-y:auto; display:flex; flex-direction:column; gap:16px; box-sizing:border-box;">
                     <div class="admin-field-group" id="addon-status-toggle-group" style="display:none; background:#FFFDF5; border:1px solid #FCD34D; padding:12px; border-radius:8px;">
                         <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#92400E; cursor:pointer; font-size:0.88rem; margin:0;">
                             <input type="checkbox" id="product-addon-enabled" name="addon_enabled" value="1" checked style="width:18px; height:18px; cursor:pointer;">
                             <span>Enable this Festive Add-On in Customer Shopping Cart</span>
                         </label>
                     </div>
-                    <div class="admin-field-group">
-                        <label for="product-category">Category</label>
-                        <select id="product-category" name="category_id" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
-                            <!-- Dynamic category list -->
-                        </select>
-                    </div>
-                    <div class="admin-field-group">
-                        <label for="product-name">Product Name</label>
-                        <input type="text" id="product-name" name="name" placeholder="e.g. Designer Rudraksha Rakhi" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
-                    </div>
-                    <div class="admin-field-group">
-                        <label for="product-price">Price (£)</label>
-                        <input type="number" id="product-price" name="price" step="0.01" min="0.00" placeholder="14.99" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
-                    </div>
-                    <div class="admin-field-group">
-                        <label for="product-description">Description</label>
-                        <textarea id="product-description" name="description" rows="3" placeholder="Enter product details..." style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
-                    </div>
-                    <div class="admin-field-group">
-                        <label for="product-image-file">Product Image File</label>
-                        <input type="file" id="product-image-file" name="product_image" accept="image/*" style="width:100%; padding:5px 0;">
-                        <small style="font-size:0.75rem; color:#64748B; display:block; margin-top:4px;">recommended ratio: 1:1 square (e.g. 1000x1000 px, max 10mb)</small>
-                        <div id="product-image-preview-box" style="margin-top:10px; display:none;">
-                            <img id="product-image-preview-el" src="" alt="Preview" style="max-width:100px; max-height:100px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0;">
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="admin-field-group">
+                            <label for="product-category" style="font-weight:700;">Category</label>
+                            <select id="product-category" name="category_id" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                <!-- Dynamic category list -->
+                            </select>
                         </div>
+                        <div class="admin-field-group">
+                            <label for="product-price" style="font-weight:700;">Price (£)</label>
+                            <input type="number" id="product-price" name="price" step="0.01" min="0.00" placeholder="14.99" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                        </div>
+                    </div>
+
+                    <div class="admin-field-group">
+                        <label for="product-name" style="font-weight:700;">Product Title / Name</label>
+                        <input type="text" id="product-name" name="name" placeholder="e.g. Ganesh Statue / Vinayaka Vigraha" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+
+                    <div class="admin-field-group">
+                        <label for="product-description" style="font-weight:700;">Description</label>
+                        <textarea id="product-description" name="description" rows="3" placeholder="Enter full product specifications and details..." style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+                    </div>
+
+                    <!-- 3 IMAGES SECTION -->
+                    <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; padding:16px; border-radius:10px; margin-top:4px;">
+                        <h4 style="margin:0 0 12px 0; color:#4A0B17; font-size:0.95rem; font-weight:800; display:flex; align-items:center; gap:6px;">
+                            <span>📸 Product Image Gallery (3 Photos Required / Supported)</span>
+                        </h4>
+
+                        <!-- Image 1 (Primary) -->
+                        <div style="margin-bottom:14px; background:#FFFFFF; padding:10px; border:1px solid #E2E8F0; border-radius:8px;">
+                            <label style="font-weight:700; color:#0F172A; font-size:0.83rem; display:block; margin-bottom:4px;">
+                                Image 1 (Main Hero View) <span style="color:#DC2626;">*Primary</span>
+                            </label>
+                            <input type="file" id="product-image-file" name="product_image" accept="image/*" style="width:100%; font-size:0.82rem;">
+                            <div id="product-image-preview-box" style="margin-top:8px; display:none; align-items:center; gap:10px;">
+                                <img id="product-image-preview-el" src="" alt="Image 1 Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:2px solid #D4AF37;">
+                                <span style="font-size:0.75rem; color:#475569; font-weight:600;">Main Photo Active</span>
+                            </div>
+                        </div>
+
+                        <!-- Image 2 -->
+                        <div style="margin-bottom:14px; background:#FFFFFF; padding:10px; border:1px solid #E2E8F0; border-radius:8px;">
+                            <label style="font-weight:700; color:#0F172A; font-size:0.83rem; display:block; margin-bottom:4px;">
+                                Image 2 (Angle / Detail View)
+                            </label>
+                            <input type="file" id="product-image-file-2" name="product_image_2" accept="image/*" style="width:100%; font-size:0.82rem;">
+                            <div id="product-image-preview-box-2" style="margin-top:8px; display:none; align-items:center; gap:10px;">
+                                <img id="product-image-preview-el-2" src="" alt="Image 2 Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">
+                                <span style="font-size:0.75rem; color:#475569; font-weight:600;">Secondary Angle Photo</span>
+                            </div>
+                        </div>
+
+                        <!-- Image 3 -->
+                        <div style="background:#FFFFFF; padding:10px; border:1px solid #E2E8F0; border-radius:8px;">
+                            <label style="font-weight:700; color:#0F172A; font-size:0.83rem; display:block; margin-bottom:4px;">
+                                Image 3 (Packaging / Kit View)
+                            </label>
+                            <input type="file" id="product-image-file-3" name="product_image_3" accept="image/*" style="width:100%; font-size:0.82rem;">
+                            <div id="product-image-preview-box-3" style="margin-top:8px; display:none; align-items:center; gap:10px;">
+                                <img id="product-image-preview-el-3" src="" alt="Image 3 Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">
+                                <span style="font-size:0.75rem; color:#475569; font-weight:600;">Packaging / Detail Photo</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div class="admin-modal-footer">
                     <button type="button" class="btn-modal-cancel" id="product-modal-cancel-btn">Cancel</button>
-                    <button type="submit" class="btn-modal-save">Save Product</button>
+                    <button type="submit" class="btn-modal-save" style="background:#4A0B17; color:#FFFFFF; font-weight:800;">Save Product &amp; 3 Photos</button>
                 </div>
             </form>
         </div>
@@ -896,34 +1063,44 @@ $settings     = get_all_settings();
 
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const csrfToken = "<?php echo escape_output($csrf_token); ?>";
-            let activeStatusFilter = 'ALL';
-            let currentSearchQuery = '';
-            let loadedBookings = [];
+        // Global Admin State & Functions
+        const csrfToken = "<?php echo escape_output($csrf_token); ?>";
+        let activeStatusFilter = 'ALL';
+        let currentSearchQuery = '';
+        let loadedBookings = <?php echo json_encode($initial_bookings); ?>;
+        let catalogCategories = <?php echo json_encode($catalog_categories); ?>;
+        let catalogProducts = <?php echo json_encode($catalog_products); ?>;
+        let adminSettings = <?php echo json_encode($settings); ?>;
 
-            // Tab Switching Logic
+        // Fail-Safe Tab Switching Function (Globally Accessible)
+        function switchAdminTab(tabId, btn) {
             const tabBtns = document.querySelectorAll('.admin-tab-btn');
             const tabContents = document.querySelectorAll('.admin-tab-content');
 
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    tabContents.forEach(c => c.style.display = 'none');
-                    
-                    this.classList.add('active');
-                    const targetContent = document.getElementById(tabId);
-                    if (targetContent) targetContent.style.display = 'block';
-                    
-                    if (tabId === 'tab-catalog') {
-                        loadCatalogData();
-                    } else if (tabId === 'tab-paypal') {
-                        loadPayPalOrdersTable();
-                    }
-                });
-            });
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.style.display = 'none');
+
+            if (btn) {
+                btn.classList.add('active');
+            } else {
+                const activeBtn = document.querySelector(`.admin-tab-btn[data-tab="${tabId}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+            }
+
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.style.display = 'block';
+            }
+
+            if (tabId === 'tab-catalog') {
+                if (typeof loadCatalogData === 'function') loadCatalogData();
+            } else if (tabId === 'tab-paypal') {
+                if (typeof loadPayPalOrdersTable === 'function') loadPayPalOrdersTable();
+            }
+        }
+        window.switchAdminTab = switchAdminTab;
+
+        document.addEventListener('DOMContentLoaded', function() {
 
             // Login Form Submission
             const loginForm = document.getElementById('admin-login-form');
@@ -1544,10 +1721,9 @@ $settings     = get_all_settings();
             setInterval(updateHeaderClock, 1000);
             updateHeaderClock();
 
-            // Initial load if authenticated
-            if (<?php echo $is_logged_in ? 'true' : 'false'; ?>) {
-                loadDashboardData();
-            }
+            // Always run initial data load on admin dashboard load
+            loadDashboardData();
+            loadCatalogData();
 
             // Close view details modal
             const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
@@ -1858,9 +2034,17 @@ $settings     = get_all_settings();
 
                 shopProducts.forEach(p => {
                     const tr = document.createElement('tr');
+                    const img1 = p.image_path || 'assets/images/ganesh_hero.png';
+                    const img2 = p.image_path_2 || '';
+                    const img3 = p.image_path_3 || '';
+
                     tr.innerHTML = `
                         <td style="text-align:center; vertical-align:middle;">
-                            <img src="${escapeHtml(p.image_path || 'assets/images/ganesh_hero.png')}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0;">
+                            <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
+                                <img src="${escapeHtml(img1)}" title="Image 1 (Main View)" class="btn-open-hd-modal" data-img="${escapeHtml(img1)}" data-ref="${escapeHtml(p.name)} - Image 1" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:2px solid #D4AF37; cursor:pointer;">
+                                ${img2 ? `<img src="${escapeHtml(img2)}" title="Image 2 (Angle View)" class="btn-open-hd-modal" data-img="${escapeHtml(img2)}" data-ref="${escapeHtml(p.name)} - Image 2" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">` : '<div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 2</div>'}
+                                ${img3 ? `<img src="${escapeHtml(img3)}" title="Image 3 (Detail View)" class="btn-open-hd-modal" data-img="${escapeHtml(img3)}" data-ref="${escapeHtml(p.name)} - Image 3" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">` : '<div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 3</div>'}
+                            </div>
                         </td>
                         <td style="vertical-align:middle;">
                             <strong style="color:#0F172A; font-size:0.9rem; display:block;">${escapeHtml(p.name)}</strong>
@@ -1946,7 +2130,7 @@ $settings     = get_all_settings();
                     return;
                 }
 
-                // 2. Add Product Button
+                // 2. Add Product Button (Resets 3 Images)
                 let btnAddProd = e.target.closest('#btn-add-product');
                 if (btnAddProd) {
                     e.preventDefault();
@@ -1954,12 +2138,22 @@ $settings     = get_all_settings();
                     document.getElementById('product-name').value = '';
                     document.getElementById('product-price').value = '';
                     document.getElementById('product-description').value = '';
+                    
                     document.getElementById('product-current-image').value = '';
+                    document.getElementById('product-current-image-2').value = '';
+                    document.getElementById('product-current-image-3').value = '';
+                    
                     document.getElementById('product-image-file').value = '';
+                    document.getElementById('product-image-file-2').value = '';
+                    document.getElementById('product-image-file-3').value = '';
+                    
                     document.getElementById('product-image-preview-box').style.display = 'none';
+                    document.getElementById('product-image-preview-box-2').style.display = 'none';
+                    document.getElementById('product-image-preview-box-3').style.display = 'none';
+                    
                     document.getElementById('addon-status-toggle-group').style.display = 'none';
                     populateCategoryDropdown();
-                    document.getElementById('product-modal-title').textContent = 'Add Product / Item';
+                    document.getElementById('product-modal-title').textContent = 'Add Product (3 Photos)';
                     document.getElementById('product-modal').style.display = 'flex';
                     return;
                 }
@@ -1972,8 +2166,14 @@ $settings     = get_all_settings();
                     document.getElementById('product-name').value = '🍫 Add-On 2: Premium Chocolate & Sweets Box';
                     document.getElementById('product-price').value = '3.99';
                     document.getElementById('product-description').value = 'Luxury assorted Cadbury chocolates & dry fruit sweets box';
+                    
                     document.getElementById('product-current-image').value = 'assets/images/rakhi_peacock.png';
+                    document.getElementById('product-current-image-2').value = 'assets/images/rakhi_rudraksha.png';
+                    document.getElementById('product-current-image-3').value = 'assets/images/ganesh_product_2.png';
+                    
                     document.getElementById('product-image-file').value = '';
+                    document.getElementById('product-image-file-2').value = '';
+                    document.getElementById('product-image-file-3').value = '';
                     
                     populateCategoryDropdown();
                     const select = document.getElementById('product-category');
@@ -1982,11 +2182,11 @@ $settings     = get_all_settings();
                         select.value = addonCat.id;
                     }
                     
-                    const prevBox = document.getElementById('product-image-preview-box');
-                    const prevImg = document.getElementById('product-image-preview-el');
-                    if (prevBox && prevImg) {
-                        prevImg.src = 'assets/images/rakhi_peacock.png';
-                        prevBox.style.display = 'block';
+                    const prevBox1 = document.getElementById('product-image-preview-box');
+                    const prevImg1 = document.getElementById('product-image-preview-el');
+                    if (prevBox1 && prevImg1) {
+                        prevImg1.src = 'assets/images/rakhi_peacock.png';
+                        prevBox1.style.display = 'flex';
                     }
                     
                     document.getElementById('addon-status-toggle-group').style.display = 'block';
@@ -1996,7 +2196,7 @@ $settings     = get_all_settings();
                     return;
                 }
 
-                // 4. Edit Product / Add-On Button
+                // 4. Edit Product Button (Fills 3 Image Paths and Previews)
                 let btnEditProd = e.target.closest('.btn-edit-product');
                 if (btnEditProd) {
                     e.preventDefault();
@@ -2014,8 +2214,15 @@ $settings     = get_all_settings();
                     document.getElementById('product-name').value = p.name;
                     document.getElementById('product-price').value = p.price;
                     document.getElementById('product-description').value = p.description || '';
+                    
+                    // 3 Images Current Values
                     document.getElementById('product-current-image').value = p.image_path || '';
+                    document.getElementById('product-current-image-2').value = p.image_path_2 || '';
+                    document.getElementById('product-current-image-3').value = p.image_path_3 || '';
+                    
                     document.getElementById('product-image-file').value = '';
+                    document.getElementById('product-image-file-2').value = '';
+                    document.getElementById('product-image-file-3').value = '';
                     
                     let isAddon = p.id == 7 || p.id == 8 || (p.name && (p.name.includes('Wrapping') || p.name.includes('Chocolate') || p.name.includes('Add-On')));
                     let toggleGroup = document.getElementById('addon-status-toggle-group');
@@ -2032,16 +2239,35 @@ $settings     = get_all_settings();
                         toggleGroup.style.display = 'none';
                     }
                     
-                    const previewEl = document.getElementById('product-image-preview-el');
-                    const previewBox = document.getElementById('product-image-preview-box');
-                    if (p.image_path && previewEl && previewBox) {
-                        previewEl.src = p.image_path;
-                        previewBox.style.display = 'block';
-                    } else if (previewBox) {
-                        previewBox.style.display = 'none';
+                    // Show 3 Previews
+                    const p1 = document.getElementById('product-image-preview-el');
+                    const b1 = document.getElementById('product-image-preview-box');
+                    if (p.image_path && p1 && b1) {
+                        p1.src = p.image_path;
+                        b1.style.display = 'flex';
+                    } else if (b1) {
+                        b1.style.display = 'none';
+                    }
+
+                    const p2 = document.getElementById('product-image-preview-el-2');
+                    const b2 = document.getElementById('product-image-preview-box-2');
+                    if (p.image_path_2 && p2 && b2) {
+                        p2.src = p.image_path_2;
+                        b2.style.display = 'flex';
+                    } else if (b2) {
+                        b2.style.display = 'none';
+                    }
+
+                    const p3 = document.getElementById('product-image-preview-el-3');
+                    const b3 = document.getElementById('product-image-preview-box-3');
+                    if (p.image_path_3 && p3 && b3) {
+                        p3.src = p.image_path_3;
+                        b3.style.display = 'flex';
+                    } else if (b3) {
+                        b3.style.display = 'none';
                     }
                     
-                    document.getElementById('product-modal-title').textContent = 'Edit Product / Add-On';
+                    document.getElementById('product-modal-title').textContent = 'Edit Product (3 Photos)';
                     document.getElementById('product-modal').style.display = 'flex';
                     return;
                 }

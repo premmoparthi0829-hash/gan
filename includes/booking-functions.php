@@ -326,3 +326,54 @@ function save_uploaded_payment_receipt($file_input, $booking_ref) {
 
     return null;
 }
+
+/**
+ * Fetch full dashboard stats and bookings array for server-side pre-rendering
+ */
+function get_dashboard_data_array($search = '', $status_filter = 'ALL') {
+    $db = Database::getConnection();
+    $stats = [
+        'total_bookings' => 0,
+        'total_revenue' => 0.00,
+        'paid_count' => 0,
+        'paid_revenue' => 0.00,
+        'pending_count' => 0,
+        'shipped_count' => 0
+    ];
+    $bookings = [];
+
+    if ($db) {
+        try {
+            $stat_stmt = $db->query("SELECT 
+                COUNT(*) as total_count,
+                COALESCE(SUM(total_amount), 0) as total_rev,
+                COALESCE(SUM(CASE WHEN payment_status = 'PAID' THEN 1 ELSE 0 END), 0) as paid_cnt,
+                COALESCE(SUM(CASE WHEN payment_status = 'PAID' THEN total_amount ELSE 0 END), 0) as paid_rev,
+                COALESCE(SUM(CASE WHEN payment_status = 'PAYMENT VERIFICATION PENDING' THEN 1 ELSE 0 END), 0) as pending_cnt,
+                COALESCE(SUM(CASE WHEN booking_status = 'SHIPPED' THEN 1 ELSE 0 END), 0) as shipped_cnt
+                FROM bookings");
+            $stat_row = $stat_stmt->fetch();
+            if ($stat_row) {
+                $stats['total_bookings'] = (int)$stat_row['total_count'];
+                $stats['total_revenue']  = (float)$stat_row['total_rev'];
+                $stats['paid_count']      = (int)$stat_row['paid_cnt'];
+                $stats['paid_revenue']   = (float)$stat_row['paid_rev'];
+                $stats['pending_count']   = (int)$stat_row['pending_cnt'];
+                $stats['shipped_count']   = (int)$stat_row['shipped_cnt'];
+            }
+
+            $stmt = $db->query("SELECT * FROM bookings ORDER BY id DESC LIMIT 200");
+            $bookings = $stmt->fetchAll();
+
+            foreach ($bookings as &$b) {
+                $stmt_items = $db->prepare("SELECT * FROM booking_items WHERE booking_id = :bid");
+                $stmt_items->execute([':bid' => $b['id']]);
+                $b['items'] = $stmt_items->fetchAll();
+            }
+        } catch (Exception $e) {
+            log_system_error("Dashboard data array error: " . $e->getMessage());
+        }
+    }
+
+    return ['stats' => $stats, 'bookings' => $bookings];
+}

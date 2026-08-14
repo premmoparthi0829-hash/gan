@@ -590,18 +590,47 @@ if ($action === 'save_product') {
     }
     
     $image_path = sanitize_input($_POST['current_image_path'] ?? '');
+    $image_path_2 = sanitize_input($_POST['current_image_path_2'] ?? '');
+    $image_path_3 = sanitize_input($_POST['current_image_path_3'] ?? '');
+
+    $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    $target_dir = __DIR__ . '/../assets/images/';
+    if (!is_dir($target_dir)) {
+        @mkdir($target_dir, 0755, true);
+    }
+
+    // Process Image 1 upload
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['product_image'];
-        $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
-            $new_filename = 'prod_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            $target_dir = __DIR__ . '/../assets/images/';
-            if (!is_dir($target_dir)) {
-                @mkdir($target_dir, 0755, true);
-            }
+            $new_filename = 'prod_' . time() . '_1_' . bin2hex(random_bytes(4)) . '.' . $ext;
             if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
                 $image_path = 'assets/images/' . $new_filename;
+            }
+        }
+    }
+
+    // Process Image 2 upload
+    if (isset($_FILES['product_image_2']) && $_FILES['product_image_2']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['product_image_2'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
+            $new_filename = 'prod_' . time() . '_2_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                $image_path_2 = 'assets/images/' . $new_filename;
+            }
+        }
+    }
+
+    // Process Image 3 upload
+    if (isset($_FILES['product_image_3']) && $_FILES['product_image_3']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['product_image_3'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
+            $new_filename = 'prod_' . time() . '_3_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                $image_path_3 = 'assets/images/' . $new_filename;
             }
         }
     }
@@ -610,23 +639,27 @@ if ($action === 'save_product') {
     if ($db) {
         try {
             if ($id > 0) {
-                $stmt = $db->prepare("UPDATE products SET category_id = :category_id, name = :name, description = :description, price = :price, image_path = :image_path WHERE id = :id");
+                $stmt = $db->prepare("UPDATE products SET category_id = :category_id, name = :name, description = :description, price = :price, image_path = :image_path, image_path_2 = :image_path_2, image_path_3 = :image_path_3 WHERE id = :id");
                 $stmt->execute([
                     ':category_id' => $category_id,
                     ':name' => $name,
                     ':description' => $description,
                     ':price' => $price,
                     ':image_path' => $image_path,
+                    ':image_path_2' => $image_path_2,
+                    ':image_path_3' => $image_path_3,
                     ':id' => $id
                 ]);
             } else {
-                $stmt = $db->prepare("INSERT INTO products (category_id, name, description, price, image_path) VALUES (:category_id, :name, :description, :price, :image_path)");
+                $stmt = $db->prepare("INSERT INTO products (category_id, name, description, price, image_path, image_path_2, image_path_3) VALUES (:category_id, :name, :description, :price, :image_path, :image_path_2, :image_path_3)");
                 $stmt->execute([
                     ':category_id' => $category_id,
                     ':name' => $name,
                     ':description' => $description,
                     ':price' => $price,
-                    ':image_path' => $image_path
+                    ':image_path' => $image_path,
+                    ':image_path_2' => $image_path_2,
+                    ':image_path_3' => $image_path_3
                 ]);
             }
             // Auto-sync settings table if product is an Add-On

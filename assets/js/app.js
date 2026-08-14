@@ -128,7 +128,40 @@ $(document).ready(function () {
         });
     });
 
-    // Product Info Quick View Modal Handler
+    // Product Info Quick View Modal Handler (3 Images Gallery)
+    let currentGalleryImages = [];
+    let currentGalleryIndex = 0;
+
+    function setGalleryActiveImage(index) {
+        if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+        if (index < 0) index = currentGalleryImages.length - 1;
+        if (index >= currentGalleryImages.length) index = 0;
+        
+        currentGalleryIndex = index;
+        let activeSrc = currentGalleryImages[index];
+
+        $('#pmodal-img').css('opacity', 0.4);
+        setTimeout(function() {
+            $('#pmodal-img').attr('src', activeSrc).css('opacity', 1);
+        }, 120);
+
+        $('.pmodal-thumb-item').each(function(i) {
+            if (i === index) {
+                $(this).addClass('active').css({
+                    'border': '2.5px solid #D4AF37',
+                    'transform': 'scale(1.05)',
+                    'box-shadow': '0 4px 10px rgba(212,175,55,0.3)'
+                });
+            } else {
+                $(this).removeClass('active').css({
+                    'border': '1.5px solid #CBD5E1',
+                    'transform': 'scale(1)',
+                    'box-shadow': 'none'
+                });
+            }
+        });
+    }
+
     $(document).on('click', '.prod-img-wrap', function(e) {
         if ($(e.target).closest('.btn-add-to-cart').length) return;
         
@@ -138,10 +171,37 @@ $(document).ready(function () {
         let name = card.data('name');
         let price = parseFloat(card.data('price')).toFixed(2);
         let desc = card.data('desc') || 'High quality handcrafted item delivered across the UK.';
-        let img = card.data('img');
+        let img1 = card.data('img') || 'assets/images/ganesh_hero.png';
+        let img2 = card.data('img2') || '';
+        let img3 = card.data('img3') || '';
         let cat = card.data('cat') || 'Festive Collection';
 
-        $('#pmodal-img').attr('src', img);
+        // Build array of up to 3 gallery images
+        currentGalleryImages = [img1];
+        if (img2) currentGalleryImages.push(img2);
+        if (img3) currentGalleryImages.push(img3);
+
+        // Render thumbnails
+        for (let i = 0; i < 3; i++) {
+            let thumbEl = $(`#pmodal-thumb-${i}`);
+            let thumbImgEl = $(`#pmodal-thumb-img-${i}`);
+            if (i < currentGalleryImages.length) {
+                thumbImgEl.attr('src', currentGalleryImages[i]);
+                thumbEl.show();
+            } else {
+                thumbEl.hide();
+            }
+        }
+
+        // Show/Hide Nav Prev/Next controls if multiple images exist
+        if (currentGalleryImages.length > 1) {
+            $('#pmodal-btn-prev, #pmodal-btn-next, #pmodal-thumbs-box').show();
+        } else {
+            $('#pmodal-btn-prev, #pmodal-btn-next').hide();
+        }
+
+        setGalleryActiveImage(0);
+
         $('#pmodal-name').text(name);
         $('#pmodal-price').html(`&pound;${price}`);
         $('#pmodal-btn-price').html(`&pound;${price}`);
@@ -149,11 +209,28 @@ $(document).ready(function () {
         $('#pmodal-category').text(cat);
 
         $('#pmodal-add-cart-btn').off('click').on('click', function() {
-            addToCart(id, name, parseFloat(price), img);
+            addToCart(id, name, parseFloat(price), currentGalleryImages[0]);
             $('#product-info-modal-overlay').removeClass('active');
         });
 
         $('#product-info-modal-overlay').addClass('active');
+    });
+
+    // Gallery Thumbnail Clicks
+    $(document).on('click', '.pmodal-thumb-item', function() {
+        let idx = parseInt($(this).data('index'));
+        setGalleryActiveImage(idx);
+    });
+
+    // Gallery Next / Prev Clicks
+    $(document).on('click', '#pmodal-btn-prev', function(e) {
+        e.stopPropagation();
+        setGalleryActiveImage(currentGalleryIndex - 1);
+    });
+
+    $(document).on('click', '#pmodal-btn-next', function(e) {
+        e.stopPropagation();
+        setGalleryActiveImage(currentGalleryIndex + 1);
     });
 
     $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function(e) {
