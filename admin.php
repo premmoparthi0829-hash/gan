@@ -13,8 +13,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     exit;
 }
 
-set_admin_logged_in(true);
-$is_logged_in     = true;
+$is_logged_in     = is_admin_logged_in();
 $csrf_token       = get_csrf_token();
 $settings         = get_all_settings();
 $dash_data          = get_dashboard_data_array();
@@ -1182,22 +1181,22 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
 
             // Logout Buttons Event Listeners
             function performAdminLogout() {
-                fetch('ajax/admin-actions.php?action=logout')
+                fetch('ajax/admin-actions.php?action=logout', { method: 'POST' })
                 .then(res => res.json())
                 .then(() => {
-                    window.location.href = 'admin.php';
+                    window.location.href = 'admin.php?action=logout';
                 })
                 .catch(() => {
-                    window.location.reload();
+                    window.location.href = 'admin.php?action=logout';
                 });
             }
 
-            const logoutElements = document.querySelectorAll('#btn-admin-logout, .btn-simple-logout, .btn-admin-logout, [data-action="logout"], .logout-btn');
-            logoutElements.forEach(btn => {
-                btn.addEventListener('click', function(e) {
+            document.addEventListener('click', function(e) {
+                let logoutBtn = e.target.closest('#btn-admin-logout, .btn-simple-logout, .btn-admin-logout, [data-action="logout"], .logout-btn');
+                if (logoutBtn) {
                     e.preventDefault();
                     performAdminLogout();
-                });
+                }
             });
 
             // Fetch & Render Dashboard Data

@@ -62,10 +62,7 @@ function is_admin_logged_in() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
-    if (!isset($_SESSION['admin_logged_in'])) {
-        $_SESSION['admin_logged_in'] = true;
-    }
-    return $_SESSION['admin_logged_in'] === true;
+    return !empty($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 
 /**
