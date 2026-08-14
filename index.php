@@ -863,6 +863,29 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
             id="footer-phone-link"><?php echo $phone; ?></a>
     </div>
 
+    <!-- Mobile App Bottom Navigation Bar (Functional Native Feel) -->
+    <nav class="mobile-app-bottom-nav">
+        <button type="button" class="mobile-nav-item" id="mnav-back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>Back</span>
+        </button>
+        <button type="button" class="mobile-nav-item active" id="mnav-home">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Home</span>
+        </button>
+        <button type="button" class="mobile-nav-item" id="mnav-cart">
+            <div style="position:relative; display:inline-block;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                <span class="mnav-cart-badge" id="mnav-cart-badge">0</span>
+            </div>
+            <span>Cart</span>
+        </button>
+        <button type="button" class="mobile-nav-item" id="mnav-profile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Track/Profile</span>
+        </button>
+    </nav>
+
     <!-- JavaScript -->
     <script>
         window.VK_PAYPAL_CONFIG = {

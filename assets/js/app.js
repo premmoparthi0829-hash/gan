@@ -711,6 +711,7 @@ $(document).ready(function () {
         // Update UI floats
         $('#cart-total-badge').text(totalQty);
         $('#nav-cart-badge').text(totalQty);
+        $('#mnav-cart-badge').text(totalQty);
         $('#cart-subtotal-val').text(currencySymbol + subtotal.toFixed(2));
         $('#cart-shipping-val').text(currencySymbol + activeShipping.toFixed(2));
         $('#cart-total-val').text(currencySymbol + total);
@@ -1498,5 +1499,40 @@ if (document.readyState === 'loading') {
 } else {
     initSwiperCarousels();
 }
+
+// ── Mobile App Bottom Navigation Logic ────────────────────
+function setActiveMobileNav(btnId) {
+    $('.mobile-nav-item').removeClass('active');
+    $(`#${btnId}`).addClass('active');
+}
+
+$(document).on('click', '#mnav-back', function() {
+    setActiveMobileNav('mnav-back');
+    if ($('#catalog-step-products').is(':visible')) {
+        $('#btn-back-to-categories').trigger('click');
+    } else if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
+
+$(document).on('click', '#mnav-home', function() {
+    setActiveMobileNav('mnav-home');
+    if ($('#catalog-step-products').is(':visible')) {
+        $('#btn-back-to-categories').trigger('click');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+$(document).on('click', '#mnav-cart', function() {
+    setActiveMobileNav('mnav-cart');
+    $('#cart-drawer-overlay').addClass('active');
+});
+
+$(document).on('click', '#mnav-profile', function() {
+    setActiveMobileNav('mnav-profile');
+    $('#track-modal-overlay').addClass('active');
+});
 
 
