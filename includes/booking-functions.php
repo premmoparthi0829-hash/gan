@@ -54,6 +54,38 @@ function get_product_by_id($id) {
     return null;
 }
 
+/** Reusable add-on catalog and product mapping (safe to call repeatedly). */
+function ensure_reusable_addon_tables($db) {
+    $db->exec("CREATE TABLE IF NOT EXISTS addons (
+        id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(150) NOT NULL,
+        price DECIMAL(10,2) NOT NULL DEFAULT 0.00, image_path VARCHAR(255) NULL,
+        status ENUM('active','inactive') NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+    $db->exec("CREATE TABLE IF NOT EXISTS product_addons (
+        id INT AUTO_INCREMENT PRIMARY KEY, product_id INT NOT NULL, addon_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_product_addon (product_id, addon_id),
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+        FOREIGN KEY (addon_id) REFERENCES addons(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+}
+
+function get_product_reusable_addons($product_id, $active_only = true) {
+    $db = Database::getConnection();
+    if (!$db) return [];
+    try {
+        ensure_reusable_addon_tables($db);
+        $sql = "SELECT a.id, a.name, a.price, a.image_path, a.status FROM product_addons pa JOIN addons a ON a.id = pa.addon_id WHERE pa.product_id = :pid";
+        if ($active_only) $sql .= " AND a.status = 'active'";
+        $sql .= " ORDER BY a.name ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':pid' => (int)$product_id]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) { log_system_error('Reusable add-on fetch error: ' . $e->getMessage()); }
+    return [];
+}
+
 /**
  * Helper to fetch add-on groups & items for a product
  */
@@ -141,13 +173,26 @@ function calculate_order_totals($cart_items) {
 
         if ($product) {
             $base_price = (float)$product['price'];
-            $addon_total = 0.0;
-            if (!empty($selected_addons) && is_array($selected_addons)) {
-                foreach ($selected_addons as $sa) {
-                    $addon_total += (float)($sa['price'] ?? 0.0);
+            // Price snapshots come only from active add-ons assigned to this
+            // product. This prevents clients from changing add-on prices or
+            // attaching an add-on belonging to another product.
+            $assigned = get_product_reusable_addons($id, true);
+            $assigned_by_id = [];
+            foreach ($assigned as $addon) $assigned_by_id[(int)$addon['id']] = $addon;
+            $verified_addons = [];
+            foreach ((array)$selected_addons as $selected) {
+                $addon_id = (int)($selected['addon_id'] ?? $selected['id'] ?? 0);
+                if ($addon_id && isset($assigned_by_id[$addon_id])) {
+                    $addon = $assigned_by_id[$addon_id];
+                    $verified_addons[] = ['addon_id' => $addon_id, 'name' => $addon['name'], 'price' => (float)$addon['price'], 'image_path' => $addon['image_path']];
+                } elseif (!$addon_id) {
+                    // Preserve legacy product-specific add-on snapshots.
+                    $verified_addons[] = ['name' => sanitize_input($selected['name'] ?? ''), 'price' => max(0, (float)($selected['price'] ?? 0))];
                 }
             }
-            $price = isset($item['price']) && (float)$item['price'] > 0 ? (float)$item['price'] : ($base_price + $addon_total);
+            $selected_addons = $verified_addons;
+            $addon_total = array_sum(array_map(fn($addon) => (float)$addon['price'], $selected_addons));
+            $price = $base_price + $addon_total;
             $name = $product['name'];
             $img_path = $product['image_path'];
         } elseif ($id === 99998 || stripos($item_name, 'Wrapping') !== false || stripos($item_name, 'Gift Wrap') !== false) {

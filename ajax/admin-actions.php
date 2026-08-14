@@ -50,7 +50,7 @@ if (!is_admin_logged_in()) {
 // CSRF Validation for state-changing admin operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, [
     'update_booking_status', 'save_settings', 'toggle_addon',
-    'save_category', 'delete_category', 'save_product', 'delete_product'
+    'save_category', 'delete_category', 'save_product', 'delete_product', 'save_addon', 'delete_addon', 'toggle_master_addon'
 ], true)) {
     $csrf = $_POST['csrf_token'] ?? '';
     if (!validate_csrf_token($csrf)) {
@@ -374,6 +374,7 @@ if ($action === 'admin_get_categories_products') {
             $products = $db->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
             foreach ($products as &$p) {
                 $p['addons'] = get_product_addons($p['id']);
+                $p['reusable_addon_ids'] = array_map('intval', array_column(get_product_reusable_addons($p['id'], false), 'id'));
             }
             unset($p);
             $settings = get_all_settings();
@@ -386,6 +387,83 @@ if ($action === 'admin_get_categories_products') {
         'products' => $products,
         'settings' => $settings
     ]);
+}
+
+// Reusable add-on catalog CRUD
+if ($action === 'admin_get_addons') {
+    $db = Database::getConnection(); 
+    $addons = [];
+    if ($db) { 
+        try { 
+            ensure_reusable_addon_tables($db); 
+            $addons = $db->query("SELECT * FROM addons ORDER BY name ASC")->fetchAll(); 
+        } catch (Exception $e) { 
+            json_response(false, $e->getMessage(), [], 500); 
+        } 
+    }
+    json_response(true, 'Add-ons fetched', ['addons' => $addons]);
+}
+if ($action === 'save_addon') {
+    $db = Database::getConnection(); 
+    $id = (int)($_POST['id'] ?? 0); 
+    $name = sanitize_input($_POST['name'] ?? ''); 
+    $price = max(0, (float)($_POST['price'] ?? 0)); 
+    $status = ($_POST['status'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+    if (!$db || $name === '') json_response(false, 'Add-on name is required.', [], 422);
+    try { 
+        ensure_reusable_addon_tables($db); 
+        $image = sanitize_input($_POST['current_image_path'] ?? '');
+        if (isset($_FILES['addon_image']) && $_FILES['addon_image']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['addon_image'];
+            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
+                $new_filename = 'master_addon_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                $target_dir = __DIR__ . '/../assets/images/';
+                if (!is_dir($target_dir)) {
+                    @mkdir($target_dir, 0755, true);
+                }
+                if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                    $image = 'assets/images/' . $new_filename;
+                }
+            }
+        }
+        if ($id) {
+            $s = $db->prepare('UPDATE addons SET name=:n,price=:p,status=:s,image_path=:i WHERE id=:id');
+            $s->execute([':n'=>$name,':p'=>$price,':s'=>$status,':i'=>$image,':id'=>$id]);
+        } else {
+            $s = $db->prepare('INSERT INTO addons(name,price,status,image_path) VALUES(:n,:p,:s,:i)');
+            $s->execute([':n'=>$name,':p'=>$price,':s'=>$status,':i'=>$image]);
+        } 
+        json_response(true, 'Add-on saved successfully.'); 
+    } catch(Exception $e) {
+        json_response(false, $e->getMessage(), [], 500);
+    }
+}
+if ($action === 'delete_addon') { 
+    $db = Database::getConnection(); 
+    try { 
+        ensure_reusable_addon_tables($db); 
+        $db->prepare('DELETE FROM addons WHERE id=:id')->execute([':id' => (int)($_POST['id'] ?? 0)]); 
+        json_response(true, 'Add-on deleted.'); 
+    } catch (Exception $e) {
+        json_response(false, $e->getMessage(), [], 500);
+    } 
+}
+if ($action === 'toggle_master_addon') {
+    $db = Database::getConnection();
+    $id = (int)($_POST['id'] ?? 0);
+    $status = ($_POST['status'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+    if ($db && $id > 0) {
+        try {
+            ensure_reusable_addon_tables($db);
+            $db->prepare("UPDATE addons SET status = :s WHERE id = :id")->execute([':s' => $status, ':id' => $id]);
+            json_response(true, 'Add-on status updated.', ['status' => $status]);
+        } catch (Exception $e) {
+            json_response(false, $e->getMessage(), [], 500);
+        }
+    }
+    json_response(false, 'Invalid add-on ID.', [], 422);
 }
 
 // 6b. Toggle Addon Status
@@ -593,6 +671,23 @@ if ($action === 'save_product') {
             }
             
             $target_prod_id = $id > 0 ? $id : (int)$db->lastInsertId();
+
+            // Persist reusable add-on selections as a many-to-many relationship.
+            // This is deliberately independent from the legacy add-on-group tables.
+            if ($target_prod_id > 0 && isset($_POST['addon_ids'])) {
+                ensure_reusable_addon_tables($db);
+                $raw_ids = is_array($_POST['addon_ids']) ? $_POST['addon_ids'] : [$_POST['addon_ids']];
+                $addon_ids = array_values(array_unique(array_filter(array_map('intval', $raw_ids), fn($value) => $value > 0)));
+                $db->prepare('DELETE FROM product_addons WHERE product_id = :pid')->execute([':pid' => $target_prod_id]);
+                if ($addon_ids) {
+                    $valid = $db->prepare("SELECT id FROM addons WHERE id = :id AND status = 'active'");
+                    $attach = $db->prepare('INSERT IGNORE INTO product_addons (product_id, addon_id) VALUES (:pid, :aid)');
+                    foreach ($addon_ids as $addon_id) {
+                        $valid->execute([':id' => $addon_id]);
+                        if ($valid->fetch()) $attach->execute([':pid' => $target_prod_id, ':aid' => $addon_id]);
+                    }
+                }
+            }
 
             // Save Add-on Groups and Items
             if ($target_prod_id > 0 && isset($_POST['addons'])) {

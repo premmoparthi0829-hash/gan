@@ -264,6 +264,9 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 <button type="button" class="admin-tab-btn" data-tab="tab-catalog" onclick="switchAdminTab('tab-catalog', this)">
                     🛍️ Products &amp; Categories
                 </button>
+                <button type="button" class="admin-tab-btn" data-tab="tab-addons" onclick="switchAdminTab('tab-addons', this)">
+                    🧩 Add-ons
+                </button>
             </div>
 
             <!-- TAB 1: BOOKINGS MANAGEMENT -->
@@ -769,6 +772,15 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 </div>
             </div>
 
+            <div class="admin-tab-content admin-panel-card" id="tab-addons" style="display:none; padding:24px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+                    <div><h2 style="margin:0;color:#4A0B17;">Reusable Add-ons</h2><p style="margin:4px 0 0;color:#64748B;">Create once and assign to multiple products.</p></div>
+                    <button type="button" id="btn-master-addon-new" class="btn-modal-save">+ Add Add-on</button>
+                </div>
+                <input id="master-addon-search" type="search" placeholder="Search add-ons..." style="width:100%;max-width:380px;padding:10px;border:1px solid #CBD5E1;border-radius:7px;margin-bottom:15px;">
+                <div id="master-addons-list"></div>
+            </div>
+
         </main>
     </div>
 
@@ -979,27 +991,60 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
 
                     <!-- PRODUCT ADD-ONS SECTION -->
                     <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; padding:18px; border-radius:12px; margin-top:4px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:8px;">
-                            <div>
-                                <h4 style="margin:0 0 4px 0; color:#4A0B17; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:6px;">
-                                    🧩 Product Add-ons
-                                </h4>
-                                <span style="font-size:0.78rem; color:#64748B;">Configure add-on groups and items (e.g. Choose Chutney, Choose Sambar)</span>
-                            </div>
-                            <button type="button" id="btn-add-addon-group" style="background:#065F46; color:#FFFFFF; border:none; padding:8px 14px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
-                                ➕ Add Group
-                            </button>
-                        </div>
-
-                        <!-- Dynamic Container for Add-on Groups -->
-                        <div id="addon-groups-container" style="display:flex; flex-direction:column; gap:14px;">
-                            <!-- Rendered dynamically by JS -->
-                        </div>
+                        <input type="hidden" name="addon_ids[]" value="">
+                        <h4 style="margin:0 0 4px 0; color:#4A0B17; font-size:1rem; font-weight:800;">🧩 Product Add-ons</h4>
+                        <p style="font-size:0.78rem; color:#64748B; margin:0 0 12px;">Select existing add-ons for this product. Add-ons are managed only in Admin → Add-ons.</p>
+                        <div id="reusable-addons-selector"></div>
                     </div>
                 </div>
                 <div class="admin-modal-footer">
                     <button type="button" class="btn-modal-cancel" id="product-modal-cancel-btn">Cancel</button>
                     <button type="submit" class="btn-modal-save" style="background:#4A0B17; color:#FFFFFF; font-weight:800;">Save Product &amp; Add-ons</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- REUSABLE ADD-ON MODAL -->
+    <div class="admin-modal-overlay" id="master-addon-modal" style="display:none; z-index:1100;">
+        <div class="admin-modal-card" style="max-width: 450px; width: 90%;">
+            <div class="admin-modal-header">
+                <h3 class="admin-modal-title" id="master-addon-modal-title">Add Reusable Add-on</h3>
+                <button type="button" class="admin-modal-close" id="master-addon-modal-close-btn">&times;</button>
+            </div>
+            <form id="master-addon-form" enctype="multipart/form-data">
+                <input type="hidden" id="master-addon-id" name="id" value="0">
+                <input type="hidden" id="master-addon-current-image" name="current_image_path" value="">
+                <div class="admin-modal-body" style="padding: 20px;">
+                    <div class="admin-field-group">
+                        <label for="master-addon-name" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Add-on Name</label>
+                        <input type="text" id="master-addon-name" name="name" placeholder="e.g. Gift Box, Pooja Samagri Kit" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
+                        <div class="admin-field-group">
+                            <label for="master-addon-price" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Price (£)</label>
+                            <input type="number" id="master-addon-price" name="price" step="0.01" min="0.00" placeholder="0.00" required style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                        </div>
+                        <div class="admin-field-group">
+                            <label for="master-addon-status" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Status</label>
+                            <select id="master-addon-status" name="status" style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="admin-field-group" style="margin-top: 15px;">
+                        <label for="master-addon-image-file" style="display:block; margin-bottom:6px; font-weight:600; font-size:0.9rem;">Add-on Image (Optional)</label>
+                        <input type="file" id="master-addon-image-file" name="addon_image" accept="image/*" style="width:100%; padding:8px; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box; background:#F8FAFC;">
+                        <div id="master-addon-image-preview-box" style="margin-top: 10px; display: none; align-items: center; gap: 10px; background: #F1F5F9; padding: 8px 12px; border-radius: 6px;">
+                            <img id="master-addon-image-preview-img" src="" alt="Add-on Image" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #CBD5E1;">
+                            <span style="font-size: 0.8rem; color: #475569; font-weight: 600;">Current Image</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-modal-footer">
+                    <button type="button" class="btn-modal-cancel" id="master-addon-modal-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-modal-save">Save Add-on</button>
                 </div>
             </form>
         </div>
@@ -1015,6 +1060,11 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
         let catalogCategories = <?php echo json_encode($catalog_categories); ?>;
         let catalogProducts = <?php echo json_encode($catalog_products); ?>;
         let adminSettings = <?php echo json_encode($settings); ?>;
+
+        window.csrfToken = csrfToken;
+        window.catalogCategories = catalogCategories;
+        window.catalogProducts = catalogProducts;
+        window.adminSettings = adminSettings;
 
         // Fail-Safe Tab Switching Function (Globally Accessible)
         function switchAdminTab(tabId, btn) {
@@ -1042,6 +1092,8 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 if (typeof window.loadUpiVerificationTable === 'function') window.loadUpiVerificationTable();
             } else if (tabId === 'tab-bookings') {
                 if (typeof window.loadDashboardData === 'function') window.loadDashboardData();
+            } else if (tabId === 'tab-addons') {
+                if (typeof window.loadMasterAddons === 'function') window.loadMasterAddons();
             }
         }
         window.switchAdminTab = switchAdminTab;
@@ -1888,9 +1940,9 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) return;
-                    catalogCategories = data.categories || [];
-                    catalogProducts = data.products || [];
-                    adminSettings = data.settings || {};
+                    catalogCategories = window.catalogCategories = data.categories || [];
+                    catalogProducts = window.catalogProducts = data.products || [];
+                    adminSettings = window.adminSettings = data.settings || {};
 
                     renderCategoriesTable();
                     renderProductsTable();
@@ -2867,6 +2919,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
             }
         });
     </script>
-    <script src="assets/js/catalog-actions.js?v=20260815"></script>
+    <script src="assets/js/catalog-actions.js?v=20260816"></script>
+    <script src="assets/js/reusable-addons.js?v=20260816"></script>
 </body>
 </html>

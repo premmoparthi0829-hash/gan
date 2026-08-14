@@ -237,8 +237,12 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                     $photo_count = count($photos);
                                     $img1 = $photos[0] ?? 'assets/images/ganesh_hero.png';
                                     $gallery_json_attr = htmlspecialchars(json_encode($photos), ENT_QUOTES, 'UTF-8');
+                                    // Reusable add-ons are a flat selectable list. Keep legacy groups
+                                    // available for products already configured with them.
                                     $prod_addons = get_product_addons($prod['id']);
+                                    $reusable_addons = get_product_reusable_addons($prod['id']);
                                     $addons_json_attr = htmlspecialchars(json_encode($prod_addons), ENT_QUOTES, 'UTF-8');
+                                    $reusable_addons_json_attr = htmlspecialchars(json_encode($reusable_addons), ENT_QUOTES, 'UTF-8');
                                 ?>
                                     <div class="swiper-slide product-card-item"
                                         data-id="<?php echo $prod['id']; ?>"
@@ -248,6 +252,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                         data-img="<?php echo escape_output($img1); ?>"
                                         data-gallery="<?php echo $gallery_json_attr; ?>"
                                         data-addons="<?php echo $addons_json_attr; ?>"
+                                        data-reusable-addons="<?php echo $reusable_addons_json_attr; ?>"
                                         data-cat="<?php echo escape_output($cat['name']); ?>">
                                         <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
                                             <div class="card-track-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden;">

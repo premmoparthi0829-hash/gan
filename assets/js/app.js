@@ -367,6 +367,17 @@ $(document).ready(function () {
                 productAddonGroups = addonsData;
             }
         }
+        // Reusable add-ons assigned by the admin are rendered as one optional
+        // multi-select group; legacy per-product groups remain supported.
+        let reusableAddonsData = card.attr('data-reusable-addons');
+        if (reusableAddonsData) {
+            try {
+                let reusableAddons = JSON.parse(reusableAddonsData);
+                if (Array.isArray(reusableAddons) && reusableAddons.length) {
+                    productAddonGroups.push({ id: 'reusable', name: 'Select Add-ons', is_required: 0, selection_type: 'multiple', min_selection: 0, max_selection: 0, items: reusableAddons });
+                }
+            } catch (err) { /* Invalid attributes must not block product purchase. */ }
+        }
 
         let basePriceNum = parseFloat(price);
         let $addonsBox = $('#pmodal-addons-container');
@@ -464,6 +475,7 @@ $(document).ready(function () {
 
             $('.pmodal-addon-input:checked').each(function() {
                 selectedAddons.push({
+                    addon_id: $(this).data('item-id'),
                     group_name: $(this).data('group-name'),
                     name: $(this).data('item-name'),
                     price: parseFloat($(this).data('item-price')) || 0
@@ -517,6 +529,15 @@ $(document).ready(function () {
             } else if (Array.isArray(addonsData)) {
                 productAddonGroups = addonsData;
             }
+        }
+        let reusableAddonsData = card.attr('data-reusable-addons');
+        if (reusableAddonsData) {
+            try {
+                let reusableAddons = JSON.parse(reusableAddonsData);
+                if (Array.isArray(reusableAddons) && reusableAddons.length) {
+                    productAddonGroups.push({ id: 'reusable', name: 'Select Add-ons', is_required: 0, selection_type: 'multiple', min_selection: 0, max_selection: 0, items: reusableAddons });
+                }
+            } catch (err) {}
         }
 
         let hasRequiredAddons = productAddonGroups && productAddonGroups.some(g => g.is_required == 1 && (g.items || []).some(i => i.status !== 'inactive'));
@@ -1816,5 +1837,3 @@ $(document).on('click', '#mnav-profile', function() {
     setActiveMobileNav('mnav-profile');
     $('#track-modal-overlay').addClass('active');
 });
-
-

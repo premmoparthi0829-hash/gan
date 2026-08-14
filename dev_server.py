@@ -48,6 +48,10 @@ PRODUCTS = [
     {"id": 8, "name": "🍫 Add-On 2: Premium Chocolate & Sweet Box", "price": 3.99, "category_id": 3, "description": "Luxury assorted Cadbury chocolates & dry fruit sweets box", "image_path": "assets/images/rakhi_peacock.png", "image_path_2": "assets/images/rakhi_rudraksha.png", "image_path_3": "assets/images/ganesh_product_2.png"}
 ]
 
+# Reusable add-ons are intentionally empty in preview; administrators create
+# real entries through the same API as production.
+ADDONS = []
+
 # Sample seed bookings
 BOOKINGS = {
     "VKG-2026-000101": {
@@ -343,7 +347,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_error(404, "Not Found")
 
     def handle_admin_actions(self, query, form_data):
-        global ADMIN_LOGGED_IN, ADMIN_PASSWORD, SETTINGS, BOOKINGS, CATEGORIES, PRODUCTS
+        global ADMIN_LOGGED_IN, ADMIN_PASSWORD, SETTINGS, BOOKINGS, CATEGORIES, PRODUCTS, ADDONS
         action = query.get('action', [''])[0] or form_data.get('action', '')
 
         if action == 'login':
@@ -505,6 +509,41 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             })
             return
 
+        elif action == 'admin_get_addons':
+            self.send_json({"success": True, "addons": ADDONS})
+            return
+
+        elif action == 'save_addon':
+            addon_id = int(form_data.get('id', 0))
+            record = {"name": form_data.get('name', '').strip(), "price": float(form_data.get('price', 0)), "status": form_data.get('status', 'active'), "image_path": form_data.get('current_image_path', '')}
+            if not record['name']:
+                self.send_json({"success": False, "message": "Add-on name is required"}, status_code=422); return
+            if addon_id:
+                for addon in ADDONS:
+                    if addon['id'] == addon_id: addon.update(record)
+            else:
+                record['id'] = max([a['id'] for a in ADDONS], default=0) + 1
+                ADDONS.append(record)
+            self.send_json({"success": True, "message": "Add-on saved successfully"})
+            return
+
+        elif action == 'delete_addon':
+            addon_id = int(form_data.get('id', 0))
+            ADDONS = [a for a in ADDONS if a['id'] != addon_id]
+            for product in PRODUCTS:
+                product['reusable_addon_ids'] = [i for i in product.get('reusable_addon_ids', []) if i != addon_id]
+            self.send_json({"success": True, "message": "Add-on deleted"})
+            return
+
+        elif action == 'toggle_master_addon':
+            addon_id = int(form_data.get('id', 0))
+            new_status = form_data.get('status', 'active')
+            for addon in ADDONS:
+                if addon['id'] == addon_id:
+                    addon['status'] = new_status
+            self.send_json({"success": True, "message": "Add-on status updated", "status": new_status})
+            return
+
         elif action == 'save_category':
             cat_id = int(form_data.get('id', 0))
             cat_name = form_data.get('name', 'New Category')
@@ -541,6 +580,11 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             cat_id = int(form_data.get('category_id', 1))
             desc = form_data.get('description', '')
             addons_raw = form_data.get('addons', '[]')
+            reusable_ids = form_data.get('addon_ids[]', form_data.get('addon_ids', ''))
+            try:
+                reusable_ids = [int(reusable_ids)] if reusable_ids != '' else []
+            except (TypeError, ValueError):
+                reusable_ids = []
             try:
                 addons_list = json.loads(addons_raw) if isinstance(addons_raw, str) else addons_raw
             except:
@@ -558,6 +602,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                         p['category_name'] = cat_name
                         p['description'] = desc
                         p['addons'] = addons_list
+                        p['reusable_addon_ids'] = reusable_ids
             else:
                 new_id = max([p['id'] for p in PRODUCTS], default=0) + 1
                 PRODUCTS.append({
@@ -569,6 +614,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "description": desc,
                     "image_path": "assets/images/ganesh_hero.png",
                     "addons": addons_list
+                    ,"reusable_addon_ids": reusable_ids
                 })
             self.send_json({"success": True, "message": "Product saved successfully"})
             return
@@ -613,6 +659,8 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             for prod in prods:
                 img = prod.get('image_path', 'assets/images/ganesh_hero.png')
                 addons_json_attr = urllib.parse.quote(json.dumps(prod.get('addons', [])))
+                reusable_addons = [a for a in ADDONS if a.get('status') == 'active' and a.get('id') in prod.get('reusable_addon_ids', [])]
+                reusable_json_attr = json.dumps(reusable_addons).replace("'", "&#39;")
                 prod_cards += f'''
                             <div class="product-card-item"
                                 data-id="{prod['id']}"
@@ -621,6 +669,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 data-desc="{prod.get('description', '')}"
                                 data-img="{img}"
                                 data-addons="{addons_json_attr}"
+                                data-reusable-addons='{reusable_json_attr}'
                                 data-cat="{cat['name']}">
                                 <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view product details">
                                     <img src="{img}" alt="{prod['name']}" loading="lazy">
