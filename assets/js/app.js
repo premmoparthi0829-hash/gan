@@ -100,7 +100,18 @@ $(document).ready(function () {
         if (targetPane.length > 0) {
             targetPane.show();
         } else {
-            $('.cat-products-pane').first().show();
+            targetPane = $('.cat-products-pane').first();
+            targetPane.show();
+        }
+
+        // Initialize & Update Swiper Carousel
+        if (typeof initSwiperCarousels === 'function') {
+            initSwiperCarousels();
+            let swiperEl = targetPane.find('.myntra-prod-swiper')[0];
+            if (swiperEl && activeSwipers[swiperEl.id]) {
+                activeSwipers[swiperEl.id].update();
+                activeSwipers[swiperEl.id].slideTo(0, 0);
+            }
         }
 
         // Swap panels with animation
@@ -166,48 +177,114 @@ $(document).ready(function () {
                     }
                 });
             });
-        }, 2200);
+        }, 1300); // Lively fast grid auto-scroll every 1.3 seconds
     }
 
     startGridCardsAutoScroll();
 
-    // Product Info Quick View Modal Handler (3 Images Gallery with Auto-Scroll Slideshow)
+    // Fast Card Arrow Click Handler (Slide Track System)
+    $(document).on('click', '.card-slide-arrow', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        let isNext = $(this).hasClass('card-slide-next');
+        let $wrap = $(this).closest('.prod-img-wrap');
+        let $track = $wrap.find('.card-slider-track');
+        let count = parseInt($track.data('count')) || 1;
+        let activeIdx = parseInt($track.data('active')) || 0;
+
+        let targetIdx = isNext ? (activeIdx + 1) % count : (activeIdx - 1 + count) % count;
+        slideProductCardTrack($track, targetIdx);
+    });
+
+    // Fast Card Dot Click Handler
+    $(document).on('click', '.card-slide-dot', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        let targetIdx = parseInt($(this).data('dot'));
+        let $wrap = $(this).closest('.prod-img-wrap');
+        let $track = $wrap.find('.card-slider-track');
+        let activeIdx = parseInt($track.data('active')) || 0;
+
+        if (targetIdx === activeIdx) return;
+        slideProductCardTrack($track, targetIdx);
+    });
+
+    function slideProductCardTrack($track, targetIdx) {
+        let count = parseInt($track.data('count')) || 1;
+        if (count <= 1) return;
+        if (targetIdx < 0) targetIdx = count - 1;
+        if (targetIdx >= count) targetIdx = 0;
+
+        $track.data('active', targetIdx);
+        $track.css({
+            'transform': `translateX(-${targetIdx * 100}%)`,
+            'transition': 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
+        });
+
+        let $dots = $track.closest('.prod-img-wrap').find('.card-slide-dot');
+        $dots.removeClass('active').eq(targetIdx).addClass('active');
+    }
+
+    // Cursor Hover-Only Auto-Slide for Category Product Cards
+    let cardHoverTimers = {};
+
+    $(document).on('mouseenter', '.prod-img-wrap', function() {
+        let $wrap = $(this);
+        let $track = $wrap.find('.card-slider-track');
+        let count = parseInt($track.data('count')) || 1;
+        if (count <= 1) return;
+
+        let cardId = $wrap.closest('.product-card-item').data('id') || Math.random();
+
+        if (cardHoverTimers[cardId]) clearInterval(cardHoverTimers[cardId]);
+
+        cardHoverTimers[cardId] = setInterval(function() {
+            let activeIdx = parseInt($track.data('active')) || 0;
+            let nextIdx = (activeIdx + 1) % count;
+            slideProductCardTrack($track, nextIdx);
+        }, 1200); // Cycles photos smoothly while cursor is over the card
+    }).on('mouseleave', '.prod-img-wrap', function() {
+        let $wrap = $(this);
+        let $track = $wrap.find('.card-slider-track');
+        let cardId = $wrap.closest('.product-card-item').data('id') || Math.random();
+
+        if (cardHoverTimers[cardId]) {
+            clearInterval(cardHoverTimers[cardId]);
+            delete cardHoverTimers[cardId];
+        }
+
+        // Return smoothly to the main 1st image when cursor leaves
+        let activeIdx = parseInt($track.data('active')) || 0;
+        if (activeIdx !== 0) {
+            slideProductCardTrack($track, 0);
+        }
+    });
+
+    // Product Info Quick View Modal Handler (Continuous Auto-Moving Slideshow)
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
-    let galleryAutoScrollTimer = null;
-    let isAutoScrollPaused = false;
+    let modalAutoSlideTimer = null;
 
-    function stopGalleryAutoScroll() {
-        if (galleryAutoScrollTimer) {
-            clearInterval(galleryAutoScrollTimer);
-            galleryAutoScrollTimer = null;
+    function stopModalAutoSlide() {
+        if (modalAutoSlideTimer) {
+            clearInterval(modalAutoSlideTimer);
+            modalAutoSlideTimer = null;
         }
     }
 
-    function startGalleryAutoScroll() {
-        stopGalleryAutoScroll();
-        if (currentGalleryImages.length > 1) {
-            galleryAutoScrollTimer = setInterval(function() {
-                if (!isAutoScrollPaused) {
-                    setGalleryActiveImage(currentGalleryIndex + 1);
-                }
-            }, 2600); // Smooth relaxed auto-scroll every 2.6 seconds
+    function startModalAutoSlide() {
+        stopModalAutoSlide();
+        if (currentGalleryImages && currentGalleryImages.length > 1) {
+            modalAutoSlideTimer = setInterval(function() {
+                let nextIdx = (currentGalleryIndex + 1) % currentGalleryImages.length;
+                setGalleryActiveIndex(nextIdx);
+            }, 1800); // Auto-slide modal photos every 1.8 seconds
         }
     }
 
-    function setGalleryActiveImage(index) {
-        if (!currentGalleryImages || currentGalleryImages.length === 0) return;
-        if (index < 0) index = currentGalleryImages.length - 1;
-        if (index >= currentGalleryImages.length) index = 0;
-        
-        currentGalleryIndex = index;
-        let activeSrc = currentGalleryImages[index];
-
-        $('#pmodal-img').css('opacity', 0.2);
-        setTimeout(function() {
-            $('#pmodal-img').attr('src', activeSrc).css('opacity', 1);
-        }, 120);
-
+    function updateGalleryThumbnails(index) {
         $('.pmodal-thumb-item').each(function(i) {
             if (i === index) {
                 $(this).addClass('active').css({
@@ -227,8 +304,23 @@ $(document).ready(function () {
         });
     }
 
+    function setGalleryActiveIndex(index) {
+        if (!currentGalleryImages || currentGalleryImages.length === 0) return;
+        if (index < 0) index = currentGalleryImages.length - 1;
+        if (index >= currentGalleryImages.length) index = 0;
+
+        currentGalleryIndex = index;
+
+        $('#pmodal-slider-track').css({
+            'transform': `translateX(-${index * 100}%)`,
+            'transition': 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
+        });
+
+        updateGalleryThumbnails(index);
+    }
+
     $(document).on('click', '.cat-products-pane .prod-img-wrap', function(e) {
-        if ($(e.target).closest('.btn-add-to-cart').length) return;
+        if ($(e.target).closest('.btn-add-to-cart, .card-slide-arrow, .card-slide-dot').length) return;
         
         let card = $(this).closest('.product-card-item');
 
@@ -236,40 +328,60 @@ $(document).ready(function () {
         let name = card.data('name');
         let price = parseFloat(card.data('price')).toFixed(2);
         let desc = card.data('desc') || 'High quality handcrafted item delivered across the UK.';
-        let img1 = card.data('img') || 'assets/images/ganesh_hero.png';
-        let img2 = card.data('img2') || '';
-        let img3 = card.data('img3') || '';
+        let mainImg = card.data('img') || 'assets/images/ganesh_hero.png';
+        let galleryData = card.data('gallery');
         let cat = card.data('cat') || 'Festive Collection';
 
-        // Build array of up to 3 gallery images
-        currentGalleryImages = [img1];
-        if (img2) currentGalleryImages.push(img2);
-        if (img3) currentGalleryImages.push(img3);
-
-        // Render carousel slide images into track
-        for (let i = 0; i < 3; i++) {
-            let slideImgEl = $(`#pmodal-slide-img-${i}`);
-            let thumbEl = $(`#pmodal-thumb-${i}`);
-            let thumbImgEl = $(`#pmodal-thumb-img-${i}`);
-            
-            if (i < currentGalleryImages.length) {
-                slideImgEl.attr('src', currentGalleryImages[i]);
-                thumbImgEl.attr('src', currentGalleryImages[i]);
-                thumbEl.show();
-            } else {
-                slideImgEl.attr('src', currentGalleryImages[0]);
-                thumbEl.hide();
+        currentGalleryImages = [];
+        if (galleryData) {
+            if (typeof galleryData === 'string') {
+                try { currentGalleryImages = JSON.parse(galleryData); } catch(err) {}
+            } else if (Array.isArray(galleryData)) {
+                currentGalleryImages = galleryData;
             }
         }
-
-        // Show/Hide Nav Controls
-        if (currentGalleryImages.length > 1) {
-            $('#pmodal-btn-prev, #pmodal-btn-next, #pmodal-thumbs-box').show();
-        } else {
-            $('#pmodal-btn-prev, #pmodal-btn-next').hide();
+        if (!currentGalleryImages || currentGalleryImages.length === 0) {
+            currentGalleryImages = [mainImg];
+            let img2 = card.data('img2');
+            let img3 = card.data('img3');
+            if (img2) currentGalleryImages.push(img2);
+            if (img3) currentGalleryImages.push(img3);
         }
 
-        setGalleryActiveImage(0);
+        // Dynamically build slider track slides
+        let $track = $('#pmodal-slider-track');
+        $track.empty();
+        currentGalleryImages.forEach(function(imgUrl, idx) {
+            $track.append(`
+                <div class="pmodal-slide-item" style="flex:0 0 100%; width:100%; height:100%;">
+                    <img src="${imgUrl}" alt="${name} Photo ${idx + 1}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                </div>
+            `);
+        });
+
+        // Dynamically build gallery thumbnails
+        let $thumbsBox = $('#pmodal-thumbs-box');
+        $thumbsBox.empty();
+        currentGalleryImages.forEach(function(imgUrl, idx) {
+            $thumbsBox.append(`
+                <div class="pmodal-thumb-item ${idx === 0 ? 'active' : ''}" data-index="${idx}" style="flex:0 0 68px; width:68px; height:68px; border-radius:12px; overflow:hidden; border:${idx === 0 ? '3.5px solid #D4AF37' : '2px solid #CBD5E1'}; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <img src="${imgUrl}" alt="Thumb ${idx + 1}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                </div>
+            `);
+        });
+
+        if (currentGalleryImages.length > 1) {
+            $thumbsBox.show();
+        } else {
+            $thumbsBox.hide();
+        }
+
+        currentGalleryIndex = 0;
+        $track.css({
+            'transition': 'none',
+            'transform': 'translateX(0%)'
+        });
+        updateGalleryThumbnails(0);
 
         $('#pmodal-name').text(name);
         $('#pmodal-price').html(`&pound;${price}`);
@@ -279,49 +391,24 @@ $(document).ready(function () {
 
         $('#pmodal-add-cart-btn').off('click').on('click', function() {
             addToCart(id, name, parseFloat(price), currentGalleryImages[0]);
-            stopGalleryAutoScroll();
+            stopModalAutoSlide();
             $('#product-info-modal-overlay').removeClass('active');
         });
 
-        isAutoScrollPaused = false;
-        startGalleryAutoScroll();
-
+        startModalAutoSlide();
         $('#product-info-modal-overlay').addClass('active');
-    });
-
-    // Pause Auto Scroll on Mouse Hover over gallery container
-    $(document).on('mouseenter', '#product-info-modal', function() {
-        isAutoScrollPaused = true;
-    }).on('mouseleave', '#product-info-modal', function() {
-        isAutoScrollPaused = false;
     });
 
     // Gallery Thumbnail Clicks
     $(document).on('click', '.pmodal-thumb-item', function() {
         let idx = parseInt($(this).data('index'));
-        isAutoScrollPaused = true;
-        setGalleryActiveImage(idx);
-        setTimeout(function() { isAutoScrollPaused = false; }, 2000);
-    });
-
-    // Gallery Next / Prev Clicks
-    $(document).on('click', '#pmodal-btn-prev', function(e) {
-        e.stopPropagation();
-        isAutoScrollPaused = true;
-        setGalleryActiveImage(currentGalleryIndex - 1);
-        setTimeout(function() { isAutoScrollPaused = false; }, 2000);
-    });
-
-    $(document).on('click', '#pmodal-btn-next', function(e) {
-        e.stopPropagation();
-        isAutoScrollPaused = true;
-        setGalleryActiveImage(currentGalleryIndex + 1);
-        setTimeout(function() { isAutoScrollPaused = false; }, 2000);
+        setGalleryActiveIndex(idx);
+        startModalAutoSlide();
     });
 
     $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function(e) {
         if (e.target === this || $(this).hasClass('prod-modal-close')) {
-            stopGalleryAutoScroll();
+            stopModalAutoSlide();
             $('#product-info-modal-overlay').removeClass('active');
         }
     });
@@ -1287,3 +1374,166 @@ window.switchProductImage = function (src, el) {
     $('.thumb-img').removeClass('active');
     $(el).addClass('active');
 };
+
+/* ============================================================
+   APPLE-STYLE GPU-OPTIMIZED CURSOR-FOLLOW PARALLAX EFFECT
+   Subtle left-right cursor tilt + gentle scale-up (1.04)
+   ============================================================ */
+(function setupCursorParallaxEffect() {
+    // Only initialize on desktop devices with fine cursor pointer
+    if (window.matchMedia && !window.matchMedia('(pointer: fine)').matches) return;
+
+    let activeCard = null;
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let animationFrameId = null;
+
+    // Selector targeting all product cards, category cards, hero banner images, modal gallery
+    const PARALLAX_SELECTORS = '.prod-img-wrap, .category-card-item, .hero-image-card, .pmodal-hero-container, .grid-card-slide-item, .cat-card-img-wrap';
+
+    function updateParallax() {
+        if (!activeCard) return;
+        
+        // Smooth linear interpolation (lerp) for ultra-fluid movement
+        currentX += (targetX - currentX) * 0.12;
+        currentY += (targetY - currentY) * 0.12;
+
+        let img = activeCard.querySelector('img') || activeCard;
+        if (img) {
+            img.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0) scale(1.04)`;
+        }
+
+        animationFrameId = requestAnimationFrame(updateParallax);
+    }
+
+    document.addEventListener('mousemove', function(e) {
+        let container = e.target.closest(PARALLAX_SELECTORS);
+        
+        if (container) {
+            if (activeCard !== container) {
+                // Reset previous card if switched quickly
+                if (activeCard) {
+                    let prevImg = activeCard.querySelector('img') || activeCard;
+                    if (prevImg) prevImg.style.transform = 'translate3d(0, 0, 0) scale(1)';
+                }
+                activeCard = container;
+                let img = activeCard.querySelector('img') || activeCard;
+                if (img) {
+                    img.style.transition = 'transform 0.15s cubic-bezier(0.2, 0.8, 0.4, 1)';
+                }
+            }
+
+            let rect = activeCard.getBoundingClientRect();
+            let relativeX = e.clientX - rect.left;
+            let relativeY = e.clientY - rect.top;
+
+            // Normalize from -1 to +1 relative to container center
+            let normX = (relativeX / rect.width - 0.5) * 2;
+            let normY = (relativeY / rect.height - 0.5) * 2;
+
+            // Subtle parallax shift: max ±10px horizontal (left-right), max ±5px vertical
+            targetX = normX * 10;
+            targetY = normY * 5;
+
+            if (!animationFrameId) {
+                animationFrameId = requestAnimationFrame(updateParallax);
+            }
+        } else if (activeCard) {
+            // Cursor moved out of all interactive containers
+            let prevImg = activeCard.querySelector('img') || activeCard;
+            if (prevImg) {
+                prevImg.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                prevImg.style.transform = 'translate3d(0, 0, 0) scale(1)';
+            }
+            activeCard = null;
+            targetX = 0;
+            targetY = 0;
+            currentX = 0;
+            currentY = 0;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', function() {
+        if (activeCard) {
+            let prevImg = activeCard.querySelector('img') || activeCard;
+            if (prevImg) {
+                prevImg.style.transition = 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                prevImg.style.transform = 'translate3d(0, 0, 0) scale(1)';
+            }
+            activeCard = null;
+            targetX = 0;
+            targetY = 0;
+            currentX = 0;
+            currentY = 0;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+    });
+})();
+
+/* ============================================================
+   SWIPER.JS MYNTRA PRODUCT CAROUSEL INITIALIZATION
+   Responsive 5 cards desktop (1200px+), 3 tablet (768px+), 2 mobile
+   ============================================================ */
+var activeSwipers = {};
+
+function initSwiperCarousels() {
+    if (typeof Swiper === 'undefined') return;
+
+    document.querySelectorAll('.myntra-prod-swiper').forEach(el => {
+        let id = el.id;
+        if (!activeSwipers[id]) {
+            activeSwipers[id] = new Swiper(`#${id}`, {
+                slidesPerView: 1.2,
+                spaceBetween: 20,
+                speed: 300,
+                grabCursor: true,
+                touchEventsTarget: 'container',
+                mousewheel: {
+                    forceToAxis: true,
+                    sensitivity: 1,
+                },
+                navigation: {
+                    nextEl: `#${id} .myntra-arrow-next`,
+                    prevEl: `#${id} .myntra-arrow-prev`,
+                },
+                breakpoints: {
+                    480: {
+                        slidesPerView: 1.5,
+                        spaceBetween: 20,
+                    },
+                    640: {
+                        slidesPerView: 2.2,
+                        spaceBetween: 22,
+                    },
+                    992: {
+                        slidesPerView: 3,
+                        spaceBetween: 26,
+                    },
+                    1240: {
+                        slidesPerView: 3.5,
+                        spaceBetween: 28,
+                    }
+                }
+            });
+        } else {
+            activeSwipers[id].update();
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSwiperCarousels);
+} else {
+    initSwiperCarousels();
+}
+
+

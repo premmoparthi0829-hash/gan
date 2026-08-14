@@ -577,7 +577,7 @@ if ($action === 'delete_category') {
     }
 }
 
-// 9. Save Product
+// 9. Save Product (UNLIMITED Product Images Upload System)
 if ($action === 'save_product') {
     $id = (int)($_POST['id'] ?? 0);
     $category_id = (int)($_POST['category_id'] ?? 0);
@@ -589,57 +589,86 @@ if ($action === 'save_product') {
         json_response(false, 'Valid name, category, and price are required.', [], 422);
     }
     
-    $image_path = sanitize_input($_POST['current_image_path'] ?? '');
-    $image_path_2 = sanitize_input($_POST['current_image_path_2'] ?? '');
-    $image_path_3 = sanitize_input($_POST['current_image_path_3'] ?? '');
+    // Existing images passed from frontend (reordered/retained)
+    $existing_images = [];
+    if (isset($_POST['existing_gallery_images'])) {
+        if (is_array($_POST['existing_gallery_images'])) {
+            foreach ($_POST['existing_gallery_images'] as $img) {
+                $clean_img = sanitize_input($img);
+                if (!empty($clean_img)) $existing_images[] = $clean_img;
+            }
+        } elseif (is_string($_POST['existing_gallery_images'])) {
+            $decoded = json_decode($_POST['existing_gallery_images'], true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $img) {
+                    $clean_img = sanitize_input($img);
+                    if (!empty($clean_img)) $existing_images[] = $clean_img;
+                }
+            }
+        }
+    } else {
+        // Fallback for single image parameters
+        $p1 = sanitize_input($_POST['current_image_path'] ?? '');
+        $p2 = sanitize_input($_POST['current_image_path_2'] ?? '');
+        $p3 = sanitize_input($_POST['current_image_path_3'] ?? '');
+        if (!empty($p1)) $existing_images[] = $p1;
+        if (!empty($p2)) $existing_images[] = $p2;
+        if (!empty($p3)) $existing_images[] = $p3;
+    }
 
-    $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+    $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
     $target_dir = __DIR__ . '/../assets/images/';
     if (!is_dir($target_dir)) {
         @mkdir($target_dir, 0755, true);
     }
 
-    // Process Image 1 upload
-    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
-        $file = $_FILES['product_image'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
-            $new_filename = 'prod_' . time() . '_1_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
-                $image_path = 'assets/images/' . $new_filename;
+    $new_uploaded_images = [];
+
+    // Process multiple gallery file uploads (UNLIMITED files!)
+    if (isset($_FILES['product_gallery_files']) && is_array($_FILES['product_gallery_files']['name'])) {
+        $files = $_FILES['product_gallery_files'];
+        $count = count($files['name']);
+        for ($i = 0; $i < $count; $i++) {
+            if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                if (in_array($ext, $allowed_exts) && $files['size'][$i] <= 20 * 1024 * 1024) {
+                    $new_filename = 'prod_' . time() . '_' . bin2hex(random_bytes(4)) . '_' . $i . '.' . $ext;
+                    if (move_uploaded_file($files['tmp_name'][$i], $target_dir . $new_filename)) {
+                        $new_uploaded_images[] = 'assets/images/' . $new_filename;
+                    }
+                }
             }
         }
     }
 
-    // Process Image 2 upload
-    if (isset($_FILES['product_image_2']) && $_FILES['product_image_2']['error'] === UPLOAD_ERR_OK) {
-        $file = $_FILES['product_image_2'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
-            $new_filename = 'prod_' . time() . '_2_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
-                $image_path_2 = 'assets/images/' . $new_filename;
+    // Process legacy single file uploads if present
+    $single_upload_keys = ['product_image', 'product_image_2', 'product_image_3'];
+    foreach ($single_upload_keys as $skey) {
+        if (isset($_FILES[$skey]) && $_FILES[$skey]['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES[$skey];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, $allowed_exts) && $file['size'] <= 20 * 1024 * 1024) {
+                $new_filename = 'prod_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                    $new_uploaded_images[] = 'assets/images/' . $new_filename;
+                }
             }
         }
     }
 
-    // Process Image 3 upload
-    if (isset($_FILES['product_image_3']) && $_FILES['product_image_3']['error'] === UPLOAD_ERR_OK) {
-        $file = $_FILES['product_image_3'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
-            $new_filename = 'prod_' . time() . '_3_' . bin2hex(random_bytes(4)) . '.' . $ext;
-            if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
-                $image_path_3 = 'assets/images/' . $new_filename;
-            }
-        }
-    }
-    
+    // Combine existing and newly uploaded images in exact sequence order
+    $all_gallery_images = array_values(array_unique(array_merge($existing_images, $new_uploaded_images)));
+
+    $image_path   = $all_gallery_images[0] ?? '';
+    $image_path_2 = $all_gallery_images[1] ?? '';
+    $image_path_3 = $all_gallery_images[2] ?? '';
+    $gallery_json = json_encode($all_gallery_images);
+
     $db = Database::getConnection();
     if ($db) {
         try {
             if ($id > 0) {
-                $stmt = $db->prepare("UPDATE products SET category_id = :category_id, name = :name, description = :description, price = :price, image_path = :image_path, image_path_2 = :image_path_2, image_path_3 = :image_path_3 WHERE id = :id");
+                $stmt = $db->prepare("UPDATE products SET category_id = :category_id, name = :name, description = :description, price = :price, image_path = :image_path, image_path_2 = :image_path_2, image_path_3 = :image_path_3, gallery_images = :gallery_images WHERE id = :id");
                 $stmt->execute([
                     ':category_id' => $category_id,
                     ':name' => $name,
@@ -648,10 +677,11 @@ if ($action === 'save_product') {
                     ':image_path' => $image_path,
                     ':image_path_2' => $image_path_2,
                     ':image_path_3' => $image_path_3,
+                    ':gallery_images' => $gallery_json,
                     ':id' => $id
                 ]);
             } else {
-                $stmt = $db->prepare("INSERT INTO products (category_id, name, description, price, image_path, image_path_2, image_path_3) VALUES (:category_id, :name, :description, :price, :image_path, :image_path_2, :image_path_3)");
+                $stmt = $db->prepare("INSERT INTO products (category_id, name, description, price, image_path, image_path_2, image_path_3, gallery_images) VALUES (:category_id, :name, :description, :price, :image_path, :image_path_2, :image_path_3, :gallery_images)");
                 $stmt->execute([
                     ':category_id' => $category_id,
                     ':name' => $name,
@@ -659,7 +689,8 @@ if ($action === 'save_product') {
                     ':price' => $price,
                     ':image_path' => $image_path,
                     ':image_path_2' => $image_path_2,
-                    ':image_path_3' => $image_path_3
+                    ':image_path_3' => $image_path_3,
+                    ':gallery_images' => $gallery_json
                 ]);
             }
             // Auto-sync settings table if product is an Add-On

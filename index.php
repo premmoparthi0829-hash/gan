@@ -65,6 +65,10 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
+    <!-- Swiper.js CSS & JS for Myntra Product Carousel -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
     <!-- CSS -->
     <link rel="stylesheet" href="assets/css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="assets/css/animations.css?v=<?php echo time(); ?>">
@@ -115,7 +119,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                     <h1 class="shop-page-title">Shop Our <span>Collections</span></h1>
                 </div>
 
-                <div class="cat-2col-grid">
+                <div class="cat-2col-grid" id="cat-grid-container">
                     <?php foreach ($shop_categories as $cat):
                         $cat_products = array_filter($products, fn($p) => $p['category_id'] == $cat['id']);
                         $count = count($cat_products);
@@ -209,52 +213,79 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                         $accent = '#4A0B17';
                     }
                     ?>
-                    <div class="products-grid cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>"
-                        style="display:none;">
-                        <?php foreach ($cat_products as $prod): 
-                            $img1 = $prod['image_path'] ?? '';
-                            $img2 = $prod['image_path_2'] ?? '';
-                            $img3 = $prod['image_path_3'] ?? '';
-                            $photos = array_values(array_filter([$img1, $img2, $img3]));
-                            $photo_count = count($photos);
-                            $track_width = $photo_count * 100;
-                        ?>
-                            <div class="product-card-item"
-                                data-id="<?php echo $prod['id']; ?>"
-                                data-name="<?php echo escape_output($prod['name']); ?>"
-                                data-price="<?php echo $prod['price']; ?>"
-                                data-desc="<?php echo escape_output($prod['description']); ?>"
-                                data-img="<?php echo escape_output($img1); ?>"
-                                data-img2="<?php echo escape_output($img2); ?>"
-                                data-img3="<?php echo escape_output($img3); ?>"
-                                data-cat="<?php echo escape_output($cat['name']); ?>">
-                                <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
-                                    <div class="grid-card-stylish-slider" data-count="<?php echo $photo_count; ?>" data-active-idx="0" style="position:absolute; top:0; left:0; width:100%; height:100%;">
-                                        <?php foreach ($photos as $p_idx => $p_img): ?>
-                                            <div class="grid-card-slide-item <?php echo $p_idx === 0 ? 'active' : ''; ?>" data-slide="<?php echo $p_idx; ?>" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:<?php echo $p_idx === 0 ? '1' : '0'; ?>; transition:opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 2.5s ease-out; transform:scale(<?php echo $p_idx === 0 ? '1.06' : '1'; ?>); z-index:<?php echo $p_idx === 0 ? '2' : '1'; ?>;">
-                                                <img src="<?php echo escape_output($p_img); ?>" alt="<?php echo escape_output($prod['name']); ?> Photo <?php echo $p_idx + 1; ?>" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
+                    <div class="myntra-swiper-container cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>" style="display:none;">
+                        <div class="swiper myntra-prod-swiper" id="swiper-pane-<?php echo $cat['id']; ?>">
+                            <div class="swiper-wrapper">
+                                <?php foreach ($cat_products as $prod): 
+                                    $photos = [];
+                                    if (!empty($prod['gallery_images'])) {
+                                        $decoded = json_decode($prod['gallery_images'], true);
+                                        if (is_array($decoded)) {
+                                            $photos = array_values(array_filter($decoded));
+                                        }
+                                    }
+                                    if (empty($photos)) {
+                                        $photos = array_values(array_filter([
+                                            $prod['image_path'] ?? '',
+                                            $prod['image_path_2'] ?? '',
+                                            $prod['image_path_3'] ?? ''
+                                        ]));
+                                    }
+                                    if (empty($photos)) {
+                                        $photos = ['assets/images/ganesh_hero.png'];
+                                    }
+                                    $photo_count = count($photos);
+                                    $img1 = $photos[0] ?? 'assets/images/ganesh_hero.png';
+                                    $gallery_json_attr = htmlspecialchars(json_encode($photos), ENT_QUOTES, 'UTF-8');
+                                ?>
+                                    <div class="swiper-slide product-card-item"
+                                        data-id="<?php echo $prod['id']; ?>"
+                                        data-name="<?php echo escape_output($prod['name']); ?>"
+                                        data-price="<?php echo $prod['price']; ?>"
+                                        data-desc="<?php echo escape_output($prod['description']); ?>"
+                                        data-img="<?php echo escape_output($img1); ?>"
+                                        data-gallery="<?php echo $gallery_json_attr; ?>"
+                                        data-cat="<?php echo escape_output($cat['name']); ?>">
+                                        <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
+                                            <div class="card-track-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden;">
+                                                <div class="card-slider-track" data-count="<?php echo $photo_count; ?>" data-active="0" style="display:flex; width:100%; height:100%; transition:transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); will-change:transform;">
+                                                    <?php foreach ($photos as $p_idx => $p_img): ?>
+                                                        <div class="card-slide-photo" style="flex:0 0 100%; width:100%; height:100%;">
+                                                            <img src="<?php echo escape_output($p_img); ?>" alt="<?php echo escape_output($prod['name']); ?> Photo <?php echo $p_idx + 1; ?>" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
                                             </div>
-                                        <?php endforeach; ?>
+
+                                            <?php if ($photo_count > 1): ?>
+                                                <div class="card-slide-dots">
+                                                    <?php for ($d = 0; $d < $photo_count; $d++): ?>
+                                                        <span class="card-slide-dot <?php echo $d === 0 ? 'active' : ''; ?>" data-dot="<?php echo $d; ?>"></span>
+                                                    <?php endfor; ?>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
+                                        </div>
+                                        <div class="prod-details">
+                                            <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
+                                            <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
+                                            <div class="prod-actions-row">
+                                                <button type="button" class="btn-add-to-cart btn-gold" data-id="<?php echo $prod['id']; ?>"
+                                                    data-name="<?php echo escape_output($prod['name']); ?>"
+                                                    data-price="<?php echo $prod['price']; ?>"
+                                                    data-img="<?php echo escape_output($prod['image_path']); ?>">
+                                                    🛒 Add to Cart
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
-
-
-                                </div>
-                                <div class="prod-details">
-                                    <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
-                                    <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
-                                    <div class="prod-actions-row">
-                                        <button type="button" class="btn-add-to-cart btn-gold" data-id="<?php echo $prod['id']; ?>"
-                                            data-name="<?php echo escape_output($prod['name']); ?>"
-                                            data-price="<?php echo $prod['price']; ?>"
-                                            data-img="<?php echo escape_output($prod['image_path']); ?>">
-                                            🛒 Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
+                                <?php endforeach; ?>
                             </div>
-                        <?php endforeach; ?>
+                            <!-- Swiper Navigation Arrows -->
+                            <div class="swiper-button-next myntra-arrow-next"></div>
+                            <div class="swiper-button-prev myntra-arrow-prev"></div>
+                        </div>
                     </div>
                 <?php endforeach; ?>
 
@@ -728,26 +759,18 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                 <div class="prod-modal-media" style="display:flex; flex-direction:column; gap:16px;">
                     <!-- Single Hero Image Container with Prev/Next Controls -->
                     <div class="pmodal-hero-container" style="position:relative; width:100%; border-radius:18px; overflow:hidden; background:#F8FAFC; border:1px solid #CBD5E1; aspect-ratio:1/1; min-height:360px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
-                        <img id="pmodal-img" src="" alt="Product Image Preview" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.55s ease-in-out;">
+                        <div class="pmodal-track-viewport" style="width:100%; height:100%; overflow:hidden;">
+                            <div class="pmodal-slider-track" id="pmodal-slider-track" style="display:flex; width:100%; height:100%; transition:transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); will-change:transform;">
+                                <!-- Dynamic unlimited hero slides populated by JS -->
+                            </div>
+                        </div>
                         
                         <span class="pmodal-price-tag" id="pmodal-price" style="font-size: 1.25rem; font-weight: 800; padding: 8px 16px; border-radius: 24px;">&pound;0.00</span>
-                        
-                        <!-- Nav Prev/Next Buttons -->
-                        <button type="button" class="pmodal-nav-btn pmodal-prev-btn" id="pmodal-btn-prev" aria-label="Previous Photo" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); background:rgba(15,23,42,0.75); color:#FFFFFF; border:none; width:42px; height:42px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); font-size:1.4rem; z-index:6; transition:all 0.2s ease;">&lsaquo;</button>
-                        <button type="button" class="pmodal-nav-btn pmodal-next-btn" id="pmodal-btn-next" aria-label="Next Photo" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:rgba(15,23,42,0.75); color:#FFFFFF; border:none; width:42px; height:42px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); font-size:1.4rem; z-index:6; transition:all 0.2s ease;">&rsaquo;</button>
                     </div>
 
-                    <!-- 3 Thumbnails Gallery Switcher -->
-                    <div class="pmodal-thumbnails-wrapper" id="pmodal-thumbs-box" style="display:flex; gap:14px; justify-content:center; align-items:center; padding:4px 0;">
-                        <div class="pmodal-thumb-item active" data-index="0" id="pmodal-thumb-0" style="width:76px; height:76px; border-radius:12px; overflow:hidden; border:3px solid #D4AF37; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-                            <img id="pmodal-thumb-img-0" src="" style="width:100%; height:100%; object-fit:cover;">
-                        </div>
-                        <div class="pmodal-thumb-item" data-index="1" id="pmodal-thumb-1" style="width:76px; height:76px; border-radius:12px; overflow:hidden; border:2px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-                            <img id="pmodal-thumb-img-1" src="" style="width:100%; height:100%; object-fit:cover;">
-                        </div>
-                        <div class="pmodal-thumb-item" data-index="2" id="pmodal-thumb-2" style="width:76px; height:76px; border-radius:12px; overflow:hidden; border:2px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-                            <img id="pmodal-thumb-img-2" src="" style="width:100%; height:100%; object-fit:cover;">
-                        </div>
+                    <!-- UNLIMITED Thumbnails Gallery Switcher (Scrollable) -->
+                    <div class="pmodal-thumbnails-wrapper" id="pmodal-thumbs-box" style="display:flex; gap:10px; justify-content:center; align-items:center; padding:6px 2px; overflow-x:auto; max-width:100%; scrollbar-width:thin;">
+                        <!-- Dynamic unlimited thumbnails populated by JS -->
                     </div>
                 </div>
                 <div class="prod-modal-info">

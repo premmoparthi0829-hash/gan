@@ -161,6 +161,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `image_path` VARCHAR(255) NULL,
   `image_path_2` VARCHAR(255) NULL,
   `image_path_3` VARCHAR(255) NULL,
+  `gallery_images` LONGTEXT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -180,13 +181,13 @@ CREATE TABLE IF NOT EXISTS `booking_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Seed initial categories
-INSERT INTO `categories` (`id`, `name`) VALUES
-(1, 'Ganesh Statue')
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+INSERT INTO `categories` (`id`, `name`, `description`, `image_path`) VALUES
+(1, 'Ganesh Statue', 'Handcrafted eco-friendly clay Ganesh statues with complete Mukut & ornament accessories delivered across the UK.', 'assets/images/ganesh_hero.png')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `description` = VALUES(`description`), `image_path` = VALUES(`image_path`);
 
-INSERT INTO `categories` (`id`, `name`) VALUES
-(2, 'Rakhi')
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+INSERT INTO `categories` (`id`, `name`, `description`, `image_path`) VALUES
+(2, 'Rakhi', 'Designer Rudraksha & Silver-Plated Peacock Rakhi sets handcrafted for festive celebrations.', 'assets/images/rakhi_peacock.png')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `description` = VALUES(`description`), `image_path` = VALUES(`image_path`);
 
 -- Seed initial products (with 3 photos each)
 INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES

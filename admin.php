@@ -142,34 +142,48 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
         <!-- Main Body Content -->
         <main class="admin-main-container" style="max-width: 1440px; margin: 0 auto; padding: 24px 20px 60px 20px;">
             
-            <!-- KPI Summary Cards -->
-            <div class="admin-kpi-grid">
-                <div class="admin-kpi-card gold">
-                    <div class="admin-kpi-icon">&#128230;</div>
+            <!-- Dynamic Summary Cards Top Bar -->
+            <div class="admin-kpi-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 24px;">
+                <div class="admin-kpi-card gold" style="border-left: 4px solid #D4AF37;">
+                    <div class="admin-kpi-icon">&#128197;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-total-bookings"><?php echo $stats['total_bookings']; ?></h3>
-                        <p>Total Bookings</p>
+                        <h3 id="stat-today-orders" style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;"><?php echo $stats['today_orders']; ?></h3>
+                        <p style="font-size: 0.82rem; font-weight: 700; color: #64748B; margin-top: 4px;">Today Orders</p>
                     </div>
                 </div>
-                <div class="admin-kpi-card green">
+                <div class="admin-kpi-card saffron" style="border-left: 4px solid #F59E0B;">
+                    <div class="admin-kpi-icon">&#127991;</div>
+                    <div class="admin-kpi-info">
+                        <h3 id="stat-total-categories" style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;"><?php echo $stats['total_categories']; ?></h3>
+                        <p style="font-size: 0.82rem; font-weight: 700; color: #64748B; margin-top: 4px;">Total Categories</p>
+                    </div>
+                </div>
+                <div class="admin-kpi-card saffron" style="border-left: 4px solid #8B5CF6;">
+                    <div class="admin-kpi-icon">&#128717;</div>
+                    <div class="admin-kpi-info">
+                        <h3 id="stat-total-products" style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;"><?php echo $stats['total_products']; ?></h3>
+                        <p style="font-size: 0.82rem; font-weight: 700; color: #64748B; margin-top: 4px;">Total Products</p>
+                    </div>
+                </div>
+                <div class="admin-kpi-card green" style="border-left: 4px solid #10B981;">
                     <div class="admin-kpi-icon">&#128176;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-total-revenue">&pound;<?php echo number_format($stats['total_revenue'], 2); ?></h3>
-                        <p>Total Revenue</p>
+                        <h3 id="stat-total-revenue" style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;">&pound;<?php echo number_format($stats['total_revenue'], 2); ?></h3>
+                        <p style="font-size: 0.82rem; font-weight: 700; color: #64748B; margin-top: 4px;">Total Revenue</p>
                     </div>
                 </div>
-                <div class="admin-kpi-card green">
-                    <div class="admin-kpi-icon">&#9989;</div>
+                <div class="admin-kpi-card gold" style="border-left: 4px solid #3B82F6;">
+                    <div class="admin-kpi-icon">&#128230;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-paid-revenue">&pound;<?php echo number_format($stats['paid_revenue'], 2); ?></h3>
-                        <p>Paid Revenue (<span id="stat-paid-count"><?php echo $stats['paid_count']; ?></span> Orders)</p>
+                        <h3 id="stat-total-bookings" style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;"><?php echo $stats['total_bookings']; ?></h3>
+                        <p style="font-size: 0.82rem; font-weight: 700; color: #64748B; margin-top: 4px;">Total Bookings</p>
                     </div>
                 </div>
-                <div class="admin-kpi-card saffron">
+                <div class="admin-kpi-card saffron" style="border-left: 4px solid #EF4444;">
                     <div class="admin-kpi-icon">&#9203;</div>
                     <div class="admin-kpi-info">
-                        <h3 id="stat-pending-count"><?php echo $stats['pending_count']; ?></h3>
-                        <p>Verification Pending</p>
+                        <h3 id="stat-pending-count" style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;"><?php echo $stats['pending_count']; ?></h3>
+                        <p style="font-size: 0.82rem; font-weight: 700; color: #64748B; margin-top: 4px;">Pending Verify</p>
                     </div>
                 </div>
             </div>
@@ -753,15 +767,44 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                             <table class="admin-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 60px; text-align: center;">ID</th>
-                                        <th style="width: 70px; text-align: center;">Image</th>
+                                        <th style="width: 50px; text-align: center;">ID</th>
+                                        <th style="width: 80px; text-align: center;">Image</th>
                                         <th style="text-align: left;">Category Name</th>
                                         <th style="text-align: left;">Short Description</th>
                                         <th style="width: 150px; text-align: center;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="admin-categories-table-body">
-                                    <!-- Dynamic rows -->
+                                    <?php
+                                    $main_cats = array_filter($catalog_categories, function($c) {
+                                        return strpos($c['name'], 'Add-On') === false;
+                                    });
+                                    if (empty($main_cats)):
+                                    ?>
+                                        <tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No shop categories found.</td></tr>
+                                    <?php else: foreach ($main_cats as $c):
+                                        $c_img = !empty($c['image_path']) ? $c['image_path'] : 'assets/images/ganesh_hero.png';
+                                        $c_desc = !empty($c['description']) ? escape_output($c['description']) : 'Festive handcrafted items & idol collection.';
+                                    ?>
+                                        <tr>
+                                            <td style="text-align:center; font-weight:700; color:#475569; vertical-align:middle; width:50px;"><?php echo $c['id']; ?></td>
+                                            <td style="text-align:center; vertical-align:middle; width:80px; padding:10px;">
+                                                <img src="<?php echo escape_output($c_img); ?>" title="<?php echo escape_output($c['name']); ?>" class="btn-open-hd-modal" data-img="<?php echo escape_output($c_img); ?>" data-ref="<?php echo escape_output($c['name']); ?>" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:2px solid #D4AF37; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.08); display:inline-block;">
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <strong style="color:#4A0B17; font-size:0.92rem; display:block;"><?php echo escape_output($c['name']); ?></strong>
+                                            </td>
+                                            <td style="font-size:0.86rem; color:#475569; vertical-align:middle; max-width:380px;">
+                                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:380px;" title="<?php echo $c_desc; ?>">
+                                                    <?php echo $c_desc; ?>
+                                                </div>
+                                            </td>
+                                            <td style="text-align:center; vertical-align:middle; width:150px;">
+                                                <button type="button" class="btn-action-sm btn-edit-category" data-id="<?php echo $c['id']; ?>" style="padding: 5px 10px; font-size:0.75rem; cursor:pointer;">Edit ✏️</button>
+                                                <button type="button" class="btn-action-sm btn-delete-category" data-id="<?php echo $c['id']; ?>" style="padding: 5px 10px; font-size:0.75rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -791,24 +834,10 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                                         <tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No products found.</td></tr>
                                     <?php else: foreach ($shop_prods as $p):
                                         $img1 = $p['image_path'] ?: 'assets/images/ganesh_hero.png';
-                                        $img2 = $p['image_path_2'] ?? '';
-                                        $img3 = $p['image_path_3'] ?? '';
                                     ?>
                                         <tr>
-                                            <td style="text-align:center; vertical-align:middle;">
-                                                <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
-                                                    <img src="<?php echo escape_output($img1); ?>" title="Image 1 (Main View)" class="btn-open-hd-modal" data-img="<?php echo escape_output($img1); ?>" data-ref="<?php echo escape_output($p['name']); ?> - Image 1" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:2px solid #D4AF37; cursor:pointer;">
-                                                    <?php if ($img2): ?>
-                                                        <img src="<?php echo escape_output($img2); ?>" title="Image 2 (Angle View)" class="btn-open-hd-modal" data-img="<?php echo escape_output($img2); ?>" data-ref="<?php echo escape_output($p['name']); ?> - Image 2" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">
-                                                    <?php else: ?>
-                                                        <div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 2</div>
-                                                    <?php endif; ?>
-                                                    <?php if ($img3): ?>
-                                                        <img src="<?php echo escape_output($img3); ?>" title="Image 3 (Detail View)" class="btn-open-hd-modal" data-img="<?php echo escape_output($img3); ?>" data-ref="<?php echo escape_output($p['name']); ?> - Image 3" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">
-                                                    <?php else: ?>
-                                                        <div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 3</div>
-                                                    <?php endif; ?>
-                                                </div>
+                                            <td style="text-align:center; vertical-align:middle; width:90px; padding:12px;">
+                                                <img src="<?php echo escape_output($img1); ?>" title="<?php echo escape_output($p['name']); ?>" class="btn-open-hd-modal" data-img="<?php echo escape_output($img1); ?>" data-ref="<?php echo escape_output($p['name']); ?>" style="width:64px; height:64px; object-fit:cover; border-radius:10px; border:2px solid #D4AF37; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.08); display:inline-block;">
                                             </td>
                                             <td style="vertical-align:middle;">
                                                 <strong style="color:#0F172A; font-size:0.9rem; display:block;"><?php echo escape_output($p['name']); ?></strong>
@@ -1009,48 +1038,36 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         <textarea id="product-description" name="description" rows="3" placeholder="Enter full product specifications and details..." style="width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:6px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
                     </div>
 
-                    <!-- 3 IMAGES SECTION -->
-                    <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; padding:16px; border-radius:10px; margin-top:4px;">
-                        <h4 style="margin:0 0 12px 0; color:#4A0B17; font-size:0.95rem; font-weight:800; display:flex; align-items:center; gap:6px;">
-                            <span>📸 Product Image Gallery (3 Photos Required / Supported)</span>
-                        </h4>
-
-                        <!-- Image 1 (Primary) -->
-                        <div style="margin-bottom:14px; background:#FFFFFF; padding:10px; border:1px solid #E2E8F0; border-radius:8px;">
-                            <label style="font-weight:700; color:#0F172A; font-size:0.83rem; display:block; margin-bottom:4px;">
-                                Image 1 (Main Hero View) <span style="color:#DC2626;">*Primary</span>
-                            </label>
-                            <input type="file" id="product-image-file" name="product_image" accept="image/*" style="width:100%; font-size:0.82rem;">
-                            <div id="product-image-preview-box" style="margin-top:8px; display:none; align-items:center; gap:10px;">
-                                <img id="product-image-preview-el" src="" alt="Image 1 Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:2px solid #D4AF37;">
-                                <span style="font-size:0.75rem; color:#475569; font-weight:600;">Main Photo Active</span>
+                    <!-- UNLIMITED PRODUCT IMAGES GALLERY SECTION -->
+                    <div style="background:#F8FAFC; border:1.5px dashed #CBD5E1; padding:18px; border-radius:12px; margin-top:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                            <div>
+                                <h4 style="margin:0 0 4px 0; color:#4A0B17; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:6px;">
+                                    📸 Unlimited Product Image Gallery
+                                </h4>
+                                <span style="font-size:0.78rem; color:#64748B;">Upload unlimited product photos. First image is featured. Reorder or remove anytime.</span>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button type="button" id="btn-add-product-gallery-images" style="background:#0F172A; color:#FFFFFF; border:none; padding:8px 14px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+                                    ➕ Add Images
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Image 2 -->
-                        <div style="margin-bottom:14px; background:#FFFFFF; padding:10px; border:1px solid #E2E8F0; border-radius:8px;">
-                            <label style="font-weight:700; color:#0F172A; font-size:0.83rem; display:block; margin-bottom:4px;">
-                                Image 2 (Angle / Detail View)
-                            </label>
-                            <input type="file" id="product-image-file-2" name="product_image_2" accept="image/*" style="width:100%; font-size:0.82rem;">
-                            <div id="product-image-preview-box-2" style="margin-top:8px; display:none; align-items:center; gap:10px;">
-                                <img id="product-image-preview-el-2" src="" alt="Image 2 Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">
-                                <span style="font-size:0.75rem; color:#475569; font-weight:600;">Secondary Angle Photo</span>
-                            </div>
+                        <!-- Hidden File Input for Unlimited Multiple Image Uploads -->
+                        <input type="file" id="product-gallery-input" name="product_gallery_files[]" multiple accept="image/*" style="display:none;">
+
+                        <!-- Dynamic Image Thumbnail Cards Grid -->
+                        <div id="product-gallery-preview-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:12px; min-height:80px; padding:12px; background:#FFFFFF; border:1.5px solid #E2E8F0; border-radius:10px;">
+                            <!-- Dynamically filled by JS -->
                         </div>
 
-                        <!-- Image 3 -->
-                        <div style="background:#FFFFFF; padding:10px; border:1px solid #E2E8F0; border-radius:8px;">
-                            <label style="font-weight:700; color:#0F172A; font-size:0.83rem; display:block; margin-bottom:4px;">
-                                Image 3 (Packaging / Kit View)
-                            </label>
-                            <input type="file" id="product-image-file-3" name="product_image_3" accept="image/*" style="width:100%; font-size:0.82rem;">
-                            <div id="product-image-preview-box-3" style="margin-top:8px; display:none; align-items:center; gap:10px;">
-                                <img id="product-image-preview-el-3" src="" alt="Image 3 Preview" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">
-                                <span style="font-size:0.75rem; color:#475569; font-weight:600;">Packaging / Detail Photo</span>
-                            </div>
+                        <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <span id="product-gallery-count-badge" style="font-size:0.78rem; color:#475569; font-weight:700;">0 Images Selected</span>
+                            <button type="button" id="btn-upload-more-gallery-images" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #93C5FD; padding:6px 12px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                                📤 Upload More Images
+                            </button>
                         </div>
-
                     </div>
                 </div>
                 <div class="admin-modal-footer">
@@ -1193,13 +1210,26 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     if (!data.success) return;
                     loadedBookings = data.bookings || [];
 
-                    // Render Stats
+                    // Render Stats Dynamically
                     const stats = data.stats;
-                    document.getElementById('stat-total-bookings').textContent = stats.total_bookings;
-                    document.getElementById('stat-total-revenue').textContent = '£' + parseFloat(stats.total_revenue).toFixed(2);
-                    document.getElementById('stat-paid-revenue').textContent = '£' + parseFloat(stats.paid_revenue).toFixed(2);
-                    document.getElementById('stat-paid-count').textContent = stats.paid_count;
-                    document.getElementById('stat-pending-count').textContent = stats.pending_count;
+                    if (document.getElementById('stat-today-orders') && stats.today_orders !== undefined) {
+                        document.getElementById('stat-today-orders').textContent = stats.today_orders;
+                    }
+                    if (document.getElementById('stat-total-categories') && stats.total_categories !== undefined) {
+                        document.getElementById('stat-total-categories').textContent = stats.total_categories;
+                    }
+                    if (document.getElementById('stat-total-products') && stats.total_products !== undefined) {
+                        document.getElementById('stat-total-products').textContent = stats.total_products;
+                    }
+                    if (document.getElementById('stat-total-bookings') && stats.total_bookings !== undefined) {
+                        document.getElementById('stat-total-bookings').textContent = stats.total_bookings;
+                    }
+                    if (document.getElementById('stat-total-revenue') && stats.total_revenue !== undefined) {
+                        document.getElementById('stat-total-revenue').textContent = '£' + parseFloat(stats.total_revenue).toFixed(2);
+                    }
+                    if (document.getElementById('stat-pending-count') && stats.pending_count !== undefined) {
+                        document.getElementById('stat-pending-count').textContent = stats.pending_count;
+                    }
 
                     // Render Table
                     const tbody = document.getElementById('bookings-table-body');
@@ -2002,17 +2032,25 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
 
                 mainCategories.forEach(cat => {
                     const tr = document.createElement('tr');
-                    const imgThumb = cat.image_path ? `<img src="${cat.image_path}" style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">` : '<span style="font-size:1.2rem;">📁</span>';
-                    const descText = cat.description ? escapeHtml(cat.description) : '<span style="color:#94A3B8; font-style:italic;">No description</span>';
+                    const imgPath = cat.image_path || 'assets/images/ganesh_hero.png';
+                    const descText = cat.description ? escapeHtml(cat.description) : 'Festive handcrafted items & idol collection.';
                     
                     tr.innerHTML = `
-                        <td style="text-align:center; font-weight:700;">${cat.id}</td>
-                        <td style="text-align:center;">${imgThumb}</td>
-                        <td><strong style="color:#4A0B17;">${escapeHtml(cat.name)}</strong></td>
-                        <td style="font-size:0.85rem; color:#475569;">${descText}</td>
-                        <td style="text-align:center;">
-                            <button type="button" class="btn-action-sm btn-edit-category" data-id="${cat.id}" style="padding: 4px 8px; font-size:0.72rem; cursor:pointer;">Edit ✏️</button>
-                            <button type="button" class="btn-action-sm btn-delete-category" data-id="${cat.id}" style="padding: 4px 8px; font-size:0.72rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
+                        <td style="text-align:center; font-weight:700; color:#475569; vertical-align:middle; width:50px;">${cat.id}</td>
+                        <td style="text-align:center; vertical-align:middle; width:80px; padding:10px;">
+                            <img src="${escapeHtml(imgPath)}" title="${escapeHtml(cat.name)}" class="btn-open-hd-modal" data-img="${escapeHtml(imgPath)}" data-ref="${escapeHtml(cat.name)}" style="width:60px; height:60px; object-fit:cover; border-radius:10px; border:2px solid #D4AF37; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.08); display:inline-block;">
+                        </td>
+                        <td style="vertical-align:middle;">
+                            <strong style="color:#4A0B17; font-size:0.92rem; display:block;">${escapeHtml(cat.name)}</strong>
+                        </td>
+                        <td style="font-size:0.86rem; color:#475569; vertical-align:middle; max-width:380px;">
+                            <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:380px;" title="${descText}">
+                                ${descText}
+                            </div>
+                        </td>
+                        <td style="text-align:center; vertical-align:middle; width:150px;">
+                            <button type="button" class="btn-action-sm btn-edit-category" data-id="${cat.id}" style="padding: 5px 10px; font-size:0.75rem; cursor:pointer;">Edit ✏️</button>
+                            <button type="button" class="btn-action-sm btn-delete-category" data-id="${cat.id}" style="padding: 5px 10px; font-size:0.75rem; background:#EF4444; border-color:#EF4444; color:#fff; cursor:pointer;">Delete 🗑️</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -2035,16 +2073,10 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 shopProducts.forEach(p => {
                     const tr = document.createElement('tr');
                     const img1 = p.image_path || 'assets/images/ganesh_hero.png';
-                    const img2 = p.image_path_2 || '';
-                    const img3 = p.image_path_3 || '';
 
                     tr.innerHTML = `
-                        <td style="text-align:center; vertical-align:middle;">
-                            <div style="display:flex; gap:6px; justify-content:center; align-items:center;">
-                                <img src="${escapeHtml(img1)}" title="Image 1 (Main View)" class="btn-open-hd-modal" data-img="${escapeHtml(img1)}" data-ref="${escapeHtml(p.name)} - Image 1" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:2px solid #D4AF37; cursor:pointer;">
-                                ${img2 ? `<img src="${escapeHtml(img2)}" title="Image 2 (Angle View)" class="btn-open-hd-modal" data-img="${escapeHtml(img2)}" data-ref="${escapeHtml(p.name)} - Image 2" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">` : '<div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 2</div>'}
-                                ${img3 ? `<img src="${escapeHtml(img3)}" title="Image 3 (Detail View)" class="btn-open-hd-modal" data-img="${escapeHtml(img3)}" data-ref="${escapeHtml(p.name)} - Image 3" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1; cursor:pointer;">` : '<div style="width:42px; height:42px; border:1px dashed #CBD5E1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.65rem; color:#94A3B8;">No Img 3</div>'}
-                            </div>
+                        <td style="text-align:center; vertical-align:middle; width:90px; padding:12px;">
+                            <img src="${escapeHtml(img1)}" title="${escapeHtml(p.name)}" class="btn-open-hd-modal" data-img="${escapeHtml(img1)}" data-ref="${escapeHtml(p.name)}" style="width:64px; height:64px; object-fit:cover; border-radius:10px; border:2px solid #D4AF37; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.08); display:inline-block;">
                         </td>
                         <td style="vertical-align:middle;">
                             <strong style="color:#0F172A; font-size:0.9rem; display:block;">${escapeHtml(p.name)}</strong>
@@ -2130,7 +2162,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     return;
                 }
 
-                // 2. Add Product Button (Resets 3 Images)
+                // 2. Add Product Button (Resets Unlimited Gallery)
                 let btnAddProd = e.target.closest('#btn-add-product');
                 if (btnAddProd) {
                     e.preventDefault();
@@ -2139,21 +2171,12 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     document.getElementById('product-price').value = '';
                     document.getElementById('product-description').value = '';
                     
-                    document.getElementById('product-current-image').value = '';
-                    document.getElementById('product-current-image-2').value = '';
-                    document.getElementById('product-current-image-3').value = '';
-                    
-                    document.getElementById('product-image-file').value = '';
-                    document.getElementById('product-image-file-2').value = '';
-                    document.getElementById('product-image-file-3').value = '';
-                    
-                    document.getElementById('product-image-preview-box').style.display = 'none';
-                    document.getElementById('product-image-preview-box-2').style.display = 'none';
-                    document.getElementById('product-image-preview-box-3').style.display = 'none';
+                    productGalleryItems = [];
+                    renderProductGalleryPreview();
                     
                     document.getElementById('addon-status-toggle-group').style.display = 'none';
                     populateCategoryDropdown();
-                    document.getElementById('product-modal-title').textContent = 'Add Product (3 Photos)';
+                    document.getElementById('product-modal-title').textContent = 'Add Product (Unlimited Photos)';
                     document.getElementById('product-modal').style.display = 'flex';
                     return;
                 }
@@ -2167,26 +2190,18 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     document.getElementById('product-price').value = '3.99';
                     document.getElementById('product-description').value = 'Luxury assorted Cadbury chocolates & dry fruit sweets box';
                     
-                    document.getElementById('product-current-image').value = 'assets/images/rakhi_peacock.png';
-                    document.getElementById('product-current-image-2').value = 'assets/images/rakhi_rudraksha.png';
-                    document.getElementById('product-current-image-3').value = 'assets/images/ganesh_product_2.png';
-                    
-                    document.getElementById('product-image-file').value = '';
-                    document.getElementById('product-image-file-2').value = '';
-                    document.getElementById('product-image-file-3').value = '';
+                    productGalleryItems = [
+                        { type: 'existing', url: 'assets/images/rakhi_peacock.png', file: null },
+                        { type: 'existing', url: 'assets/images/rakhi_rudraksha.png', file: null },
+                        { type: 'existing', url: 'assets/images/ganesh_product_2.png', file: null }
+                    ];
+                    renderProductGalleryPreview();
                     
                     populateCategoryDropdown();
                     const select = document.getElementById('product-category');
                     const addonCat = catalogCategories.find(c => c.name.includes('Add-On'));
                     if (addonCat && select) {
                         select.value = addonCat.id;
-                    }
-                    
-                    const prevBox1 = document.getElementById('product-image-preview-box');
-                    const prevImg1 = document.getElementById('product-image-preview-el');
-                    if (prevBox1 && prevImg1) {
-                        prevImg1.src = 'assets/images/rakhi_peacock.png';
-                        prevBox1.style.display = 'flex';
                     }
                     
                     document.getElementById('addon-status-toggle-group').style.display = 'block';
@@ -2196,7 +2211,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     return;
                 }
 
-                // 4. Edit Product Button (Fills 3 Image Paths and Previews)
+                // 4. Edit Product Button (Fills Unlimited Gallery Images and Previews)
                 let btnEditProd = e.target.closest('.btn-edit-product');
                 if (btnEditProd) {
                     e.preventDefault();
@@ -2215,14 +2230,24 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     document.getElementById('product-price').value = p.price;
                     document.getElementById('product-description').value = p.description || '';
                     
-                    // 3 Images Current Values
-                    document.getElementById('product-current-image').value = p.image_path || '';
-                    document.getElementById('product-current-image-2').value = p.image_path_2 || '';
-                    document.getElementById('product-current-image-3').value = p.image_path_3 || '';
-                    
-                    document.getElementById('product-image-file').value = '';
-                    document.getElementById('product-image-file-2').value = '';
-                    document.getElementById('product-image-file-3').value = '';
+                    // Parse Unlimited Gallery Images
+                    productGalleryItems = [];
+                    if (p.gallery_images) {
+                        try {
+                            let parsed = typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images;
+                            if (Array.isArray(parsed)) {
+                                parsed.forEach(imgUrl => {
+                                    if (imgUrl) productGalleryItems.push({ type: 'existing', url: imgUrl, file: null });
+                                });
+                            }
+                        } catch (err) {}
+                    }
+                    if (productGalleryItems.length === 0) {
+                        [p.image_path, p.image_path_2, p.image_path_3].forEach(imgUrl => {
+                            if (imgUrl) productGalleryItems.push({ type: 'existing', url: imgUrl, file: null });
+                        });
+                    }
+                    renderProductGalleryPreview();
                     
                     let isAddon = p.id == 7 || p.id == 8 || (p.name && (p.name.includes('Wrapping') || p.name.includes('Chocolate') || p.name.includes('Add-On')));
                     let toggleGroup = document.getElementById('addon-status-toggle-group');
@@ -2239,35 +2264,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         toggleGroup.style.display = 'none';
                     }
                     
-                    // Show 3 Previews
-                    const p1 = document.getElementById('product-image-preview-el');
-                    const b1 = document.getElementById('product-image-preview-box');
-                    if (p.image_path && p1 && b1) {
-                        p1.src = p.image_path;
-                        b1.style.display = 'flex';
-                    } else if (b1) {
-                        b1.style.display = 'none';
-                    }
-
-                    const p2 = document.getElementById('product-image-preview-el-2');
-                    const b2 = document.getElementById('product-image-preview-box-2');
-                    if (p.image_path_2 && p2 && b2) {
-                        p2.src = p.image_path_2;
-                        b2.style.display = 'flex';
-                    } else if (b2) {
-                        b2.style.display = 'none';
-                    }
-
-                    const p3 = document.getElementById('product-image-preview-el-3');
-                    const b3 = document.getElementById('product-image-preview-box-3');
-                    if (p.image_path_3 && p3 && b3) {
-                        p3.src = p.image_path_3;
-                        b3.style.display = 'flex';
-                    } else if (b3) {
-                        b3.style.display = 'none';
-                    }
-                    
-                    document.getElementById('product-modal-title').textContent = 'Edit Product (3 Photos)';
+                    document.getElementById('product-modal-title').textContent = 'Edit Product (Unlimited Gallery)';
                     document.getElementById('product-modal').style.display = 'flex';
                     return;
                 }
@@ -2365,6 +2362,135 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 }
             });
 
+            // UNLIMITED PRODUCT GALLERY STATE MANAGEMENT & REORDER CONTROLLER
+            let productGalleryItems = []; // items: { type: 'existing'|'new', url: string, file: File|null }
+
+            function renderProductGalleryPreview() {
+                const grid = document.getElementById('product-gallery-preview-grid');
+                const badge = document.getElementById('product-gallery-count-badge');
+                if (!grid) return;
+
+                grid.innerHTML = '';
+                if (badge) badge.textContent = `${productGalleryItems.length} Image(s) Selected`;
+
+                if (productGalleryItems.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column:1/-1; text-align:center; padding:24px 12px; color:#94A3B8;">
+                            <div style="font-size:1.6rem; margin-bottom:4px;">🖼️</div>
+                            <div style="font-weight:700; font-size:0.85rem; color:#64748B;">No Images Selected Yet</div>
+                            <div style="font-size:0.75rem; color:#94A3B8;">Click <strong>+ Add Images</strong> above to select unlimited product photos</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                productGalleryItems.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'position:relative; background:#F8FAFC; border:1.5px solid #CBD5E1; border-radius:8px; padding:6px; display:flex; flex-direction:column; align-items:center; gap:4px; box-sizing:border-box;';
+
+                    const img = document.createElement('img');
+                    img.src = item.url;
+                    img.style.cssText = 'width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0; display:block;';
+
+                    const badgeSpan = document.createElement('span');
+                    badgeSpan.style.cssText = 'font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; margin-top:2px; text-align:center; width:100%; box-sizing:border-box;';
+                    if (index === 0) {
+                        badgeSpan.style.background = '#FEF3C7';
+                        badgeSpan.style.color = '#B45309';
+                        badgeSpan.textContent = '⭐ Main Hero';
+                    } else {
+                        badgeSpan.style.background = '#E2E8F0';
+                        badgeSpan.style.color = '#334155';
+                        badgeSpan.textContent = `#${index + 1} Gallery`;
+                    }
+
+                    // Action Controls: Reorder Left, Reorder Right, Delete
+                    const ctrlRow = document.createElement('div');
+                    ctrlRow.style.cssText = 'display:flex; justify-content:space-between; width:100%; margin-top:4px; gap:2px;';
+
+                    const btnLeft = document.createElement('button');
+                    btnLeft.type = 'button';
+                    btnLeft.innerHTML = '‹';
+                    btnLeft.title = 'Move Left';
+                    btnLeft.disabled = index === 0;
+                    btnLeft.style.cssText = 'padding:2px 6px; font-size:0.75rem; font-weight:800; border:1px solid #CBD5E1; background:#FFF; border-radius:4px; cursor:pointer; opacity:' + (index === 0 ? '0.4' : '1');
+                    btnLeft.onclick = (e) => {
+                        e.preventDefault();
+                        if (index > 0) {
+                            let temp = productGalleryItems[index];
+                            productGalleryItems[index] = productGalleryItems[index - 1];
+                            productGalleryItems[index - 1] = temp;
+                            renderProductGalleryPreview();
+                        }
+                    };
+
+                    const btnRight = document.createElement('button');
+                    btnRight.type = 'button';
+                    btnRight.innerHTML = '›';
+                    btnRight.title = 'Move Right';
+                    btnRight.disabled = index === productGalleryItems.length - 1;
+                    btnRight.style.cssText = 'padding:2px 6px; font-size:0.75rem; font-weight:800; border:1px solid #CBD5E1; background:#FFF; border-radius:4px; cursor:pointer; opacity:' + (index === productGalleryItems.length - 1 ? '0.4' : '1');
+                    btnRight.onclick = (e) => {
+                        e.preventDefault();
+                        if (index < productGalleryItems.length - 1) {
+                            let temp = productGalleryItems[index];
+                            productGalleryItems[index] = productGalleryItems[index + 1];
+                            productGalleryItems[index + 1] = temp;
+                            renderProductGalleryPreview();
+                        }
+                    };
+
+                    const btnDel = document.createElement('button');
+                    btnDel.type = 'button';
+                    btnDel.innerHTML = '✕';
+                    btnDel.title = 'Remove Image';
+                    btnDel.style.cssText = 'padding:2px 6px; font-size:0.75rem; font-weight:800; border:1px solid #FCA5A5; background:#FEF2F2; color:#DC2626; border-radius:4px; cursor:pointer;';
+                    btnDel.onclick = (e) => {
+                        e.preventDefault();
+                        productGalleryItems.splice(index, 1);
+                        renderProductGalleryPreview();
+                    };
+
+                    ctrlRow.appendChild(btnLeft);
+                    ctrlRow.appendChild(btnRight);
+                    ctrlRow.appendChild(btnDel);
+
+                    card.appendChild(img);
+                    card.appendChild(badgeSpan);
+                    card.appendChild(ctrlRow);
+
+                    grid.appendChild(card);
+                });
+            }
+
+            // File selection event handlers for + Add Images & Upload More Images
+            const galleryInput = document.getElementById('product-gallery-input');
+            const btnAddGalleryImages = document.getElementById('btn-add-product-gallery-images');
+            const btnUploadMoreGalleryImages = document.getElementById('btn-upload-more-gallery-images');
+
+            if (btnAddGalleryImages && galleryInput) {
+                btnAddGalleryImages.addEventListener('click', () => galleryInput.click());
+            }
+            if (btnUploadMoreGalleryImages && galleryInput) {
+                btnUploadMoreGalleryImages.addEventListener('click', () => galleryInput.click());
+            }
+
+            if (galleryInput) {
+                galleryInput.addEventListener('change', function(e) {
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(file => {
+                        const url = URL.createObjectURL(file);
+                        productGalleryItems.push({
+                            type: 'new',
+                            url: url,
+                            file: file
+                        });
+                    });
+                    renderProductGalleryPreview();
+                    galleryInput.value = '';
+                });
+            }
+
             // Form submissions
             const closeCategoryModal = () => document.getElementById('category-modal').style.display = 'none';
             const closeProductModal = () => document.getElementById('product-modal').style.display = 'none';
@@ -2391,8 +2517,37 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
 
             document.getElementById('product-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                let fd = new FormData(this);
+                
+                let fd = new FormData();
+                fd.append('id', document.getElementById('product-id').value);
+                fd.append('category_id', document.getElementById('product-category').value);
+                fd.append('name', document.getElementById('product-name').value);
+                fd.append('price', document.getElementById('product-price').value);
+                fd.append('description', document.getElementById('product-description').value);
+                
+                let addonEnabledEl = document.getElementById('product-addon-enabled');
+                if (addonEnabledEl && addonEnabledEl.checked) {
+                    fd.append('addon_enabled', '1');
+                } else if (addonEnabledEl) {
+                    fd.append('addon_enabled', '0');
+                }
+                
                 fd.append('csrf_token', csrfToken);
+
+                // Append existing image paths & new File objects in exact sequence order
+                productGalleryItems.forEach((item, idx) => {
+                    if (item.type === 'existing') {
+                        fd.append('existing_gallery_images[]', item.url);
+                    } else if (item.type === 'new' && item.file) {
+                        fd.append('product_gallery_files[]', item.file);
+                    }
+                });
+
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving Product Gallery...';
+                }
 
                 fetch('ajax/admin-actions.php?action=save_product', {
                     method: 'POST',
@@ -2400,12 +2555,23 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 })
                 .then(res => res.json())
                 .then(res => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Product & Photos';
+                    }
                     if (res.success) {
                         closeProductModal();
                         loadCatalogData();
                     } else {
-                        alert(res.message);
+                        alert(res.message || 'Error saving product');
                     }
+                })
+                .catch(err => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Product & Photos';
+                    }
+                    alert('Network error saving product.');
                 });
             });
 

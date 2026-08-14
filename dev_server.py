@@ -34,9 +34,9 @@ SETTINGS = {
 }
 
 CATEGORIES = [
-    {"id": 1, "name": "Ganesh Statues"},
-    {"id": 2, "name": "Designer Rakhis"},
-    {"id": 3, "name": "Festive Add-Ons & Gift Kits"}
+    {"id": 1, "name": "Ganesh Statue", "description": "Handcrafted eco-friendly clay Ganesh statues with complete Mukut & ornament accessories delivered across the UK.", "image_path": "assets/images/ganesh_hero.png"},
+    {"id": 2, "name": "Rakhi", "description": "Designer Rudraksha & Silver-Plated Peacock Rakhi sets handcrafted for festive celebrations.", "image_path": "assets/images/rakhi_peacock.png"},
+    {"id": 3, "name": "Festive Add-Ons & Gift Kits", "description": "Luxury chocolate boxes and gift wrapping accessories.", "image_path": "assets/images/rakhi_rudraksha.png"}
 ]
 
 PRODUCTS = [

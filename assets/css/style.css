@@ -5313,6 +5313,478 @@ body.modal-open { overflow: hidden; }
   outline: none;
 }
 
+/* ============================================================
+   MASTER RESPONSIVE STYLESHEET (320px to 1920px+)
+   Guarantees 100% Mobile, Tablet, Laptop & Desktop Perfection
+   ============================================================ */
+
+/* ── Global Viewport & Overflow Safeguards ── */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, video, iframe, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Touch Friendly Form Inputs (Prevents iOS Auto-Zoom) */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* ── Storefront Responsive Rules (320px – 1920px+) ── */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .cat-2col-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+    gap: 20px !important;
+  }
+
+  .prod-modal-card {
+    max-width: 90% !important;
+    width: 90% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Storefront Header & Navigation */
+  .top-festive-bar {
+    font-size: 0.76rem !important;
+    padding: 6px 12px !important;
+    text-align: center !important;
+  }
+
+  .site-header {
+    padding: 8px 0 !important;
+  }
+
+  .header-inner {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    justify-content: space-between !important;
+  }
+
+  .header-queries-box {
+    font-size: 0.78rem !important;
+  }
+
+  .header-phone-link {
+    font-size: 0.82rem !important;
+  }
+
+  .btn-header-cart, .scroll-to-booking {
+    padding: 8px 14px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Storefront Catalog & Cards */
+  .shop-hero-text .shop-page-title {
+    font-size: 1.8rem !important;
+  }
+
+  .cat-2col-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 0 12px !important;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 0 12px !important;
+  }
+
+  .product-card-item {
+    border-radius: 16px !important;
+  }
+
+  .prod-details {
+    padding: 16px !important;
+  }
+
+  .prod-name {
+    font-size: 1.05rem !important;
+  }
+
+  .prod-desc {
+    font-size: 0.84rem !important;
+  }
+
+  .btn-add-to-cart, .btn-shop-collection {
+    padding: 12px 16px !important;
+    font-size: 0.9rem !important;
+    min-height: 44px !important;
+  }
+
+  /* Storefront Modals */
+  .prod-modal-overlay {
+    padding: 12px !important;
+  }
+
+  .prod-modal-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    padding: 18px 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .prod-modal-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .pmodal-hero-container {
+    min-height: 280px !important;
+    aspect-ratio: 1/1 !important;
+  }
+
+  .pmodal-thumb-item {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .pmodal-title {
+    font-size: 1.3rem !important;
+  }
+
+  .pmodal-desc-box {
+    padding: 12px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Shopping Cart Drawer */
+  .cart-drawer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-queries-box {
+    display: none !important;
+  }
+
+  .site-header .container {
+    padding: 0 10px !important;
+  }
+
+  .pmodal-hero-container {
+    min-height: 240px !important;
+  }
+
+  .pmodal-thumb-item {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+/* ============================================================
+   ADMIN MANAGEMENT PANEL – DESKTOP & WEB OPTIMIZATION (1366px – 1920px+)
+   Configured strictly for Desktop & Laptop Web Usage
+   ============================================================ */
+
+.admin-body {
+  min-width: 1200px !important;
+  background: #F8FAFC;
+  font-family: 'Outfit', sans-serif;
+}
+
+.admin-main-wrapper {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 32px;
+}
+
+.admin-header {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 20px 28px !important;
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+  margin-bottom: 24px !important;
+}
+
+.admin-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 20px !important;
+  margin-bottom: 28px !important;
+}
+
+.admin-kpi-card {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  padding: 20px 24px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04) !important;
+}
+
+.admin-tab-nav {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  background: #FFFFFF !important;
+  padding: 8px !important;
+  border-radius: 14px !important;
+  border: 1px solid #E2E8F0 !important;
+  margin-bottom: 24px !important;
+}
+
+.admin-tab-btn {
+  flex: 1 !important;
+  padding: 12px 20px !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.admin-table-wrapper {
+  width: 100% !important;
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04) !important;
+  overflow: hidden !important;
+}
+
+.admin-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+.admin-table th {
+  background: #F1F5F9 !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
+  font-size: 0.88rem !important;
+  padding: 14px 18px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.admin-table td {
+  padding: 14px 18px !important;
+  font-size: 0.92rem !important;
+  color: #0F172A !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+}
+
+/* ============================================================
+   GPU-OPTIMIZED INTERACTIVE CURSOR PARALLAX HOVER EFFECT
+   Apple-style left-right cursor tilt + gentle scale-up (1.04)
+   ============================================================ */
+.prod-img-wrap,
+.category-card-item,
+.hero-image-card,
+.pmodal-hero-container,
+.cat-card-img-wrap {
+  overflow: hidden !important;
+  perspective: 1000px;
+}
+
+.prod-img-wrap img,
+.category-card-item img,
+.hero-image-card img,
+.pmodal-hero-container img,
+.cat-card-img-wrap img,
+.grid-card-slide-item img {
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+@media (hover: none), (max-width: 768px) {
+  .prod-img-wrap img,
+  .category-card-item img,
+  .hero-image-card img,
+  .pmodal-hero-container img,
+  .cat-card-img-wrap img,
+  .grid-card-slide-item img {
+    transform: none !important;
+    transition: transform 0.3s ease-out !important;
+  }
+}
+
+/* ============================================================
+   MYNTRA-STYLE SWIPER.JS PRODUCT CAROUSEL STYLES
+   Responsive 5 cards desktop, 3 tablet, 2 mobile
+   ============================================================ */
+.myntra-swiper-container {
+  position: relative;
+  width: 100%;
+  padding: 10px 0 20px 0;
+}
+
+.myntra-prod-swiper {
+  width: 100%;
+  padding: 16px 6px 36px 6px !important;
+  overflow: hidden !important;
+}
+
+.myntra-prod-swiper .swiper-slide {
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #F1F5F9 !important;
+}
+
+.myntra-prod-swiper .swiper-slide .prod-img-wrap {
+  position: relative !important;
+  width: 100% !important;
+  padding-top: 100% !important; /* 1:1 Aspect Ratio square */
+  background: #F8FAFC !important;
+  overflow: hidden !important;
+  border-top-left-radius: 18px !important;
+  border-top-right-radius: 18px !important;
+}
+
+.myntra-prod-swiper .swiper-slide:hover {
+  transform: translateY(-6px) scale(1.02) !important;
+  box-shadow: 0 20px 36px rgba(74, 11, 23, 0.14) !important;
+  border-color: rgba(212, 175, 55, 0.4) !important;
+  z-index: 10;
+}
+
+/* Custom Navigation Arrows */
+.myntra-arrow-next,
+.myntra-arrow-prev {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 2px solid #D4AF37 !important;
+  color: #4A0B17 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.25s ease !important;
+}
+
+.myntra-arrow-next:after,
+.myntra-arrow-prev:after {
+  font-size: 1.2rem !important;
+  font-weight: 900 !important;
+}
+
+.myntra-arrow-next:hover,
+.myntra-arrow-prev:hover {
+  background: #4A0B17 !important;
+  color: #D4AF37 !important;
+  border-color: #4A0B17 !important;
+  transform: scale(1.1) !important;
+}
+
+@media (max-width: 768px) {
+  .myntra-arrow-next,
+  .myntra-arrow-prev {
+    display: none !important;
+  }
+}
+
+/* Remove arrow buttons from images in both Collection View and Product Modal View */
+.pmodal-nav-btn,
+.pmodal-prev-btn,
+.pmodal-next-btn,
+.card-slide-arrow,
+.card-slide-prev,
+.card-slide-next {
+  display: none !important;
+}
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  color: #FFFFFF;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.prod-img-wrap:hover .card-slide-arrow {
+  opacity: 1;
+}
+
+.card-slide-arrow:hover {
+  background: #D4AF37;
+  color: #4A0B17;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.card-slide-prev { left: 8px; }
+.card-slide-next { right: 8px; }
+
+.card-slide-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 5;
+}
+
+.card-slide-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-slide-dot.active {
+  background: #D4AF37;
+  width: 14px;
+  border-radius: 4px;
+}
+
+
 
 
 

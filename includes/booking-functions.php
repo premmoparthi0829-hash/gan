@@ -333,12 +333,15 @@ function save_uploaded_payment_receipt($file_input, $booking_ref) {
 function get_dashboard_data_array($search = '', $status_filter = 'ALL') {
     $db = Database::getConnection();
     $stats = [
-        'total_bookings' => 0,
-        'total_revenue' => 0.00,
-        'paid_count' => 0,
-        'paid_revenue' => 0.00,
-        'pending_count' => 0,
-        'shipped_count' => 0
+        'total_bookings'   => 0,
+        'today_orders'     => 0,
+        'total_categories' => 0,
+        'total_products'   => 0,
+        'total_revenue'    => 0.00,
+        'paid_count'       => 0,
+        'paid_revenue'     => 0.00,
+        'pending_count'    => 0,
+        'shipped_count'    => 0
     ];
     $bookings = [];
 
@@ -346,6 +349,7 @@ function get_dashboard_data_array($search = '', $status_filter = 'ALL') {
         try {
             $stat_stmt = $db->query("SELECT 
                 COUNT(*) as total_count,
+                COALESCE(SUM(CASE WHEN DATE(created_at) = CURRENT_DATE() THEN 1 ELSE 0 END), 0) as today_cnt,
                 COALESCE(SUM(total_amount), 0) as total_rev,
                 COALESCE(SUM(CASE WHEN payment_status = 'PAID' THEN 1 ELSE 0 END), 0) as paid_cnt,
                 COALESCE(SUM(CASE WHEN payment_status = 'PAID' THEN total_amount ELSE 0 END), 0) as paid_rev,
@@ -355,11 +359,22 @@ function get_dashboard_data_array($search = '', $status_filter = 'ALL') {
             $stat_row = $stat_stmt->fetch();
             if ($stat_row) {
                 $stats['total_bookings'] = (int)$stat_row['total_count'];
+                $stats['today_orders']   = (int)$stat_row['today_cnt'];
                 $stats['total_revenue']  = (float)$stat_row['total_rev'];
                 $stats['paid_count']      = (int)$stat_row['paid_cnt'];
                 $stats['paid_revenue']   = (float)$stat_row['paid_rev'];
                 $stats['pending_count']   = (int)$stat_row['pending_cnt'];
                 $stats['shipped_count']   = (int)$stat_row['shipped_cnt'];
+            }
+
+            $cat_stmt = $db->query("SELECT COUNT(*) as cat_cnt FROM categories");
+            if ($cat_row = $cat_stmt->fetch()) {
+                $stats['total_categories'] = (int)$cat_row['cat_cnt'];
+            }
+
+            $prod_stmt = $db->query("SELECT COUNT(*) as prod_cnt FROM products");
+            if ($prod_row = $prod_stmt->fetch()) {
+                $stats['total_products'] = (int)$prod_row['prod_cnt'];
             }
 
             $stmt = $db->query("SELECT * FROM bookings ORDER BY id DESC LIMIT 200");
