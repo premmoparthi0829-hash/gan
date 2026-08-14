@@ -94,35 +94,36 @@ $(document).ready(function () {
         $('#cat-products-subtitle').text(`Browse our ${catName} items below and add them to your cart.`);
         $('#active-cat-label').text(`Shop › ${catName}`);
 
-        // Hide all product panes, show only selected category pane
+        // Hide all product panes, show only target category pane
         $('.cat-products-pane').hide();
         let targetPane = $(`#products-pane-${catId}`);
-        if (targetPane.length > 0) {
-            targetPane.show();
-        } else {
+        if (!targetPane.length) {
             targetPane = $('.cat-products-pane').first();
-            targetPane.show();
         }
+        targetPane.css('display', 'block');
 
-        // Initialize & Update Swiper Carousel
+        // Swap steps cleanly without layout jump overlap
+        $('body').removeClass('single-view-mode');
+        $('#catalog-step-categories').hide();
+        $('#catalog-step-products').css('display', 'block').addClass('step-fade-in');
+
+        // Initialize & Update Swiper Carousel AFTER container is visible for 100% exact width calculations
         if (typeof initSwiperCarousels === 'function') {
             initSwiperCarousels();
             let swiperEl = targetPane.find('.myntra-prod-swiper')[0];
             if (swiperEl && activeSwipers[swiperEl.id]) {
-                activeSwipers[swiperEl.id].update();
-                activeSwipers[swiperEl.id].slideTo(0, 0);
+                setTimeout(function() {
+                    activeSwipers[swiperEl.id].update();
+                    activeSwipers[swiperEl.id].slideTo(0, 0);
+                }, 30);
             }
         }
 
-        // Swap panels with animation
-        $('body').removeClass('single-view-mode');
-        $('#catalog-step-categories').fadeOut(200, function() {
-            $('#catalog-step-products').show().addClass('step-fade-in');
-            // Smooth scroll to catalog section
-            $('html, body').animate({
-                scrollTop: $('#shop-catalog').offset().top - 80
-            }, 400);
-        });
+        // Smooth scroll to catalog section
+        let targetOffset = $('#shop-catalog').offset() ? $('#shop-catalog').offset().top - 70 : 0;
+        $('html, body').stop(true, true).animate({
+            scrollTop: targetOffset
+        }, 300);
     }
 
     // Click on category card
@@ -135,52 +136,14 @@ $(document).ready(function () {
 
     // Back button — return to category grid
     $('#btn-back-to-categories').on('click', function() {
-        $('#catalog-step-products').fadeOut(200, function() {
-            $(this).removeClass('step-fade-in');
-            $('body').addClass('single-view-mode');
-            $('#catalog-step-categories').fadeIn(300).addClass('step-fade-in');
-        });
+        $('#catalog-step-products').hide().removeClass('step-fade-in');
+        $('body').addClass('single-view-mode');
+        $('#catalog-step-categories').css('display', 'block').addClass('step-fade-in');
+        let targetOffset = $('#shop-catalog').offset() ? $('#shop-catalog').offset().top - 70 : 0;
+        $('html, body').stop(true, true).animate({
+            scrollTop: targetOffset
+        }, 300);
     });
-
-    // ── Grid Product Cards Cinematic Crossfade + Zoom Slideshow ──
-    let gridCardsAutoScrollTimer = null;
-
-    function startGridCardsAutoScroll() {
-        if (gridCardsAutoScrollTimer) clearInterval(gridCardsAutoScrollTimer);
-        gridCardsAutoScrollTimer = setInterval(function() {
-            $('.cat-products-pane:visible .product-card-item').each(function() {
-                let card = $(this);
-                let slider = card.find('.grid-card-stylish-slider');
-                if (!slider.length) return;
-                
-                let count = parseInt(slider.attr('data-count')) || 1;
-                if (count <= 1) return;
-
-                let activeIdx = parseInt(slider.attr('data-active-idx')) || 0;
-                let nextIdx = (activeIdx + 1) % count;
-
-                slider.attr('data-active-idx', nextIdx);
-
-                slider.find('.grid-card-slide-item').each(function(i) {
-                    if (i === nextIdx) {
-                        $(this).css({
-                            'opacity': '1',
-                            'transform': 'scale(1.06)',
-                            'z-index': '2'
-                        }).addClass('active');
-                    } else {
-                        $(this).css({
-                            'opacity': '0',
-                            'transform': 'scale(1)',
-                            'z-index': '1'
-                        }).removeClass('active');
-                    }
-                });
-            });
-        }, 1300); // Lively fast grid auto-scroll every 1.3 seconds
-    }
-
-    startGridCardsAutoScroll();
 
     // Fast Card Arrow Click Handler (Slide Track System)
     $(document).on('click', '.card-slide-arrow', function(e) {
