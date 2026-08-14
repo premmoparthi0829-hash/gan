@@ -642,9 +642,6 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         <button type="button" class="btn-catalog-action btn-add-cat-style" id="btn-add-category">
                             📁 Add Category
                         </button>
-                        <button type="button" class="btn-catalog-action btn-add-addon-style" id="btn-add-addon">
-                            🍫 Add Festive Add-On
-                        </button>
                         <button type="button" class="btn-catalog-action btn-add-prod-style" id="btn-add-product">
                             🛒 Add Product / Item
                         </button>
@@ -652,23 +649,6 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 30px;">
-                    <!-- Festive Cart Add-Ons Status Panel -->
-                    <div style="background: linear-gradient(135deg, #FFFDF5 0%, #FEF3C7 100%); border: 1.5px solid #FCD34D; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px dashed #F59E0B; padding-bottom: 10px;">
-                            <h3 style="color: #92400E; font-size: 1.15rem; margin: 0; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                                🎁 Festive Cart Add-Ons Status &amp; Live Controls
-                            </h3>
-                            <span style="background: #D97706; color: #FFF; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 20px;">
-                                ✅ Active in Customer Cart
-                            </span>
-                        </div>
-                        <p style="color: #78350F; font-size: 0.86rem; margin: 0 0 16px 0; line-height: 1.4;">
-                            These add-ons are displayed inside the shopping cart. You can edit their title, price, description, or image icon directly here.
-                        </p>
-                        <div id="admin-addons-status-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                            <!-- Dynamically populated by renderAddonsPanel() -->
-                        </div>
-                    </div>
 
                     <!-- Categories Management -->
                     <div style="background:#FFF; border:1px solid #E2E8F0; border-radius:12px; padding:20px;">
