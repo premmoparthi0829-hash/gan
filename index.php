@@ -19,8 +19,8 @@ if ($db) {
     }
 }
 
-// Filter main categories for shop front (hide Add-Ons category from main grid)
-$shop_categories = array_filter($categories, fn($c) => stripos($c['name'], 'Add-On') === false);
+// Include all categories for shop front (including Festive Add-Ons)
+$shop_categories = $categories;
 
 // Locate dynamic Add-On products for Cart
 $gift_wrap_prod = null;

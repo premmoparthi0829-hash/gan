@@ -206,6 +206,18 @@ INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `im
 (4, 2, 'Silver Plated Peacock Rakhi', 'Elegant silver-plated peacock designer Rakhi with premium thread.', 6.99, 'assets/images/rakhi_peacock.png', 'assets/images/rakhi_rudraksha.png', 'assets/images/prod_1786450274_3733079c.png')
 ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`), `image_path_2` = VALUES(`image_path_2`), `image_path_3` = VALUES(`image_path_3`);
 
+INSERT INTO `categories` (`id`, `name`, `description`, `image_path`) VALUES
+(3, 'Festive Add-Ons', 'Luxury gift wrapping, greeting cards, Cadbury chocolates & dry fruit sweet boxes for celebrations.', 'assets/images/rakhi_rudraksha.png')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `description` = VALUES(`description`), `image_path` = VALUES(`image_path`);
+
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES
+(7, 3, '🎁 Add-On 1: Festive Gift Wrapping & Card', 'Luxury golden gift wrap with customized festive greeting card', 1.99, 'assets/images/rakhi_rudraksha.png', 'assets/images/rakhi_peacock.png', 'assets/images/ganesh_hero.png')
+ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`);
+
+INSERT INTO `products` (`id`, `category_id`, `name`, `description`, `price`, `image_path`, `image_path_2`, `image_path_3`) VALUES
+(8, 3, '🍫 Add-On 2: Premium Chocolate & Sweets Box', 'Luxury assorted Cadbury chocolates & dry fruit sweets box', 3.99, 'assets/images/rakhi_peacock.png', 'assets/images/rakhi_rudraksha.png', 'assets/images/ganesh_product_2.png')
+ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`name`), `description` = VALUES(`description`), `price` = VALUES(`price`), `image_path` = VALUES(`image_path`);
+
 -- Migrate existing bookings to booking_items (backward compatibility)
 INSERT INTO `booking_items` (`booking_id`, `product_id`, `product_name`, `quantity`, `price`)
 SELECT `id`, 1, 'Ganesh Statue / Vinayaka Vigraha', `quantity`, `unit_price` FROM `bookings`
