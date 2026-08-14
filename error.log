@@ -446,3 +446,6 @@
 [2026-08-11 10:53:06] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.
 [2026-08-11 10:53:19] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.
 [2026-08-11 10:53:31] MySQL Connection Error: Could not connect to MySQL server on ports 3306/3307.
+[2026-08-14 18:08:07] UPI verification error: SQLSTATE[HY093]: Invalid parameter number
+[2026-08-14 18:09:04] UPI verification error: SQLSTATE[HY093]: Invalid parameter number
+[2026-08-14 18:09:25] UPI verification error: SQLSTATE[HY093]: Invalid parameter number

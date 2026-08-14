@@ -148,7 +148,65 @@ function calculate_order_totals($cart_items) {
 }
 
 /**
- * Create a new booking in MySQL
+ * Get dynamic UPI & Bank Payment settings from database
+ */
+function get_upi_settings() {
+    return [
+        'upi_id' => get_setting('upi_id', 'vklogistics@upi'),
+        'upi_account_name' => get_setting('upi_account_name', 'VK LOGISTICS LTD'),
+        'upi_qr_image' => get_setting('upi_qr_image', 'assets/images/upi_qr_default.png'),
+        'upi_instructions' => get_setting('upi_instructions', 'Scan QR Code or copy UPI ID. Open Google Pay, PhonePe, Paytm or any UPI App to complete payment, then upload your transaction screenshot below.'),
+        'upi_enabled' => get_setting('upi_enabled', '1'),
+
+        // Bank Payment Settings
+        'bank_name' => get_setting('bank_name', 'Barclays Bank UK'),
+        'bank_account_name' => get_setting('bank_account_name', 'VK LOGISTICS LTD'),
+        'bank_sort_code' => get_setting('bank_sort_code', '20-45-77'),
+        'bank_account_number' => get_setting('bank_account_number', '83920144'),
+        'bank_instructions' => get_setting('bank_instructions', 'Transfer the total payable amount to our Bank Account given below. Upload your payment screenshot/receipt after transfer.'),
+        'bank_enabled' => get_setting('bank_enabled', '1'),
+
+        // Customer Support Phone
+        'support_phone' => get_setting('support_phone', '+44 7700 900888')
+    ];
+}
+
+/**
+ * Save UPI & Bank Payment settings in database
+ */
+function save_upi_settings($upi_id, $account_name, $qr_image, $instructions, $is_enabled, $bank_data = []) {
+    $db = Database::getConnection();
+    if (!$db) return false;
+    
+    $settings = [
+        'upi_id' => sanitize_input($upi_id),
+        'upi_account_name' => sanitize_input($account_name),
+        'upi_instructions' => sanitize_input($instructions),
+        'upi_enabled' => $is_enabled ? '1' : '0'
+    ];
+    if (!empty($qr_image)) {
+        $settings['upi_qr_image'] = sanitize_input($qr_image);
+    }
+    
+    if (!empty($bank_data)) {
+        if (isset($bank_data['bank_name'])) $settings['bank_name'] = sanitize_input($bank_data['bank_name']);
+        if (isset($bank_data['bank_account_name'])) $settings['bank_account_name'] = sanitize_input($bank_data['bank_account_name']);
+        if (isset($bank_data['bank_sort_code'])) $settings['bank_sort_code'] = sanitize_input($bank_data['bank_sort_code']);
+        if (isset($bank_data['bank_account_number'])) $settings['bank_account_number'] = sanitize_input($bank_data['bank_account_number']);
+        if (isset($bank_data['bank_instructions'])) $settings['bank_instructions'] = sanitize_input($bank_data['bank_instructions']);
+        if (isset($bank_data['bank_enabled'])) $settings['bank_enabled'] = $bank_data['bank_enabled'] ? '1' : '0';
+        if (isset($bank_data['support_phone'])) $settings['support_phone'] = sanitize_input($bank_data['support_phone']);
+    }
+    
+    foreach ($settings as $key => $val) {
+        $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value, description) VALUES (:k, :v, 'Payment Setting') ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+        $stmt->execute([':k' => $key, ':v' => $val]);
+    }
+    return true;
+}
+
+/**
+ * Create a new booking in MySQL using UPI or Bank Transfer Payment Method
  */
 function create_new_booking($customer_data) {
     $totals = calculate_order_totals($customer_data['cart_items'] ?? []);
@@ -172,13 +230,12 @@ function create_new_booking($customer_data) {
         'subtotal' => $totals['subtotal'],
         'shipping_charge' => $totals['shipping_charge'],
         'total_amount' => $totals['total_amount'],
-        'payment_method' => $customer_data['payment_method'], // 'paypal' or 'bank_transfer'
+        'payment_method' => $customer_data['payment_method'] ?? 'upi',
         'payment_reference' => $customer_data['payment_reference'] ?? null,
-        'paypal_order_id' => $customer_data['paypal_order_id'] ?? null,
-        'paypal_transaction_id' => $customer_data['paypal_transaction_id'] ?? null,
-        'payment_status' => ($customer_data['payment_method'] === 'paypal' && !empty($customer_data['paypal_transaction_id'])) ? 'PAID' : 'PAYMENT VERIFICATION PENDING',
-        'booking_status' => 'CONFIRMED',
-        'payment_proof_image' => $customer_data['payment_proof_image'] ?? null
+        'payment_proof_image' => $customer_data['payment_screenshot'] ?? $customer_data['payment_proof_image'] ?? null,
+        'payment_screenshot' => $customer_data['payment_screenshot'] ?? $customer_data['payment_proof_image'] ?? null,
+        'payment_status' => 'PAYMENT VERIFICATION PENDING',
+        'booking_status' => 'PENDING'
     ];
 
     if ($db) {
@@ -187,14 +244,14 @@ function create_new_booking($customer_data) {
                 booking_reference, customer_name, mobile, email,
                 address_line_1, address_line_2, city, county, postcode, country,
                 quantity, unit_price, subtotal, shipping_charge, total_amount,
-                payment_method, payment_reference, paypal_order_id, paypal_transaction_id,
-                payment_status, booking_status, payment_proof_image
+                payment_method, payment_reference, payment_proof_image, payment_screenshot,
+                payment_status, booking_status
             ) VALUES (
                 :booking_reference, :customer_name, :mobile, :email,
                 :address_line_1, :address_line_2, :city, :county, :postcode, :country,
                 :quantity, :unit_price, :subtotal, :shipping_charge, :total_amount,
-                :payment_method, :payment_reference, :paypal_order_id, :paypal_transaction_id,
-                :payment_status, :booking_status, :payment_proof_image
+                :payment_method, :payment_reference, :payment_proof_image, :payment_screenshot,
+                :payment_status, :booking_status
             )";
 
             $stmt = $db->prepare($sql);
@@ -258,31 +315,72 @@ function get_booking_by_ref($reference) {
 }
 
 /**
- * Update payment status & proof for a booking
+ * Update payment status & screenshot for a booking
  */
-function update_booking_payment($reference, $status, $payment_ref = '', $paypal_order = '', $paypal_txn = '', $proof_image = '') {
+function update_booking_payment($reference, $status, $payment_ref = '', $screenshot_path = '') {
     $db = Database::getConnection();
     if ($db) {
         try {
             $sql = "UPDATE bookings SET 
                     payment_status = :status,
                     payment_reference = COALESCE(NULLIF(:payment_ref, ''), payment_reference),
-                    paypal_order_id = COALESCE(NULLIF(:paypal_order, ''), paypal_order_id),
-                    paypal_transaction_id = COALESCE(NULLIF(:paypal_txn, ''), paypal_transaction_id),
-                    payment_proof_image = COALESCE(NULLIF(:proof_img, ''), payment_proof_image)
+                    payment_proof_image = COALESCE(NULLIF(:proof_img, ''), payment_proof_image),
+                    payment_screenshot = COALESCE(NULLIF(:proof_img, ''), payment_screenshot)
                     WHERE booking_reference = :ref";
             $stmt = $db->prepare($sql);
             return $stmt->execute([
                 ':status' => $status,
                 ':payment_ref' => $payment_ref,
-                ':paypal_order' => $paypal_order,
-                ':paypal_txn' => $paypal_txn,
-                ':proof_img' => $proof_image,
+                ':proof_img' => $screenshot_path,
                 ':ref' => $reference
             ]);
         } catch (Exception $e) {
             log_system_error("Error updating payment status: " . $e->getMessage());
         }
+    }
+    return false;
+}
+
+/**
+ * Admin UPI Verification action
+ */
+function verify_upi_payment($reference, $action_status, $reason = '', $admin_user = 'Admin') {
+    $db = Database::getConnection();
+    if (!$db) return false;
+
+    $pay_status = 'PAYMENT VERIFICATION PENDING';
+    $book_status = 'PENDING';
+
+    if ($action_status === 'approve' || $action_status === 'PAID') {
+        $pay_status = 'PAID';
+        $book_status = 'CONFIRMED';
+    } elseif ($action_status === 'reject' || $action_status === 'REJECTED') {
+        $pay_status = 'REJECTED';
+        $book_status = 'REJECTED';
+    } elseif ($action_status === 'request_reupload' || $action_status === 'RE-UPLOAD REQUESTED') {
+        $pay_status = 'RE-UPLOAD REQUESTED';
+        $book_status = 'PENDING';
+    }
+
+    try {
+        $sql = "UPDATE bookings SET 
+                payment_status = :pay_status,
+                booking_status = :book_status,
+                rejection_reason = :reason,
+                verified_by = :admin,
+                verified_at = NOW()
+                WHERE booking_reference = :ref1 OR id = :ref2";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([
+            ':pay_status' => $pay_status,
+            ':book_status' => $book_status,
+            ':reason' => sanitize_input($reason),
+            ':admin' => sanitize_input($admin_user),
+            ':ref1' => $reference,
+            ':ref2' => $reference
+        ]);
+    } catch (Exception $e) {
+        log_system_error("UPI verification error: " . $e->getMessage());
     }
     return false;
 }

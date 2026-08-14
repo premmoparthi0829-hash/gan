@@ -1001,6 +1001,127 @@ $(document).ready(function () {
         });
     });
 
+    // ===== UPI & SCREENSHOT HANDLERS =====
+    $(document).on('click', '#pay-tab-upi', function() {
+        $('.bm-pay-tab').removeClass('active');
+        $(this).addClass('active');
+        $('.bm-pay-panel').removeClass('active').hide();
+        $('#upi-tab').addClass('active').show();
+        $('#payment_method').val('upi');
+    });
+
+    $(document).on('click', '#pay-tab-bank', function() {
+        $('.bm-pay-tab').removeClass('active');
+        $(this).addClass('active');
+        $('.bm-pay-panel').removeClass('active').hide();
+        $('#bank-tab').addClass('active').show();
+        $('#payment_method').val('bank_transfer');
+    });
+
+    $(document).on('click', '#btn-copy-checkout-upi', function(e) {
+        e.preventDefault();
+        let upiId = $('#checkout-upi-id-text').text().trim() || 'vklogistics@upi';
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(upiId).then(() => {
+                showToast('📋 UPI ID copied to clipboard!', 'success');
+            });
+        } else {
+            alert('UPI ID: ' + upiId);
+        }
+    });
+
+    $(document).on('click', '#upi-upload-idle-state', function() {
+        $('#payment_screenshot_file').trigger('click');
+    });
+
+    $(document).on('change', '#payment_screenshot_file', function() {
+        let file = this.files[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Image file size must be less than 10MB.', 'error');
+                $(this).val('');
+                return;
+            }
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                $('#upi-screenshot-img-preview').attr('src', evt.target.result);
+                $('#upi-upload-file-name').text(file.name);
+                $('#upi-upload-idle-state').hide();
+                $('#upi-upload-preview-state').show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $(document).on('click', '#btn-remove-upi-screenshot', function(e) {
+        e.stopPropagation();
+        $('#payment_screenshot_file').val('');
+        $('#upi-screenshot-img-preview').attr('src', '');
+        $('#upi-upload-preview-state').hide();
+        $('#upi-upload-idle-state').show();
+    });
+
+    // UPI Order Submit
+    $(document).on('click', '#btn-submit-upi-booking', function(e) {
+        e.preventDefault();
+        if (!validateBookingForm()) return;
+
+        let fileInput = $('#payment_screenshot_file')[0];
+        if (!fileInput || fileInput.files.length === 0) {
+            showToast('Please upload your payment screenshot/receipt.', 'error');
+            return;
+        }
+
+        let submitBtn = $('#btn-submit-upi-booking');
+        let originalText = submitBtn.html();
+        submitBtn.prop('disabled', true).html('⏳ Placing Order...');
+
+        let rawMobile = $('#mobile').val().trim();
+        let countryCode = $('#country_code').val() || '+44';
+        let cleanRaw = rawMobile.replace(/[\s\-\(\)]/g, '');
+        if (cleanRaw.startsWith('0')) cleanRaw = cleanRaw.substring(1);
+        let fullMobile = rawMobile.startsWith('+') ? rawMobile : (countryCode + ' ' + cleanRaw);
+
+        let formData = new FormData();
+        formData.append('csrf_token', $('#csrf_token').val());
+        formData.append('customer_name', $('#customer_name').val().trim());
+        formData.append('mobile', fullMobile);
+        formData.append('email', $('#email').val().trim());
+        formData.append('address_line_1', $('#address_line_1').val().trim());
+        formData.append('address_line_2', $('#address_line_2').val().trim());
+        formData.append('city', $('#city').val().trim());
+        formData.append('county', $('#county').val().trim());
+        formData.append('postcode', $('#postcode').val().trim());
+        formData.append('cart', JSON.stringify(cart));
+        formData.append('payment_method', 'upi');
+        formData.append('payment_screenshot', fileInput.files[0]);
+
+        $.ajax({
+            url: 'ajax/create-booking.php',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    showToast('🎉 Order placed successfully! Redirecting...', 'success');
+                    setTimeout(function() {
+                        window.location.href = res.redirect_url;
+                    }, 1000);
+                } else {
+                    showToast(res.message || 'Error placing order', 'error');
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr) {
+                let err = xhr.responseJSON ? xhr.responseJSON.message : 'Server error occurred.';
+                showToast(err, 'error');
+                submitBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
     // ===== PAYPAL UPLOAD ZONE HANDLERS =====
     $(document).on('click', '#paypal-upload-idle', function() {
         $('#paypal_proof_file').trigger('click');

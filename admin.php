@@ -192,11 +192,8 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 <button type="button" class="admin-tab-btn active" data-tab="tab-bookings" onclick="switchAdminTab('tab-bookings', this)">
                     &#128221; Bookings Management
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="tab-paypal" onclick="switchAdminTab('tab-paypal', this)">
-                    💳 PayPal Live Gateway
-                </button>
-                <button type="button" class="admin-tab-btn" data-tab="tab-settings" onclick="switchAdminTab('tab-settings', this)">
-                    &#9881; Store Settings
+                <button type="button" class="admin-tab-btn" data-tab="tab-upi" onclick="switchAdminTab('tab-upi', this)">
+                    📱 UPI &amp; Bank Payments
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="tab-export" onclick="switchAdminTab('tab-export', this)">
                     📄 PDF &amp; CSV Reports
@@ -321,225 +318,200 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 </div>
             </div>
 
-            <!-- TAB PAYPAL: DEDICATED PAYPAL LIVE GATEWAY SECTION -->
-            <div class="admin-tab-content admin-panel-card" id="tab-paypal" style="display:none; padding: 28px;">
+            <!-- TAB UPI: UPI & BANK PAYMENT SETTINGS & VERIFICATION PANEL -->
+            <div class="admin-tab-content admin-panel-card" id="tab-upi" style="display:none; padding: 28px;">
                 
                 <!-- Section Top Header & Mode Badge Banner -->
-                <div style="background: linear-gradient(135deg, #003087 0%, #0070BA 100%); color: #FFFFFF; border-radius: 14px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0, 48, 135, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div style="background: linear-gradient(135deg, #4A0B17 0%, #7A1228 100%); color: #FFFFFF; border-radius: 14px; padding: 24px; margin-bottom: 28px; box-shadow: 0 10px 25px rgba(74, 11, 23, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                            <span style="font-size: 1.8rem;">💳</span>
-                            <h2 style="font-size: 1.5rem; color: #FFFFFF; margin: 0; font-weight: 800; font-family: 'Outfit', sans-serif;">PayPal Live Credentials &amp; Gateway Configuration</h2>
+                            <span style="font-size: 1.8rem;">📱</span>
+                            <h2 style="font-size: 1.5rem; color: #FFFFFF; margin: 0; font-weight: 800; font-family: 'Outfit', sans-serif;">UPI &amp; Bank Payment Gateway Configuration</h2>
                         </div>
-                        <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0; max-width: 650px; line-height: 1.4;">
-                            Manage real-time PayPal API credentials, toggle between Sandbox testing and Live production, verify REST API authentication, and manage customer PayPal transactions.
+                        <p style="color: rgba(255, 255, 255, 0.85); font-size: 0.9rem; margin: 0; max-width: 720px; line-height: 1.4;">
+                            Manage Admin UPI details, Direct Bank Transfer credentials, support helpline phone, and verify customer payment screenshots.
                         </p>
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.15); padding: 10px 18px; border-radius: 10px; backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.2);">
-                        <span style="font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: #FFFFFF;">Current Mode:</span>
-                        <?php $p_mode = $settings['paypal_mode'] ?? 'sandbox'; ?>
-                        <span id="paypal-mode-badge" style="<?php echo $p_mode === 'live' ? 'background: #10B981; color: #FFFFFF;' : 'background: #F59E0B; color: #FFFFFF;'; ?> padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
-                            <?php echo $p_mode === 'live' ? '🟢 LIVE PRODUCTION' : '🟡 SANDBOX TEST'; ?>
+                        <span style="font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: #FFFFFF;">Gateways:</span>
+                        <?php $upi_sett = get_upi_settings(); ?>
+                        <span id="upi-status-badge" style="<?php echo ($upi_sett['upi_enabled'] ?? '1') === '1' ? 'background: #10B981; color: #FFFFFF;' : 'background: #EF4444; color: #FFFFFF;'; ?> padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <?php echo ($upi_sett['upi_enabled'] ?? '1') === '1' ? '🟢 UPI ACTIVE' : '🔴 UPI OFF'; ?>
+                        </span>
+                        <span id="bank-status-badge" style="<?php echo ($upi_sett['bank_enabled'] ?? '1') === '1' ? 'background: #3B82F6; color: #FFFFFF;' : 'background: #EF4444; color: #FFFFFF;'; ?> padding: 6px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <?php echo ($upi_sett['bank_enabled'] ?? '1') === '1' ? '🟢 BANK ACTIVE' : '🔴 BANK OFF'; ?>
                         </span>
                     </div>
                 </div>
 
-                <!-- Easy 3-Step Setup Guide Banner -->
-                <div style="background: #F0F9FF; border: 1.5px solid #BAE6FD; border-radius: 12px; padding: 18px 22px; margin-bottom: 24px; color: #0369A1;">
-                    <div style="font-weight: 800; font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                        <span>💡 Easy 3-Step PayPal Setup Guide:</span>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; font-size: 0.85rem; line-height: 1.45;">
-                        <div style="background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #E0F2FE;">
-                            <strong style="color: #0284C7; display: block; margin-bottom: 4px;">1. Get API Credentials</strong>
-                            Log in to <a href="https://developer.paypal.com" target="_blank" style="color: #0284C7; font-weight: 700; text-decoration: underline;">developer.paypal.com</a> &rarr; Apps &amp; Credentials &rarr; Copy your Client ID &amp; Secret.
-                        </div>
-                        <div style="background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #E0F2FE;">
-                            <strong style="color: #0284C7; display: block; margin-bottom: 4px;">2. Paste &amp; Save Mode</strong>
-                            Paste keys below, choose <strong>Live Production Mode</strong> (real payments) or <strong>Sandbox Mode</strong>, then click <strong>💾 Save Credentials</strong>.
-                        </div>
-                        <div style="background: #FFFFFF; padding: 12px 14px; border-radius: 8px; border: 1px solid #E0F2FE;">
-                            <strong style="color: #0284C7; display: block; margin-bottom: 4px;">3. Test OAuth Connection</strong>
-                            Click <strong>⚡ Test API Connection</strong> button to instantly verify your API keys with PayPal servers!
-                        </div>
-                    </div>
-                </div>
-
-                <!-- API Connectivity Test Alert Box (Hidden until test triggered) -->
-                <div id="paypal-api-test-result" style="display: none; margin-bottom: 24px; border-radius: 12px; padding: 16px 20px; font-size: 0.92rem; font-weight: 600;"></div>
-
-                <form id="admin-paypal-live-form">
+                <!-- ADMIN UPI & BANK PAYMENT SETTINGS FORM -->
+                <form id="admin-upi-settings-form" enctype="multipart/form-data" style="margin-bottom: 36px;">
                     <input type="hidden" name="csrf_token" value="<?php echo escape_output($csrf_token); ?>">
+                    <input type="hidden" name="current_qr_image" value="<?php echo escape_output($upi_sett['upi_qr_image'] ?? 'assets/images/upi_qr_default.png'); ?>">
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 28px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
                         
-                        <!-- Left Panel: Core Operating Credentials -->
+                        <!-- Card 1: UPI Credentials & QR Image -->
                         <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 22px;">
-                            <h3 style="color: #003087; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                🔑 Live &amp; Sandbox API Keys
+                            <h3 style="color: #4A0B17; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                📱 UPI ID &amp; QR Code Configuration
                             </h3>
 
-                            <!-- Operating Mode Selector -->
+                            <!-- UPI ID Field -->
                             <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_mode" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Operating Mode <span class="req">*</span></label>
-                                <select id="paypal_tab_mode" name="paypal_mode" style="width: 100%; padding: 11px 14px; border: 2px solid #0070BA; border-radius: 8px; font-weight: 800; font-size: 0.95rem; background: #FFFFFF; color: #003087;">
-                                    <option value="sandbox" <?php echo ($settings['paypal_mode'] ?? '') === 'sandbox' ? 'selected' : ''; ?>>🟡 Sandbox Mode (Testing / Mock Payments)</option>
-                                    <option value="live" <?php echo ($settings['paypal_mode'] ?? '') === 'live' ? 'selected' : ''; ?>>🟢 Live Production Mode (Real Customer Payments)</option>
-                                </select>
-                                <small style="color: #64748B; font-size: 0.78rem; margin-top: 5px; display: block;">
-                                    Switching to <strong>Live Production</strong> processes real credit card and PayPal payments via `api-m.paypal.com`.
-                                </small>
+                                <label for="upi_id" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Admin UPI ID <span class="req">*</span></label>
+                                <input type="text" id="upi_id" name="upi_id" value="<?php echo escape_output($upi_sett['upi_id'] ?? 'vklogistics@upi'); ?>" placeholder="e.g. vklogistics@upi" required style="width: 100%; padding: 11px 14px; border: 2px solid #D97706; border-radius: 8px; font-weight: 800; font-size: 1rem; color: #4A0B17;">
+                                <small style="color: #64748B; font-size: 0.78rem; margin-top: 4px; display: block;">Copied by customers paying via Google Pay, PhonePe, Paytm, etc.</small>
                             </div>
 
-                            <!-- Live Client ID -->
+                            <!-- Account Holder Name -->
                             <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_client_id" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Client ID <span class="req">*</span></label>
-                                <div style="position: relative; display: flex; align-items: center;">
-                                    <input type="text" id="paypal_tab_client_id" name="paypal_client_id" value="<?php echo escape_output($settings['paypal_client_id'] ?? 'sb'); ?>" placeholder="Enter Client ID from developer.paypal.com" required style="width: 100%; padding-right: 40px; font-family: monospace; font-weight: 600;">
-                                    <button type="button" class="btn-copy-input-val" data-target="#paypal_tab_client_id" title="Copy Client ID" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #64748B; padding: 4px;">📋</button>
+                                <label for="account_name" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">UPI Account Holder Name <span class="req">*</span></label>
+                                <input type="text" id="account_name" name="account_name" value="<?php echo escape_output($upi_sett['upi_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="e.g. VK LOGISTICS LTD" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                            </div>
+
+                            <!-- QR Code Image Upload -->
+                            <div class="admin-field-group" style="margin-bottom: 18px;">
+                                <label for="upi_qr_file" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">QR Code Image Upload</label>
+                                <div style="display: flex; align-items: center; gap: 16px; margin-top: 6px;">
+                                    <img id="admin-upi-qr-preview" src="<?php echo escape_output($upi_sett['upi_qr_image'] ?? 'assets/images/upi_qr_default.png'); ?>" alt="UPI QR Code" style="width: 90px; height: 90px; object-fit: contain; border: 2px solid #D4AF37; border-radius: 10px; background: #FFF; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                    <div style="flex: 1;">
+                                        <input type="file" id="upi_qr_file" name="upi_qr_file" accept="image/jpeg,image/png,image/webp" style="display: block; width: 100%; font-size: 0.85rem;">
+                                        <small style="color: #64748B; font-size: 0.76rem; margin-top: 6px; display: block;">JPG, PNG, or WEBP (Max 10 MB).</small>
+                                    </div>
                                 </div>
-                                <small style="color: #64748B; font-size: 0.76rem; margin-top: 4px; display: block;">
-                                    Found in PayPal Developer Portal &rarr; Apps &amp; Credentials.
-                                </small>
                             </div>
 
-                            <!-- Live Client Secret -->
+                            <!-- UPI Instructions -->
                             <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_client_secret" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Client Secret <span class="req">*</span></label>
-                                <div style="position: relative; display: flex; align-items: center;">
-                                    <input type="password" id="paypal_tab_client_secret" name="paypal_client_secret" value="<?php echo escape_output($settings['paypal_client_secret'] ?? ''); ?>" placeholder="Enter Client Secret" style="width: 100%; padding-right: 40px; font-family: monospace;">
-                                    <button type="button" id="btn-toggle-secret-visibility" title="Toggle Secret Visibility" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #64748B; padding: 4px;">👁️</button>
-                                </div>
-                                <small style="color: #64748B; font-size: 0.76rem; margin-top: 4px; display: block;">
-                                    Stored securely and used for server-side REST API order capture verification.
-                                </small>
+                                <label for="instructions" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">UPI Payment Instructions</label>
+                                <textarea id="instructions" name="instructions" rows="3" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-size: 0.88rem; line-height: 1.45; resize: vertical;"><?php echo escape_output($upi_sett['upi_instructions'] ?? ''); ?></textarea>
                             </div>
 
-                            <!-- Currency Selection -->
-                            <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_currency" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Store Payment Currency</label>
-                                <?php $curr = $settings['currency_code'] ?? 'GBP'; ?>
-                                <select id="paypal_tab_currency" name="currency_code" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700; background: #FFF;">
-                                    <option value="GBP" <?php echo $curr === 'GBP' ? 'selected' : ''; ?>>GBP (£) - UK Pound Sterling</option>
-                                    <option value="USD" <?php echo $curr === 'USD' ? 'selected' : ''; ?>>USD ($) - US Dollar</option>
-                                    <option value="EUR" <?php echo $curr === 'EUR' ? 'selected' : ''; ?>>EUR (€) - Euro</option>
-                                    <option value="INR" <?php echo $curr === 'INR' ? 'selected' : ''; ?>>INR (₹) - Indian Rupee</option>
-                                </select>
-                            </div>
-
-                            <!-- Delivery Fee / Shipping Charge -->
-                            <div class="admin-field-group">
-                                <label for="paypal_tab_shipping_charge" style="font-weight: 700; color: #0070BA; font-size: 0.9rem;">🚚 UK Doorstep Delivery Fee (&pound;) <span class="req">*</span></label>
-                                <input type="number" step="0.01" min="0" id="paypal_tab_shipping_charge" name="shipping_charge" value="<?php echo escape_output($settings['shipping_charge'] ?? '4.99'); ?>" placeholder="4.99" required style="width: 100%; padding: 10px 12px; border: 2px solid #0070BA; border-radius: 8px; font-weight: 800; font-size: 1rem; background: #FFFFFF; color: #003087;">
-                                <small style="color: #64748B; font-size: 0.76rem; margin-top: 4px; display: block;">
-                                    Delivery charge added to customer orders at checkout. Set to <code>0.00</code> for Free Delivery.
-                                </small>
-                            </div>
-
-                        </div>
-
-                        <!-- Right Panel: Merchant & Business Details -->
-                        <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 22px;">
-                            <h3 style="color: #003087; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                🏢 Merchant &amp; Business Profile
-                            </h3>
-
-                            <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_email" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Merchant Email</label>
-                                <input type="email" id="paypal_tab_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="payments@vklogistics.co.uk">
-                            </div>
-
-                            <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_account_name" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Business Account Holder Name</label>
-                                <input type="text" id="paypal_tab_account_name" name="paypal_account_name" value="<?php echo escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="VK LOGISTICS LTD">
-                            </div>
-
-                            <div class="admin-field-group" style="margin-bottom: 18px;">
-                                <label for="paypal_tab_id" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal ID / Handle</label>
-                                <input type="text" id="paypal_tab_id" name="paypal_id" value="<?php echo escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal'); ?>" placeholder="premmoparthi@paypal">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="paypal_tab_status" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">PayPal Gateway Status</label>
-                                <?php $status = $settings['paypal_status'] ?? 'enabled'; ?>
-                                <select id="paypal_tab_status" name="paypal_status" style="width: 100%; padding: 10px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700; background: #FFF;">
-                                    <option value="enabled" <?php echo $status === 'enabled' ? 'selected' : ''; ?>>✅ Active &amp; Displayed at Checkout</option>
-                                    <option value="disabled" <?php echo $status === 'disabled' ? 'selected' : ''; ?>>🚫 Disabled (Hide PayPal from Checkout)</option>
-                                </select>
+                            <!-- Enable / Disable Checkbox -->
+                            <div style="background: #FFF; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+                                <input type="checkbox" id="is_enabled" name="is_enabled" value="1" <?php echo ($upi_sett['upi_enabled'] ?? '1') === '1' ? 'checked' : ''; ?> style="width: 20px; height: 20px; accent-color: #10B981; cursor: pointer;">
+                                <label for="is_enabled" style="font-weight: 700; color: #0F172A; font-size: 0.9rem; cursor: pointer; margin: 0;">
+                                    Enable UPI Payment at Checkout
+                                </label>
                             </div>
                         </div>
 
-                        <!-- Info Banner: Festive Add-Ons & Products Management -->
-                        <div style="grid-column: 1 / -1; background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 14px; padding: 20px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                        <!-- Card 2: Direct Bank Transfer Details -->
+                        <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 22px;">
+                            <h3 style="color: #4A0B17; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                🏛️ Direct Bank Transfer Details
+                            </h3>
+
+                            <!-- Bank Name -->
+                            <div class="admin-field-group" style="margin-bottom: 14px;">
+                                <label for="bank_name" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Bank Name</label>
+                                <input type="text" id="bank_name" name="bank_name" value="<?php echo escape_output($upi_sett['bank_name'] ?? 'Barclays Bank UK'); ?>" placeholder="e.g. Barclays Bank UK" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                            </div>
+
+                            <!-- Bank Account Name -->
+                            <div class="admin-field-group" style="margin-bottom: 14px;">
+                                <label for="bank_account_name" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Account Holder Name</label>
+                                <input type="text" id="bank_account_name" name="bank_account_name" value="<?php echo escape_output($upi_sett['bank_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="e.g. VK LOGISTICS LTD" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                            </div>
+
+                            <!-- UK Sort Code -->
+                            <div class="admin-field-group" style="margin-bottom: 14px;">
+                                <label for="bank_sort_code" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Sort Code / IFSC</label>
+                                <input type="text" id="bank_sort_code" name="bank_sort_code" value="<?php echo escape_output($upi_sett['bank_sort_code'] ?? '20-45-77'); ?>" placeholder="e.g. 20-45-77" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                            </div>
+
+                            <!-- Account Number -->
+                            <div class="admin-field-group" style="margin-bottom: 14px;">
+                                <label for="bank_account_number" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Account Number</label>
+                                <input type="text" id="bank_account_number" name="bank_account_number" value="<?php echo escape_output($upi_sett['bank_account_number'] ?? '83920144'); ?>" placeholder="e.g. 83920144" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                            </div>
+
+                            <!-- Bank Instructions -->
+                            <div class="admin-field-group" style="margin-bottom: 14px;">
+                                <label for="bank_instructions" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Bank Transfer Instructions</label>
+                                <textarea id="bank_instructions" name="bank_instructions" rows="2" style="width: 100%; padding: 8px 12px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-size: 0.85rem; resize: vertical;"><?php echo escape_output($upi_sett['bank_instructions'] ?? ''); ?></textarea>
+                            </div>
+
+                            <!-- Enable / Disable Checkbox -->
+                            <div style="background: #FFF; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+                                <input type="checkbox" id="bank_enabled" name="bank_enabled" value="1" <?php echo ($upi_sett['bank_enabled'] ?? '1') === '1' ? 'checked' : ''; ?> style="width: 20px; height: 20px; accent-color: #3B82F6; cursor: pointer;">
+                                <label for="bank_enabled" style="font-weight: 700; color: #0F172A; font-size: 0.9rem; cursor: pointer; margin: 0;">
+                                    Enable Bank Transfer at Checkout
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Support Phone & Passkey -->
+                        <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
-                                <h3 style="color: #1E293B; font-size: 1.05rem; margin: 0 0 6px 0; font-weight: 800;">
-                                    🎁 Festive Add-Ons &amp; Products Management
+                                <h3 style="color: #4A0B17; font-size: 1.15rem; margin-top: 0; margin-bottom: 18px; font-weight: 800; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                    📞 Helpline &amp; Passkey Security
                                 </h3>
-                                <p style="color: #64748B; font-size: 0.88rem; margin: 0;">
-                                    Gift wrapping, chocolate boxes, and store items are now managed dynamically under <strong>Products &amp; Categories</strong>.
-                                </p>
+
+                                <div class="admin-field-group" style="margin-bottom: 18px;">
+                                    <label for="support_phone" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">UK Customer Support Helpline</label>
+                                    <input type="text" id="support_phone" name="support_phone" value="<?php echo escape_output($upi_sett['support_phone'] ?? '+44 7700 900888'); ?>" placeholder="e.g. +44 7700 900888" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-weight: 700;">
+                                    <small style="color: #64748B; font-size: 0.78rem; margin-top: 4px; display: block;">Displays on site header &amp; customer receipts.</small>
+                                </div>
+
+                                <div class="admin-field-group" style="margin-bottom: 18px;">
+                                    <label for="admin_password" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Update Admin Passkey</label>
+                                    <input type="password" id="admin_password" name="admin_password" placeholder="Leave blank to keep current passkey" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px;">
+                                    <small style="color: #64748B; font-size: 0.78rem; margin-top: 4px; display: block;">Default passkey is <strong>admin123</strong>.</small>
+                                </div>
                             </div>
-                            <button type="button" onclick="document.querySelector('[data-tab=\'tab-catalog\']').click();" style="background: #4A0B17; color: #FFF; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
-                                🛒 Manage Add-Ons &amp; Products &rarr;
-                            </button>
-                        </div>
 
-                    </div>
-
-                    <!-- Action Buttons Toolbar -->
-                    <div style="margin-top: 28px; background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-                        
-                        <div>
-                            <button type="button" class="btn-danger-outline" id="btn-delete-paypal-credentials" style="background: #FEF2F2; color: #DC2626; border: 1.5px solid #FCA5A5; padding: 11px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                                🗑️ Delete / Clear Credentials
-                            </button>
-                        </div>
-
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                            <button type="button" class="btn-secondary" id="btn-test-paypal-api" style="background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #93C5FD; padding: 11px 22px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                                ⚡ Test API Connection
-                            </button>
-
-                            <button type="submit" class="btn-gold" id="btn-save-paypal-live-credentials" style="background: linear-gradient(135deg, #0070BA 0%, #003087 100%); color: #FFFFFF; border: none; padding: 12px 28px; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 112, 186, 0.25);">
-                                💾 Save PayPal Live Credentials
-                            </button>
+                            <div style="margin-top: 24px; text-align: right;">
+                                <button type="submit" id="btn-save-upi-settings" style="background: linear-gradient(135deg, #D97706 0%, #B45309 100%); color: #FFFFFF; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); width: 100%;">
+                                    💾 Save All Payment &amp; Gateway Settings
+                                </button>
+                            </div>
                         </div>
 
                     </div>
                 </form>
 
-                <!-- Dedicated PayPal Orders Table -->
-                <div style="margin-top: 36px; background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 14px; padding: 22px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #F1F5F9; padding-bottom: 12px;">
+                <!-- ADMIN PAYMENT VERIFICATION PANEL -->
+                <div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 14px; padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #F1F5F9; padding-bottom: 12px; flex-wrap: wrap; gap: 12px;">
                         <div>
-                            <h3 style="color: #003087; font-size: 1.2rem; margin: 0; font-weight: 800;">
-                                📊 PayPal Live &amp; Completed Transactions
+                            <h3 style="color: #4A0B17; font-size: 1.25rem; margin: 0; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                                <span>🔍</span> Orders &rarr; Payment Verification Panel (UPI &amp; Bank Transfer)
                             </h3>
-                            <p style="color: #64748B; font-size: 0.85rem; margin: 4px 0 0 0;">Customer bookings paid directly through PayPal API</p>
+                            <p style="color: #64748B; font-size: 0.85rem; margin: 4px 0 0 0;">Review uploaded payment screenshots, approve payments, or request re-upload</p>
                         </div>
-                        <button type="button" id="btn-refresh-paypal-table" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 0.82rem; cursor: pointer; color: #475569;">
-                            🔄 Refresh Table
-                        </button>
+
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button type="button" id="btn-filter-upi-pending" class="btn-secondary" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
+                                🟡 Show Pending Verify Only
+                            </button>
+                            <button type="button" id="btn-refresh-upi-table" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: #475569;">
+                                🔄 Refresh Table
+                            </button>
+                        </div>
                     </div>
 
+                    <!-- Payment Verification Table -->
                     <div class="admin-table-wrapper">
                         <table class="admin-table">
                             <thead>
                                 <tr>
                                     <th style="white-space:nowrap; text-align:center; width: 40px;">#</th>
-                                    <th style="white-space:nowrap; text-align:left;">Booking Ref / Date</th>
-                                    <th style="text-align:left;">Customer Details</th>
-                                    <th style="white-space:nowrap; text-align:center;">PayPal Order ID</th>
-                                    <th style="white-space:nowrap; text-align:center;">Capture Txn ID</th>
-                                    <th style="white-space:nowrap; text-align:right;">Amount (£)</th>
-                                    <th style="white-space:nowrap; text-align:center;">Status</th>
+                                    <th style="white-space:nowrap; text-align:left;">Order ID / Date</th>
+                                    <th style="text-align:left;">User Name &amp; Contact</th>
+                                    <th style="white-space:nowrap; text-align:right;">Amount</th>
+                                    <th style="white-space:nowrap; text-align:center;">Uploaded Screenshot</th>
+                                    <th style="white-space:nowrap; text-align:center;">Payment Method</th>
+                                    <th style="white-space:nowrap; text-align:center;">Payment Status</th>
+                                    <th style="white-space:nowrap; text-align:center;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="paypal-orders-table-body">
+                            <tbody id="upi-verification-table-body">
                                 <tr>
-                                    <td colspan="7" style="text-align:center; padding: 30px; color: var(--color-text-muted);">
-                                        Loading PayPal transactions...
+                                    <td colspan="8" style="text-align:center; padding: 30px; color: #64748B;">
+                                        Loading payment verification records...
                                     </td>
                                 </tr>
                             </tbody>
@@ -547,133 +519,6 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     </div>
                 </div>
 
-            </div>
-
-            <!-- TAB 2: STORE & PRICING SETTINGS -->
-            <div class="admin-tab-content admin-panel-card" id="tab-settings" style="display:none;">
-                <form id="admin-settings-form">
-                    <input type="hidden" name="csrf_token" value="<?php echo escape_output($csrf_token); ?>">
-                    
-                    <div class="admin-settings-grid">
-                        
-                        <!-- Section: Pricing & Product -->
-                        <div>
-                            <h3 class="settings-section-title">&#127983; Product & Pricing Configuration</h3>
-                            
-                            <div class="admin-field-group">
-                                <label for="setting_product_name">Product Name</label>
-                                <input type="text" id="setting_product_name" name="product_name" value="<?php echo escape_output($settings['product_name']); ?>" required>
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_unit_price">Unit Price (&pound; GBP)</label>
-                                <input type="number" step="0.01" id="setting_unit_price" name="unit_price" value="<?php echo escape_output($settings['unit_price']); ?>" required>
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_shipping_charge">UK Delivery Fee (&pound; GBP)</label>
-                                <input type="number" step="0.01" id="setting_shipping_charge" name="shipping_charge" value="<?php echo escape_output($settings['shipping_charge']); ?>" required>
-                            </div>
-                        </div>
-
-                        <!-- Section: Bank Account Transfers -->
-                        <div>
-                            <h3 class="settings-section-title">&#127974; Direct Bank Transfer Details</h3>
-
-                            <div class="admin-field-group">
-                                <label for="setting_bank_name">Bank Name</label>
-                                <input type="text" id="setting_bank_name" name="bank_name" value="<?php echo escape_output($settings['bank_name']); ?>">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_bank_account_name">Account Holder Name</label>
-                                <input type="text" id="setting_bank_account_name" name="bank_account_name" value="<?php echo escape_output($settings['bank_account_name']); ?>">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_bank_sort_code">UK Sort Code</label>
-                                <input type="text" id="setting_bank_sort_code" name="bank_sort_code" value="<?php echo escape_output($settings['bank_sort_code']); ?>">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_bank_account_number">Account Number</label>
-                                <input type="text" id="setting_bank_account_number" name="bank_account_number" value="<?php echo escape_output($settings['bank_account_number']); ?>">
-                            </div>
-                        </div>
-
-                        <!-- Section: PayPal Integration & Contact Support -->
-                        <div>
-                            <h3 class="settings-section-title">&#128179; PayPal Live &amp; Sandbox Gateway Configuration</h3>
-
-                            <!-- Mode Selector Badge Card -->
-                            <div style="background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
-                                <label style="font-weight: 700; font-size: 0.9rem; color: #1E293B; margin-bottom: 6px; display: block;">PayPal Operating Mode</label>
-                                <?php $current_mode = $settings['paypal_mode'] ?? 'sandbox'; ?>
-                                <select id="setting_paypal_mode" name="paypal_mode" style="width: 100%; padding: 10px 12px; border: 1.5px solid #94A3B8; border-radius: 6px; font-weight: 700; font-size: 0.95rem; background: #FFFFFF; color: #0F172A;">
-                                    <option value="sandbox" <?php echo $current_mode === 'sandbox' ? 'selected' : ''; ?>>🟡 Sandbox Mode (Testing &amp; Development)</option>
-                                    <option value="live" <?php echo $current_mode === 'live' ? 'selected' : ''; ?>>🟢 Live Production Mode (Real Payments)</option>
-                                </select>
-                                <small style="color: #64748B; font-size: 0.78rem; margin-top: 6px; display: block; line-height: 1.4;">
-                                    Switching to <strong>Live Production Mode</strong> will activate real customer payment redirection using your Live API keys below.
-                                </small>
-                            </div>
-
-                            <!-- Live Client ID -->
-                            <div class="admin-field-group">
-                                <label for="setting_paypal_client_id">PayPal Live Client ID</label>
-                                <input type="text" id="setting_paypal_client_id" name="paypal_client_id" value="<?php echo escape_output($settings['paypal_client_id'] ?? 'sb'); ?>" placeholder="A...">
-                                <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">From your PayPal Developer Dashboard &rarr; Apps &amp; Credentials &rarr; Live tab</small>
-                            </div>
-
-                            <!-- Live Client Secret with Eye Toggle -->
-                            <div class="admin-field-group">
-                                <label for="setting_paypal_client_secret">PayPal Live Client Secret</label>
-                                <div style="position: relative; display: flex; align-items: center;">
-                                    <input type="password" id="setting_paypal_client_secret" name="paypal_client_secret" value="<?php echo escape_output($settings['paypal_client_secret'] ?? ''); ?>" placeholder="E..." style="width: 100%; padding-right: 40px;">
-                                    <button type="button" id="toggle-paypal-secret-btn" style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: #64748B; padding: 4px; display: flex; align-items: center;" title="Toggle secret visibility">
-                                        👁️
-                                    </button>
-                                </div>
-                                <small style="color:var(--color-text-muted);font-size:0.75rem;margin-top:4px;display:block;">Used server-side to capture and verify live payments securely</small>
-                            </div>
-
-                            <!-- Account Details -->
-                            <div class="admin-field-group">
-                                <label for="setting_paypal_account_name">PayPal Account / Business Name</label>
-                                <input type="text" id="setting_paypal_account_name" name="paypal_account_name" value="<?php echo escape_output($settings['paypal_account_name'] ?? 'VK LOGISTICS LTD'); ?>" placeholder="VK LOGISTICS LTD">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_paypal_id">PayPal ID / Handle</label>
-                                <input type="text" id="setting_paypal_id" name="paypal_id" value="<?php echo escape_output($settings['paypal_id'] ?? 'premmoparthi@paypal'); ?>" placeholder="premmoparthi@paypal">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_paypal_email">PayPal Merchant Email Address</label>
-                                <input type="email" id="setting_paypal_email" name="paypal_email" value="<?php echo escape_output($settings['paypal_email'] ?? 'payments@vklogistics.co.uk'); ?>" placeholder="payments@vklogistics.co.uk">
-                            </div>
-
-                            <h3 class="settings-section-title" style="margin-top: 24px;">&#128222; Customer Support &amp; Security</h3>
-
-                            <div class="admin-field-group">
-                                <label for="setting_support_phone">UK Customer Support Helpline</label>
-                                <input type="text" id="setting_support_phone" name="support_phone" value="<?php echo escape_output($settings['support_phone']); ?>">
-                            </div>
-
-                            <div class="admin-field-group">
-                                <label for="setting_admin_password">Admin Portal Passkey</label>
-                                <input type="password" id="setting_admin_password" name="admin_password" placeholder="Leave blank to keep current passkey">
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div style="margin-top: 24px; text-align: right;">
-                        <button type="submit" class="btn-gold" style="padding: 12px 28px; font-size: 1rem; border:none; cursor:pointer;" id="btn-save-settings">
-                            &#128190; Save All Settings
-                        </button>
-                    </div>
-                </form>
             </div>
 
             <!-- TAB 3: PDF & CSV REPORTS -->
@@ -1109,12 +954,25 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
             }
 
             if (tabId === 'tab-catalog') {
-                if (typeof loadCatalogData === 'function') loadCatalogData();
-            } else if (tabId === 'tab-paypal') {
-                if (typeof loadPayPalOrdersTable === 'function') loadPayPalOrdersTable();
+                if (typeof window.loadCatalogData === 'function') window.loadCatalogData();
+            } else if (tabId === 'tab-upi') {
+                if (typeof window.loadUpiVerificationTable === 'function') window.loadUpiVerificationTable();
+            } else if (tabId === 'tab-bookings') {
+                if (typeof window.loadDashboardData === 'function') window.loadDashboardData();
             }
         }
         window.switchAdminTab = switchAdminTab;
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.admin-tab-btn');
+            if (btn) {
+                e.preventDefault();
+                const tabId = btn.getAttribute('data-tab');
+                if (tabId) {
+                    switchAdminTab(tabId, btn);
+                }
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -1367,6 +1225,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     });
                 });
             }
+            window.loadDashboardData = loadDashboardData;
 
             // Global Click Event Delegation for HD Lightbox Modal Open
             document.addEventListener('click', function(e) {
@@ -1499,245 +1358,242 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 });
             });
 
-            // =========================================================================
-            // PAYPAL LIVE MANAGEMENT MODULE (DEDICATED ADMIN TAB)
-            // =========================================================================
-
-            // 1. Toggle Secret Visibility Button in PayPal Live Tab
-            const btnToggleSecretVis = document.getElementById('btn-toggle-secret-visibility');
-            const inputPaypalTabSecret = document.getElementById('paypal_tab_client_secret');
-            if (btnToggleSecretVis && inputPaypalTabSecret) {
-                btnToggleSecretVis.addEventListener('click', function() {
-                    if (inputPaypalTabSecret.type === 'password') {
-                        inputPaypalTabSecret.type = 'text';
-                        btnToggleSecretVis.textContent = '🔒';
-                    } else {
-                        inputPaypalTabSecret.type = 'password';
-                        btnToggleSecretVis.textContent = '👁️';
+            // --- UPI SETTINGS & VERIFICATION JS HANDLERS ---
+            
+            // Live Preview of Uploaded QR Code Image
+            const qrFileInput = document.getElementById('upi_qr_file');
+            if (qrFileInput) {
+                qrFileInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const prev = document.getElementById('admin-upi-qr-preview');
+                            if (prev) prev.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
                     }
                 });
             }
 
-            // 2. Copy Client ID Handler
-            document.querySelectorAll('.btn-copy-input-val').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const targetSelector = this.getAttribute('data-target');
-                    const inputEl = document.querySelector(targetSelector);
-                    if (inputEl && inputEl.value) {
-                        navigator.clipboard.writeText(inputEl.value).then(() => {
-                            alert('Copied PayPal Client ID to clipboard!');
-                        });
-                    }
-                });
-            });
-
-            // 3. Operating Mode Select Badge Update
-            const modeSelectEl = document.getElementById('paypal_tab_mode');
-            const modeBadgeEl = document.getElementById('paypal-mode-badge');
-            if (modeSelectEl && modeBadgeEl) {
-                modeSelectEl.addEventListener('change', function() {
-                    if (this.value === 'live') {
-                        modeBadgeEl.style.background = '#10B981';
-                        modeBadgeEl.style.color = '#FFFFFF';
-                        modeBadgeEl.innerHTML = '🟢 LIVE PRODUCTION';
-                    } else {
-                        modeBadgeEl.style.background = '#F59E0B';
-                        modeBadgeEl.style.color = '#FFFFFF';
-                        modeBadgeEl.innerHTML = '🟡 SANDBOX TEST';
-                    }
-                });
-            }
-
-            // 4. Save Dedicated PayPal Live Credentials & Settings Form
-            const formPaypalLive = document.getElementById('admin-paypal-live-form');
-            if (formPaypalLive) {
-                formPaypalLive.addEventListener('submit', function(e) {
+            // Save UPI Settings Form Submission
+            const upiSettingsForm = document.getElementById('admin-upi-settings-form');
+            if (upiSettingsForm) {
+                upiSettingsForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    const btn = document.getElementById('btn-save-paypal-live-credentials');
+                    const btn = document.getElementById('btn-save-upi-settings');
                     btn.disabled = true;
-                    btn.innerHTML = '⏳ Saving Credentials...';
+                    btn.textContent = '💾 Saving UPI Settings...';
 
                     const formData = new FormData(this);
 
-                    fetch('ajax/admin-actions.php?action=save_paypal_settings', {
+                    fetch('ajax/admin-actions.php?action=save_upi_settings', {
                         method: 'POST',
                         body: formData
                     })
                     .then(res => res.json())
                     .then(data => {
                         btn.disabled = false;
-                        btn.innerHTML = '💾 Save PayPal Live Credentials';
+                        btn.textContent = '💾 Save UPI Settings';
                         if (data.success) {
-                            alert('✅ ' + (data.message || 'PayPal Live credentials updated successfully!'));
-                            loadDashboardData();
-                        } else {
-                            alert('❌ ' + (data.message || 'Error saving PayPal settings.'));
-                        }
-                    })
-                    .catch(err => {
-                        btn.disabled = false;
-                        btn.innerHTML = '💾 Save PayPal Live Credentials';
-                        alert('❌ Server connection error while saving PayPal credentials.');
-                    });
-                });
-            }
-
-            // 5. Test PayPal REST API Connection
-            const btnTestPaypalApi = document.getElementById('btn-test-paypal-api');
-            const testResultBox = document.getElementById('paypal-api-test-result');
-            if (btnTestPaypalApi) {
-                btnTestPaypalApi.addEventListener('click', function() {
-                    btnTestPaypalApi.disabled = true;
-                    btnTestPaypalApi.innerHTML = '⏳ Testing Connection...';
-                    if (testResultBox) testResultBox.style.display = 'none';
-
-                    const mode = document.getElementById('paypal_tab_mode').value;
-                    const clientId = document.getElementById('paypal_tab_client_id').value.trim();
-                    const clientSecret = document.getElementById('paypal_tab_client_secret').value.trim();
-
-                    const formData = new FormData();
-                    formData.append('paypal_mode', mode);
-                    formData.append('paypal_client_id', clientId);
-                    formData.append('paypal_client_secret', clientSecret);
-                    formData.append('csrf_token', csrfToken);
-
-                    fetch('ajax/admin-actions.php?action=test_paypal_credentials', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        btnTestPaypalApi.disabled = false;
-                        btnTestPaypalApi.innerHTML = '⚡ Test API Connection';
-                        if (testResultBox) {
-                            testResultBox.style.display = 'block';
-                            if (data.success) {
-                                testResultBox.style.background = '#DEF7EC';
-                                testResultBox.style.color = '#03543F';
-                                testResultBox.style.border = '1.5px solid #31C48D';
-                                testResultBox.innerHTML = `
-                                    <div style="display:flex; align-items:center; gap:8px; font-weight:800; margin-bottom:4px;">
-                                        <span>✅ Authentication Successful!</span>
-                                    </div>
-                                    <div>${escapeHtml(data.message)}</div>
-                                    ${data.data ? `<div style="font-size:0.8rem; margin-top:6px; font-family:monospace; color:#046C4E;">App ID: ${data.data.app_id} | Token Expires In: ${data.data.expires_in}</div>` : ''}
-                                `;
-                            } else {
-                                testResultBox.style.background = '#FDE8E8';
-                                testResultBox.style.color = '#9B1C1C';
-                                testResultBox.style.border = '1.5px solid #F8B4B4';
-                                testResultBox.innerHTML = `
-                                    <div style="display:flex; align-items:center; gap:8px; font-weight:800; margin-bottom:4px;">
-                                        <span>❌ API Connection Failed</span>
-                                    </div>
-                                    <div>${escapeHtml(data.message)}</div>
-                                `;
+                            alert('✅ UPI Payment Settings saved successfully!');
+                            const badge = document.getElementById('upi-status-badge');
+                            if (badge) {
+                                const isEnabled = document.getElementById('is_enabled').checked;
+                                badge.style.background = isEnabled ? '#10B981' : '#EF4444';
+                                badge.textContent = isEnabled ? '🟢 ENABLED & ACTIVE' : '🔴 DISABLED';
                             }
+                        } else {
+                            alert('❌ ' + (data.message || 'Failed to save UPI settings.'));
                         }
                     })
                     .catch(err => {
-                        btnTestPaypalApi.disabled = false;
-                        btnTestPaypalApi.innerHTML = '⚡ Test API Connection';
-                        if (testResultBox) {
-                            testResultBox.style.display = 'block';
-                            testResultBox.style.background = '#FDE8E8';
-                            testResultBox.style.color = '#9B1C1C';
-                            testResultBox.style.border = '1.5px solid #F8B4B4';
-                            testResultBox.innerHTML = `<strong>Network Error:</strong> Could not connect to backend server.`;
-                        }
+                        btn.disabled = false;
+                        btn.textContent = '💾 Save UPI Settings';
+                        alert('❌ Network error while saving UPI settings.');
                     });
                 });
             }
 
-            // 6. Delete / Clear PayPal API Credentials
-            const btnDeletePaypalCreds = document.getElementById('btn-delete-paypal-credentials');
-            if (btnDeletePaypalCreds) {
-                btnDeletePaypalCreds.addEventListener('click', function() {
-                    if (!confirm('⚠️ Are you sure you want to delete/reset your PayPal API Client ID and Secret credentials?')) {
-                        return;
-                    }
-
-                    const formData = new FormData();
-                    formData.append('csrf_token', csrfToken);
-
-                    fetch('ajax/admin-actions.php?action=delete_paypal_credentials', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            document.getElementById('paypal_tab_client_id').value = '';
-                            document.getElementById('paypal_tab_client_secret').value = '';
-                            document.getElementById('paypal_tab_mode').value = 'sandbox';
-                            if (modeSelectEl) modeSelectEl.dispatchEvent(new Event('change'));
-                            alert('🗑️ PayPal API credentials have been deleted/reset successfully.');
-                        } else {
-                            alert('❌ ' + (data.message || 'Failed to delete credentials.'));
-                        }
-                    });
-                });
-            }
-
-            // 7. Load & Render PayPal Orders Table
-            function loadPayPalOrdersTable() {
-                const tbody = document.getElementById('paypal-orders-table-body');
+            // Load & Render UPI Verification Table
+            function loadUpiVerificationTable(filterPendingOnly = false) {
+                const tbody = document.getElementById('upi-verification-table-body');
                 if (!tbody) return;
 
-                const paypalBookings = loadedBookings.filter(b => b.payment_method === 'paypal' || b.paypal_order_id || b.paypal_transaction_id);
+                let upiBookings = loadedBookings.filter(b => b.payment_method === 'upi' || b.payment_screenshot || b.payment_proof_image || b.payment_status === 'PAYMENT VERIFICATION PENDING');
+
+                if (filterPendingOnly) {
+                    upiBookings = upiBookings.filter(b => b.payment_status === 'PAYMENT VERIFICATION PENDING' || b.booking_status === 'PENDING');
+                }
 
                 tbody.innerHTML = '';
 
-                if (paypalBookings.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748B;">No PayPal transactions recorded yet.</td></tr>`;
+                if (upiBookings.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748B;">No UPI verification orders found.</td></tr>`;
                     return;
                 }
 
-                let serial = paypalBookings.length;
-                paypalBookings.forEach(b => {
+                let serial = upiBookings.length;
+                upiBookings.forEach(b => {
                     const tr = document.createElement('tr');
-                    
-                    let pBadge = `<span class="status-pill status-pending">${b.payment_status}</span>`;
-                    if (b.payment_status === 'PAID') {
+
+                    let pStatus = b.payment_status || 'PAYMENT VERIFICATION PENDING';
+                    let pBadge = `<span class="status-pill status-pending">PENDING VERIFY</span>`;
+
+                    if (pStatus === 'PAID') {
                         pBadge = `<span class="status-pill status-paid">PAID</span>`;
-                    } else if (b.payment_status === 'FAILED' || b.payment_status === 'CANCELLED') {
-                        pBadge = `<span class="status-pill status-cancelled">${b.payment_status}</span>`;
+                    } else if (pStatus === 'REJECTED') {
+                        pBadge = `<span class="status-pill status-cancelled">REJECTED</span>`;
+                    } else if (pStatus === 'RE-UPLOAD REQUESTED') {
+                        pBadge = `<span class="status-pill status-processing" style="background:#FEF3C7; color:#92400E;">RE-UPLOAD REQ</span>`;
+                    }
+
+                    const screenshot = b.payment_screenshot || b.payment_proof_image || '';
+                    let imgHtml = `<span style="color:#94A3B8; font-size:0.8rem;">No Image</span>`;
+
+                    if (screenshot) {
+                        imgHtml = `
+                            <div style="position:relative; display:inline-block; cursor:pointer;" onclick="openScreenshotLightbox('${escapeHtml(screenshot)}', '${escapeHtml(b.booking_reference)}', '${escapeHtml(b.customer_name)}')">
+                                <img src="${escapeHtml(screenshot)}" alt="Receipt" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1.5px solid #D4AF37; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+                                <span style="position:absolute; bottom:-4px; right:-4px; background:#4A0B17; color:#FFF; font-size:0.65rem; padding:1px 4px; border-radius:4px; font-weight:700;">🔍 View</span>
+                            </div>
+                        `;
                     }
 
                     tr.innerHTML = `
-                        <td style="text-align:center; font-weight:700; color:#475569; vertical-align:top; padding-top:12px;">${serial--}</td>
-                        <td style="white-space:nowrap; vertical-align:top; padding-top:12px;">
-                            <strong style="color:#003087; font-size:0.86rem; font-family:monospace;">${escapeHtml(b.booking_reference)}</strong>
-                            <span style="font-size:0.72rem; color:#64748B; display:block; margin-top:2px;">${(b.created_at || '').substring(0, 10)}</span>
+                        <td style="text-align:center; font-weight:700; color:#475569; vertical-align:middle;">${serial--}</td>
+                        <td style="white-space:nowrap; vertical-align:middle;">
+                            <strong style="color:#4A0B17; font-size:0.88rem; font-family:monospace;">${escapeHtml(b.booking_reference)}</strong>
+                            <span style="font-size:0.72rem; color:#64748B; display:block; margin-top:2px;">${(b.created_at || '').substring(0, 16)}</span>
                         </td>
-                        <td style="vertical-align:top; padding-top:12px;">
+                        <td style="vertical-align:middle;">
                             <div><strong style="color:#0F172A; font-size:0.88rem;">${escapeHtml(b.customer_name)}</strong></div>
-                            <div style="font-size:0.78rem; color:#64748B;">${escapeHtml(b.email || b.mobile)}</div>
+                            <div style="font-size:0.78rem; color:#64748B;">📱 ${escapeHtml(b.mobile)} | ✉️ ${escapeHtml(b.email)}</div>
                         </td>
-                        <td style="text-align:center; font-family:monospace; font-size:0.82rem; vertical-align:top; padding-top:12px; color:#334155;">
-                            ${escapeHtml(b.paypal_order_id || 'N/A')}
-                        </td>
-                        <td style="text-align:center; font-family:monospace; font-size:0.82rem; vertical-align:top; padding-top:12px; color:#059669; font-weight:700;">
-                            ${escapeHtml(b.paypal_transaction_id || b.payment_reference || 'N/A')}
-                        </td>
-                        <td style="text-align:right; font-weight:800; color:#0F172A; vertical-align:top; padding-top:12px;">
+                        <td style="text-align:right; font-weight:800; color:#0F172A; vertical-align:middle;">
                             &pound;${parseFloat(b.total_amount).toFixed(2)}
                         </td>
-                        <td style="text-align:center; vertical-align:top; padding-top:12px;">
+                        <td style="text-align:center; vertical-align:middle;">
+                            ${imgHtml}
+                        </td>
+                        <td style="text-align:center; vertical-align:middle;">
+                            ${(b.payment_method === 'bank_transfer') ? '<span style="background:#DBEAFE; color:#1E40AF; font-size:0.75rem; font-weight:800; padding:4px 8px; border-radius:6px;">🏛️ BANK TRANSFER</span>' : '<span style="background:#FEF3C7; color:#92400E; font-size:0.75rem; font-weight:800; padding:4px 8px; border-radius:6px;">📱 UPI / QR</span>'}
+                        </td>
+                        <td style="text-align:center; vertical-align:middle;">
                             ${pBadge}
+                        </td>
+                        <td style="text-align:center; vertical-align:middle; white-space:nowrap;">
+                            <button type="button" onclick="verifyUpiPayment('${escapeHtml(b.booking_reference)}', 'approve')" style="background:#10B981; color:#FFF; border:none; padding:5px 10px; border-radius:6px; font-size:0.78rem; font-weight:800; cursor:pointer; margin-right:4px;" title="Approve Payment">
+                                ✅ Approve
+                            </button>
+                            <button type="button" onclick="verifyUpiPayment('${escapeHtml(b.booking_reference)}', 'reject')" style="background:#EF4444; color:#FFF; border:none; padding:5px 10px; border-radius:6px; font-size:0.78rem; font-weight:800; cursor:pointer; margin-right:4px;" title="Reject Payment">
+                                ❌ Reject
+                            </button>
+                            <button type="button" onclick="verifyUpiPayment('${escapeHtml(b.booking_reference)}', 'request_reupload')" style="background:#F59E0B; color:#FFF; border:none; padding:5px 10px; border-radius:6px; font-size:0.78rem; font-weight:800; cursor:pointer;" title="Request Re-upload">
+                                🔄 Re-upload
+                            </button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             }
 
-            const btnRefreshPaypalTable = document.getElementById('btn-refresh-paypal-table');
-            if (btnRefreshPaypalTable) {
-                btnRefreshPaypalTable.addEventListener('click', function() {
-                    loadDashboardData();
-                    setTimeout(loadPayPalOrdersTable, 400);
+            window.loadUpiVerificationTable = loadUpiVerificationTable;
+
+            // Admin Verification Action Handler
+            function verifyUpiPayment(ref, status) {
+                let reason = '';
+                if (status === 'reject') {
+                    reason = prompt('Enter rejection reason for customer (optional):', 'Payment screenshot not clear or mismatch in transaction details');
+                    if (reason === null) return;
+                } else if (status === 'request_reupload') {
+                    reason = prompt('Enter message for customer explaining re-upload request:', 'Please upload a clearer screenshot showing transaction reference number.');
+                    if (reason === null) return;
+                }
+
+                const formData = new FormData();
+                formData.append('ref', ref);
+                formData.append('status', status);
+                formData.append('reason', reason || '');
+                formData.append('csrf_token', csrfToken);
+
+                fetch('ajax/admin-actions.php?action=verify_upi_payment', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('✅ Booking payment status updated successfully!');
+                        loadDashboardData();
+                        setTimeout(loadUpiVerificationTable, 400);
+                    } else {
+                        alert('❌ ' + (data.message || 'Failed to update payment status.'));
+                    }
+                })
+                .catch(err => {
+                    alert('❌ Connection error while updating payment status.');
                 });
             }
+
+            window.verifyUpiPayment = verifyUpiPayment;
+
+            // Filter Pending Buttons
+            const btnFilterPending = document.getElementById('btn-filter-upi-pending');
+            if (btnFilterPending) {
+                let isFiltered = false;
+                btnFilterPending.addEventListener('click', function() {
+                    isFiltered = !isFiltered;
+                    this.textContent = isFiltered ? '📋 Show All UPI Orders' : '🟡 Show Pending Verify Only';
+                    loadUpiVerificationTable(isFiltered);
+                });
+            }
+
+            const btnRefreshUpiTable = document.getElementById('btn-refresh-upi-table');
+            if (btnRefreshUpiTable) {
+                btnRefreshUpiTable.addEventListener('click', function() {
+                    loadDashboardData();
+                    setTimeout(loadUpiVerificationTable, 400);
+                });
+            }
+
+            // Lightbox Modal Functions
+            function openScreenshotLightbox(imgUrl, ref, name) {
+                let modal = document.getElementById('screenshot-lightbox-modal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'screenshot-lightbox-modal';
+                    modal.style.cssText = 'display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); justify-content:center; align-items:center; padding:20px;';
+                    modal.innerHTML = `
+                        <div style="background:#FFF; border-radius:16px; max-width:600px; width:100%; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);">
+                            <div style="padding:16px 20px; background:#4A0B17; color:#FFF; display:flex; justify-content:space-between; align-items:center;">
+                                <h3 id="lightbox-modal-title" style="margin:0; font-size:1.1rem; font-weight:800; color:#FFF;">Payment Screenshot</h3>
+                                <button type="button" onclick="closeScreenshotLightbox()" style="background:none; border:none; color:#FFF; font-size:1.6rem; cursor:pointer; line-height:1;">&times;</button>
+                            </div>
+                            <div style="padding:20px; overflow-y:auto; text-align:center; background:#F8FAFC;">
+                                <img id="lightbox-modal-img" src="" alt="Screenshot" style="max-width:100%; max-height:60vh; border-radius:10px; border:2px solid #E2E8F0; object-fit:contain;">
+                                <div id="lightbox-modal-info" style="margin-top:14px; font-size:0.9rem; color:#475569; font-weight:600;"></div>
+                            </div>
+                            <div style="padding:14px 20px; background:#FFF; border-top:1px solid #E2E8F0; text-align:right;">
+                                <button type="button" onclick="closeScreenshotLightbox()" style="background:#64748B; color:#FFF; border:none; padding:8px 18px; border-radius:8px; font-weight:700; cursor:pointer;">Close</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+                document.getElementById('lightbox-modal-img').src = imgUrl;
+                document.getElementById('lightbox-modal-title').textContent = 'Payment Screenshot: ' + ref;
+                document.getElementById('lightbox-modal-info').textContent = 'Customer: ' + name + ' | Ref: ' + ref;
+                modal.style.display = 'flex';
+            }
+
+            function closeScreenshotLightbox() {
+                const modal = document.getElementById('screenshot-lightbox-modal');
+                if (modal) modal.style.display = 'none';
+            }
+
+            window.openScreenshotLightbox = openScreenshotLightbox;
+            window.closeScreenshotLightbox = closeScreenshotLightbox;
 
             // Live Enterprise Telemetry Clock Widget
             function updateHeaderClock() {
@@ -1946,6 +1802,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     populateCategoryDropdown();
                 });
             }
+            window.loadCatalogData = loadCatalogData;
 
             function renderAddonsPanel() {
                 const container = document.getElementById('admin-addons-status-cards');

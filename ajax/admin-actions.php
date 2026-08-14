@@ -28,6 +28,20 @@ if ($action === 'logout') {
     json_response(true, 'Logged out successfully');
 }
 
+// Public Order Tracking
+if ($action === 'get_booking_details') {
+    $ref = sanitize_input($_REQUEST['booking_reference'] ?? $_REQUEST['booking_ref'] ?? '');
+    if (empty($ref)) {
+        json_response(false, 'Booking Reference is required', [], 422);
+    }
+    $booking = get_booking_by_ref($ref);
+    if ($booking) {
+        json_response(true, 'Booking details fetched', ['booking' => $booking]);
+    } else {
+        json_response(false, 'Booking Reference not found', [], 404);
+    }
+}
+
 // Check admin authentication for all subsequent actions
 if (!is_admin_logged_in()) {
     json_response(false, 'Unauthorized. Please login.', ['logged_in' => false], 401);
@@ -229,130 +243,7 @@ if ($action === 'save_settings') {
     json_response(true, 'Settings updated successfully.');
 }
 
-// 3b. Save Dedicated PayPal Settings
-if ($action === 'save_paypal_settings') {
-    $allowed_keys = [
-        'paypal_client_id', 'paypal_mode', 'paypal_client_secret',
-        'paypal_email', 'paypal_account_name', 'paypal_id',
-        'currency_code', 'paypal_status', 'shipping_charge',
-        'gift_wrap_enabled', 'gift_wrap_name', 'gift_wrap_desc', 'gift_wrap_price', 'gift_wrap_image',
-        'choc_box_enabled', 'choc_box_name', 'choc_box_desc', 'choc_box_price', 'choc_box_image'
-    ];
 
-    $db = Database::getConnection();
-    $updated_count = 0;
-
-    foreach ($allowed_keys as $key) {
-        if (isset($_POST[$key])) {
-            $val = sanitize_input($_POST[$key]);
-            
-            // If secret is passed as '***' or empty string when updating, keep existing secret
-            if ($key === 'paypal_client_secret' && ($val === '***' || $val === '')) {
-                continue;
-            }
-
-            if ($db) {
-                try {
-                    $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)
-                        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
-                    $stmt->execute([':k' => $key, ':v' => $val]);
-                    $updated_count++;
-                } catch (Exception $e) {
-                    log_system_error("Save PayPal setting error for '$key': " . $e->getMessage());
-                }
-            }
-        }
-    }
-
-    json_response(true, 'PayPal Live credentials and settings saved successfully.');
-}
-
-// 3c. Delete / Reset PayPal Credentials
-if ($action === 'delete_paypal_credentials') {
-    $db = Database::getConnection();
-    if ($db) {
-        try {
-            $keys_to_clear = ['paypal_client_id', 'paypal_client_secret', 'paypal_mode'];
-            foreach ($keys_to_clear as $k) {
-                $val = ($k === 'paypal_mode') ? 'sandbox' : '';
-                $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (:k, :v)
-                    ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
-                $stmt->execute([':k' => $k, ':v' => $val]);
-            }
-            json_response(true, 'PayPal API credentials have been deleted/reset successfully.');
-        } catch (Exception $e) {
-            json_response(false, 'Error resetting credentials: ' . $e->getMessage(), [], 500);
-        }
-    }
-    json_response(false, 'Database connection offline.', [], 500);
-}
-
-// 3d. Test PayPal API Connection (OAuth 2.0 Auth Check)
-if ($action === 'test_paypal_credentials') {
-    $mode          = sanitize_input($_POST['paypal_mode'] ?? get_setting('paypal_mode', 'sandbox'));
-    $client_id     = sanitize_input($_POST['paypal_client_id'] ?? get_setting('paypal_client_id', ''));
-    $client_secret = sanitize_input($_POST['paypal_client_secret'] ?? get_setting('paypal_client_secret', ''));
-
-    // If client_secret in POST is blank or hidden, pull from DB settings
-    if (empty($client_secret) || $client_secret === '***') {
-        $client_secret = get_setting('paypal_client_secret', '');
-    }
-
-    if (empty($client_id)) {
-        json_response(false, 'PayPal Client ID is missing. Please enter your Client ID.', [], 422);
-    }
-    if ($client_id === 'sb') {
-        json_response(true, 'PayPal is currently in Sandbox Test Mode with mock ID "sb". Replace with real Live Client ID for Live production.');
-    }
-    if (empty($client_secret)) {
-        json_response(false, 'PayPal Client Secret is required to test API connection.', [], 422);
-    }
-
-    $api_base = ($mode === 'live') ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
-
-    $ch = curl_init($api_base . '/v1/oauth2/token');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => 'grant_type=client_credentials',
-        CURLOPT_USERPWD        => $client_id . ':' . $client_secret,
-        CURLOPT_HTTPHEADER     => [
-            'Accept: application/json',
-            'Accept-Language: en_US',
-        ],
-        CURLOPT_TIMEOUT        => 15,
-        CURLOPT_SSL_VERIFYPEER => true
-    ]);
-    $response  = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curl_err  = curl_error($ch);
-    curl_close($ch);
-
-    if ($curl_err) {
-        json_response(false, 'Network connection to PayPal failed: ' . $curl_err, [], 502);
-    }
-
-    $data = json_decode($response, true);
-
-    if ($http_code === 200 && !empty($data['access_token'])) {
-        $app_id     = $data['app_id'] ?? 'N/A';
-        $expires_in = $data['expires_in'] ?? 32400;
-        $scope      = $data['scope'] ?? 'standard';
-        
-        json_response(true, "✅ PayPal OAuth 2.0 Authentication SUCCESSFUL! Connection established to PayPal (" . strtoupper($mode) . " Mode).", [
-            'mode'       => $mode,
-            'app_id'     => $app_id,
-            'expires_in' => $expires_in . ' seconds',
-            'scope'      => $scope
-        ]);
-    } else {
-        $error_desc = $data['error_description'] ?? $data['error'] ?? 'Invalid Client ID or Secret';
-        json_response(false, "❌ PayPal OAuth Authentication Failed (HTTP $http_code): " . $error_desc, [
-            'http_code' => $http_code,
-            'raw'       => $data
-        ], 400);
-    }
-}
 
 
 // 4. Export Bookings CSV
@@ -477,7 +368,7 @@ if ($action === 'admin_get_categories_products') {
     if ($db) {
         try {
             $categories = $db->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
-            $products = $db->query("SELECT p.*, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
+            $products = $db->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
             $settings = get_all_settings();
         } catch (Exception $e) {
             log_system_error("Admin get categories/products error: " . $e->getMessage());
@@ -743,6 +634,89 @@ if ($action === 'delete_product') {
         } catch (Exception $e) {
             json_response(false, 'Error deleting product: ' . $e->getMessage(), [], 500);
         }
+    }
+}
+
+// 11. Save UPI & Bank Payment Settings
+if ($action === 'save_upi_settings' || $action === 'save_payment_settings') {
+    $upi_id = sanitize_input($_POST['upi_id'] ?? '');
+    $account_name = sanitize_input($_POST['account_name'] ?? '');
+    $instructions = sanitize_input($_POST['instructions'] ?? '');
+    $is_enabled = (int)($_POST['is_enabled'] ?? 1);
+    
+    if (empty($upi_id) || empty($account_name)) {
+        json_response(false, 'UPI ID and Account Holder Name are required.', [], 422);
+    }
+    
+    $qr_image_path = sanitize_input($_POST['current_qr_image'] ?? '');
+    if (isset($_FILES['upi_qr_file']) && $_FILES['upi_qr_file']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['upi_qr_file'];
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'webp'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed_exts)) {
+            json_response(false, 'Invalid QR code image format. Only JPG, PNG, and WEBP allowed.', [], 422);
+        }
+        if ($file['size'] > 10 * 1024 * 1024) {
+            json_response(false, 'QR code image must be smaller than 10MB.', [], 422);
+        }
+        $target_dir = __DIR__ . '/../uploads/upi_qr/';
+        if (!is_dir($target_dir)) {
+            @mkdir($target_dir, 0755, true);
+        }
+        $new_filename = 'upi_qr_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+        if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+            $qr_image_path = 'uploads/upi_qr/' . $new_filename;
+        }
+    }
+    
+    $bank_data = [
+        'bank_name' => sanitize_input($_POST['bank_name'] ?? ''),
+        'bank_account_name' => sanitize_input($_POST['bank_account_name'] ?? ''),
+        'bank_sort_code' => sanitize_input($_POST['bank_sort_code'] ?? ''),
+        'bank_account_number' => sanitize_input($_POST['bank_account_number'] ?? ''),
+        'bank_instructions' => sanitize_input($_POST['bank_instructions'] ?? ''),
+        'bank_enabled' => (int)($_POST['bank_enabled'] ?? 1),
+        'support_phone' => sanitize_input($_POST['support_phone'] ?? '')
+    ];
+
+    // Admin Passkey update if provided
+    $new_passcode = trim($_POST['admin_password'] ?? '');
+    if (!empty($new_passcode)) {
+        if (strlen($new_passcode) < 6) {
+            json_response(false, 'New passkey must be at least 6 characters.', [], 422);
+        }
+        update_setting('admin_password', password_hash($new_passcode, PASSWORD_DEFAULT));
+    }
+    
+    save_upi_settings($upi_id, $account_name, $qr_image_path, $instructions, $is_enabled, $bank_data);
+    json_response(true, 'Payment Settings saved successfully.', [
+        'upi_id' => $upi_id,
+        'account_name' => $account_name,
+        'qr_image' => $qr_image_path
+    ]);
+}
+
+// 12. Get UPI Settings
+if ($action === 'get_upi_settings') {
+    $settings = get_upi_settings();
+    json_response(true, 'UPI Settings loaded', $settings);
+}
+
+// 13. Verify UPI Payment (Approve / Reject / Request Re-upload)
+if ($action === 'verify_upi_payment') {
+    $ref = sanitize_input($_POST['ref'] ?? $_POST['id'] ?? '');
+    $status = sanitize_input($_POST['status'] ?? ''); // approve, reject, request_reupload
+    $reason = sanitize_input($_POST['reason'] ?? '');
+    
+    if (empty($ref) || empty($status)) {
+        json_response(false, 'Booking Reference and Action Status are required.', [], 422);
+    }
+    
+    $res = verify_upi_payment($ref, $status, $reason, 'Admin');
+    if ($res) {
+        json_response(true, 'UPI Payment status updated successfully.');
+    } else {
+        json_response(false, 'Failed to update UPI Payment status.', [], 500);
     }
 }
 

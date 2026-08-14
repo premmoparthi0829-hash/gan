@@ -1,6 +1,6 @@
 <?php
 /**
- * AJAX Endpoint: Create Booking
+ * AJAX Endpoint: Create Booking (UPI Payment System)
  */
 
 require_once __DIR__ . '/../includes/booking-functions.php';
@@ -10,7 +10,42 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_response(false, 'Invalid request method', [], 405);
 }
 
-// CSRF Protection
+// Action router (Create Booking or Re-upload Screenshot)
+$action = sanitize_input($_POST['action'] ?? 'create_booking');
+
+// Handle Payment Screenshot Re-upload by Customer
+if ($action === 'reupload_screenshot') {
+    $ref = sanitize_input($_POST['booking_reference'] ?? '');
+    if (empty($ref)) {
+        json_response(false, 'Booking Reference is required.', [], 422);
+    }
+    
+    if (!isset($_FILES['payment_screenshot']) || $_FILES['payment_screenshot']['error'] !== UPLOAD_ERR_OK) {
+        json_response(false, 'Please select a valid payment screenshot (JPG, PNG, or WEBP, max 10MB).', [], 422);
+    }
+    
+    $screenshot_path = save_uploaded_payment_receipt($_FILES['payment_screenshot'], $ref);
+    if (!$screenshot_path) {
+        json_response(false, 'Failed to process screenshot image. Please upload a valid JPG, PNG, or WEBP image under 10MB.', [], 422);
+    }
+    
+    $updated = update_booking_payment($ref, 'PAYMENT VERIFICATION PENDING', '', $screenshot_path);
+    if ($updated) {
+        // Also reset booking status to PENDING
+        $db = Database::getConnection();
+        if ($db) {
+            $db->prepare("UPDATE bookings SET booking_status = 'PENDING' WHERE booking_reference = :ref")->execute([':ref' => $ref]);
+        }
+        json_response(true, 'Payment screenshot uploaded successfully! Verification pending.', [
+            'booking_reference' => $ref,
+            'screenshot_path' => $screenshot_path
+        ]);
+    } else {
+        json_response(false, 'Failed to update order status. Please check your booking reference.', [], 500);
+    }
+}
+
+// CSRF Protection for booking creation
 $csrf = $_POST['csrf_token'] ?? '';
 if (!validate_csrf_token($csrf)) {
     json_response(false, 'Security token expired. Please refresh the page and try again.', [], 403);
@@ -40,7 +75,7 @@ if (!is_array($cart_items) || empty($cart_items)) {
         'quantity' => $qty
     ]];
 }
-$payment_method = sanitize_input($_POST['payment_method'] ?? 'bank_transfer');
+$payment_method = 'upi';
 
 // Server-side validation
 $errors = [];
@@ -78,27 +113,17 @@ if ($total_qty > 50) {
     $errors[] = 'You can book a maximum of 50 items in a single order.';
 }
 
-if (!in_array($payment_method, ['paypal', 'bank_transfer'])) {
-    $errors[] = 'Please select a valid payment method.';
-}
-
 if (!empty($errors)) {
     json_response(false, implode('<br>', $errors), ['errors' => $errors], 422);
 }
 
-// Generate unique reference first so filename matches reference
+// Generate unique reference
 $booking_ref = generate_unique_booking_reference();
 
-// Receipt upload is mandatory ONLY for bank transfer payments
+// Upload Payment Screenshot if provided
 $proof_image_path = null;
-if ($payment_method === 'bank_transfer') {
-    if (!isset($_FILES['payment_proof']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
-        json_response(false, 'Payment proof screenshot or receipt photo is mandatory. Please upload your payment receipt to complete bank transfer booking.', [], 422);
-    }
-    $proof_image_path = save_uploaded_payment_receipt($_FILES['payment_proof'], $booking_ref);
-    if (!$proof_image_path) {
-        json_response(false, 'Failed to process receipt image. Please upload a valid image file (JPG, PNG, or WEBP).', [], 422);
-    }
+if (isset($_FILES['payment_screenshot']) && $_FILES['payment_screenshot']['error'] === UPLOAD_ERR_OK) {
+    $proof_image_path = save_uploaded_payment_receipt($_FILES['payment_screenshot'], $booking_ref);
 }
 
 // Data is valid. Create booking via backend
@@ -113,9 +138,9 @@ $booking_data = [
     'county' => $county,
     'postcode' => $postcode,
     'cart_items' => $cart_items,
-    'payment_method' => $payment_method,
+    'payment_method' => sanitize_input($_POST['payment_method'] ?? 'upi'),
     'payment_reference' => sanitize_input($_POST['payment_reference'] ?? ''),
-    'payment_proof_image' => $proof_image_path
+    'payment_screenshot' => $proof_image_path
 ];
 
 $booking = create_new_booking($booking_data);
@@ -128,5 +153,6 @@ json_response(true, 'Booking created successfully', [
     'booking_reference' => $booking['booking_reference'],
     'total_amount' => number_format($booking['total_amount'], 2),
     'payment_method' => $booking['payment_method'],
+    'payment_status' => $booking['payment_status'],
     'redirect_url' => 'success.php?ref=' . urlencode($booking['booking_reference'])
 ]);

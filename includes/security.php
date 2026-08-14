@@ -69,7 +69,7 @@ function is_admin_logged_in() {
  * Verify admin passcode against database setting or default 'admin123'
  */
 function verify_admin_password($passcode) {
-    $stored_pass = get_setting('admin_password', 'admin123');
+    $stored_pass = function_exists('get_setting') ? get_setting('admin_password', 'admin123') : 'admin123';
     return $passcode === $stored_pass;
 }
 

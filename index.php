@@ -614,125 +614,82 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
 
                             <!-- Payment Tabs -->
                             <div class="bm-pay-tabs">
-                                <button type="button" class="bm-pay-tab active" id="pay-tab-bank" data-tab="bank-tab">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="6" width="20" height="14" rx="2"></rect>
-                                        <path d="M2 10h20"></path>
-                                    </svg>
-                                    Bank Transfer
+                                <button type="button" class="bm-pay-tab active" id="pay-tab-upi" data-tab="upi-tab">
+                                    📱 UPI / QR Code
                                 </button>
-                                <button type="button" class="bm-pay-tab" id="pay-tab-paypal" data-tab="paypal-tab">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="1" y="4" width="22" height="16" rx="2"></rect>
-                                        <line x1="1" y1="10" x2="23" y2="10"></line>
-                                    </svg>
-                                    PayPal
+                                <button type="button" class="bm-pay-tab" id="pay-tab-bank" data-tab="bank-tab">
+                                    🏛️ Direct Bank Transfer
                                 </button>
                             </div>
+                            <input type="hidden" id="payment_method" name="payment_method" value="upi">
 
-                            <!-- Bank Tab -->
-                            <div class="bm-pay-panel active" id="bank-tab">
-                                <div class="bm-bank-box">
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Account Name</span>
-                                        <span id="bank-acc-name-display"
-                                            class="bm-bank-val"><?php echo $bank_acc_name; ?></span>
+                            <!-- UPI Tab -->
+                            <div class="bm-pay-panel active" id="upi-tab">
+                                <div style="text-align: center; margin-bottom: 16px; background: #FFFFFF; border: 2px dashed #D4AF37; border-radius: 14px; padding: 16px;">
+                                    <div style="font-weight: 800; font-size: 0.92rem; color: #4A0B17; margin-bottom: 8px;">
+                                        📸 Scan QR Code to Pay
                                     </div>
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Bank</span>
-                                        <span id="bank-name-display"
-                                            class="bm-bank-val"><?php echo $bank_name; ?></span>
-                                    </div>
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Sort Code</span>
-                                        <span id="bank-sort-display"
-                                            class="bm-bank-val bm-mono"><?php echo $bank_sort; ?></span>
-                                    </div>
-                                    <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Account No.</span>
-                                        <span id="bank-num-display"
-                                            class="bm-bank-val bm-mono"><?php echo $bank_acc_num; ?></span>
+                                    <img id="checkout-upi-qr-img" src="<?php echo escape_output(($upi_config['upi_qr_image'] ?? '') ?: 'assets/images/upi_qr_default.png'); ?>" alt="UPI QR Code" style="max-width: 200px; width: 100%; height: auto; border-radius: 10px; border: 2px solid #D4AF37; padding: 4px; background: #FFF;">
+                                </div>
+
+                                <div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                                    <div style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Official UPI ID</div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px;">
+                                        <span id="checkout-upi-id-text" style="font-family: monospace; font-weight: 800; font-size: 1rem; color: #4A0B17;">
+                                            <?php echo escape_output($upi_config['upi_id'] ?? 'vklogistics@upi'); ?>
+                                        </span>
+                                        <button type="button" id="btn-copy-checkout-upi" style="background: #D97706; color: #FFFFFF; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 0.78rem; cursor: pointer;">
+                                            📋 Copy
+                                        </button>
                                     </div>
                                 </div>
+
                                 <div class="bm-field" style="margin-top:14px;">
-                                    <label for="payment_reference">Your Payment Reference <span
-                                            class="req">*</span></label>
-                                    <div class="bm-input-wrap">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
-                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                        </svg>
-                                        <input type="text" id="payment_reference"
-                                            placeholder="Your name or bank reference">
-                                    </div>
-                                </div>
-                                <div class="bm-field" style="margin-top:14px;">
-                                    <label for="payment_proof_file">Upload Payment Receipt Photo <span
-                                            class="req">*</span></label>
-                                    <div class="bm-upload-box" id="receipt-upload-zone">
-                                        <input type="file" id="payment_proof_file"
-                                            accept="image/jpeg,image/png,image/webp,image/heic" style="display:none;">
-                                        <div class="upload-drop-content" id="upload-idle-state">
-                                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4AF37"
-                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                <polyline points="17 8 12 3 7 8"></polyline>
-                                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                                            </svg>
-                                            <div class="upload-text"><strong>Click to select photo</strong> or drag
-                                                &amp; drop receipt here</div>
-                                            <div class="upload-sub">Supports Ultra HD JPG, PNG, WEBP (Up to 10MB)</div>
+                                    <label for="payment_screenshot_file">Upload Payment Screenshot / Receipt <span class="req">*</span></label>
+                                    <div class="bm-upload-box" id="upi-screenshot-upload-zone">
+                                        <input type="file" id="payment_screenshot_file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                                        <div class="upload-drop-content" id="upi-upload-idle-state">
+                                            <div class="upload-text"><strong>Click to select screenshot</strong> or drag photo here</div>
+                                            <div class="upload-sub">Supports JPG, PNG, WEBP (Max 10MB)</div>
                                         </div>
-                                        <div class="upload-preview-content" id="upload-preview-state"
-                                            style="display:none;">
-                                            <img id="receipt-img-preview" src="" alt="Receipt Photo Preview">
+                                        <div class="upload-preview-content" id="upi-upload-preview-state" style="display:none;">
+                                            <img id="upi-screenshot-img-preview" src="" alt="Screenshot Preview">
                                             <div class="upload-file-info">
-                                                <span id="upload-file-name">receipt.jpg</span>
-                                                <button type="button" id="btn-remove-receipt"
-                                                    class="btn-remove-file">&times; Remove Photo</button>
+                                                <span id="upi-upload-file-name">screenshot.jpg</span>
+                                                <button type="button" id="btn-remove-upi-screenshot" class="btn-remove-file">&times; Remove Photo</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="bm-submit-btn" id="btn-submit-bank"
-                                    style="margin-top:16px;">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                    Confirm Bank Transfer Booking
+
+                                <button type="button" class="bm-submit-btn" id="btn-submit-upi-booking" style="margin-top:16px;">
+                                    Confirm &amp; Place Order
                                 </button>
                             </div>
 
-                            <!-- PayPal Tab — Live Checkout -->
-                            <div class="bm-pay-panel" id="paypal-tab">
-
-                                <!-- Info strip -->
-                                <div class="bm-bank-box" style="margin-bottom:18px;">
+                            <!-- Bank Tab -->
+                            <div class="bm-pay-panel" id="bank-tab">
+                                <div class="bm-bank-box">
                                     <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Payment Method</span>
-                                        <span class="bm-bank-val">PayPal Live &amp; Express Checkout</span>
+                                        <span class="bm-bank-key">Account Name</span>
+                                        <span id="bank-acc-name-display" class="bm-bank-val"><?php echo escape_output($upi_config['bank_account_name'] ?? 'VK LOGISTICS LTD'); ?></span>
                                     </div>
                                     <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Currency</span>
-                                        <span class="bm-bank-val"><?php echo escape_output($settings['currency_code'] ?? 'GBP'); ?> (&pound;)</span>
+                                        <span class="bm-bank-key">Bank Name</span>
+                                        <span id="bank-name-display" class="bm-bank-val"><?php echo escape_output($upi_config['bank_name'] ?? 'Barclays Bank UK'); ?></span>
                                     </div>
                                     <div class="bm-bank-row">
-                                        <span class="bm-bank-key">Merchant</span>
-                                        <span class="bm-bank-val"><?php echo $paypal_acc_name; ?></span>
+                                        <span class="bm-bank-key">Sort Code / IFSC</span>
+                                        <span id="bank-sort-display" class="bm-bank-val bm-mono"><?php echo escape_output($upi_config['bank_sort_code'] ?? '20-45-77'); ?></span>
+                                    </div>
+                                    <div class="bm-bank-row">
+                                        <span class="bm-bank-key">Account Number</span>
+                                        <span id="bank-num-display" class="bm-bank-val bm-mono"><?php echo escape_output($upi_config['bank_account_number'] ?? '83920144'); ?></span>
                                     </div>
                                 </div>
-
-                                 <!-- Live PayPal Smart Buttons Container -->
-                                <div id="paypal-button-container" style="min-height:48px; margin-bottom:12px;"></div>
-
-                                <p style="text-align:center; font-size:0.78rem; color:#64748B; margin-top:12px;">
-                                    🔒 You will be securely redirected to PayPal's encrypted payment checkout. No card details are stored on this site.
-                                </p>
-
+                                <button type="button" class="bm-submit-btn" id="btn-submit-bank" style="margin-top:16px;">
+                                    Confirm Bank Transfer Booking
+                                </button>
                             </div>
 
                             <button type="button" class="bm-back-btn" id="step3-back" style="margin-top:12px;">
