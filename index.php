@@ -720,33 +720,17 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
         </div>
     </div>
 
-    <!-- PRODUCT INFO QUICK VIEW MODAL (LARGE HD SIZE WITH SMOOTH HORIZONTAL SLIDING CAROUSEL) -->
+    <!-- PRODUCT INFO QUICK VIEW MODAL (MEDIUM-LARGE DESKTOP SCREEN SIZE) -->
     <div class="prod-modal-overlay" id="product-info-modal-overlay">
-        <div class="prod-modal-card" id="product-info-modal" style="max-width: 1020px; width: 94%; border-radius: 24px; border: 2px solid #D4AF37; padding: 24px;">
+        <div class="prod-modal-card" id="product-info-modal" style="max-width: 920px; width: 92%; border-radius: 24px; border: 2px solid #D4AF37; padding: 28px;">
             <button type="button" class="prod-modal-close" id="btn-close-prod-modal" aria-label="Close">&times;</button>
-            <div class="prod-modal-grid" style="display: grid; grid-template-columns: 460px 1fr; gap: 28px; align-items: start;">
+            <div class="prod-modal-grid" style="display: grid; grid-template-columns: 400px 1fr; gap: 32px; align-items: start;">
                 <div class="prod-modal-media" style="display:flex; flex-direction:column; gap:16px;">
-                    <!-- Smooth Horizontal Carousel Slider Track -->
-                    <div class="pmodal-hero-container" style="position:relative; width:100%; border-radius:18px; overflow:hidden; background:#F8FAFC; border:1px solid #CBD5E1; aspect-ratio:4/3; min-height:360px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+                    <!-- Single Hero Image Container with Prev/Next Controls -->
+                    <div class="pmodal-hero-container" style="position:relative; width:100%; border-radius:18px; overflow:hidden; background:#F8FAFC; border:1px solid #CBD5E1; aspect-ratio:1/1; min-height:360px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+                        <img id="pmodal-img" src="" alt="Product Image Preview" style="width:100%; height:100%; object-fit:cover; transition:opacity 0.55s ease-in-out;">
                         
-                        <div id="pmodal-carousel-track" style="display:flex; width:300%; height:100%; transition:transform 0.22s ease-out; transform:translateX(0%);">
-                            <div style="width:33.3333%; height:100%; flex-shrink:0;">
-                                <img id="pmodal-slide-img-0" src="" alt="Product Image 1" style="width:100%; height:100%; object-fit:cover;">
-                            </div>
-                            <div style="width:33.3333%; height:100%; flex-shrink:0;">
-                                <img id="pmodal-slide-img-1" src="" alt="Product Image 2" style="width:100%; height:100%; object-fit:cover;">
-                            </div>
-                            <div style="width:33.3333%; height:100%; flex-shrink:0;">
-                                <img id="pmodal-slide-img-2" src="" alt="Product Image 3" style="width:100%; height:100%; object-fit:cover;">
-                            </div>
-                        </div>
-
                         <span class="pmodal-price-tag" id="pmodal-price" style="font-size: 1.25rem; font-weight: 800; padding: 8px 16px; border-radius: 24px;">&pound;0.00</span>
-
-                        <!-- Photo Counter Badge -->
-                        <span id="pmodal-photo-counter" style="position:absolute; bottom:12px; right:12px; background:rgba(15,23,42,0.85); color:#FFFFFF; font-size:0.75rem; font-weight:700; padding:5px 12px; border-radius:14px; backdrop-filter:blur(4px); z-index:5;">
-                            Photo 1 of 3
-                        </span>
                         
                         <!-- Nav Prev/Next Buttons -->
                         <button type="button" class="pmodal-nav-btn pmodal-prev-btn" id="pmodal-btn-prev" aria-label="Previous Photo" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); background:rgba(15,23,42,0.75); color:#FFFFFF; border:none; width:42px; height:42px; border-radius:50%; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); font-size:1.4rem; z-index:6; transition:all 0.2s ease;">&lsaquo;</button>
@@ -755,13 +739,13 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
 
                     <!-- 3 Thumbnails Gallery Switcher -->
                     <div class="pmodal-thumbnails-wrapper" id="pmodal-thumbs-box" style="display:flex; gap:14px; justify-content:center; align-items:center; padding:4px 0;">
-                        <div class="pmodal-thumb-item active" data-index="0" id="pmodal-thumb-0" style="width:84px; height:84px; border-radius:12px; overflow:hidden; border:3px solid #D4AF37; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                        <div class="pmodal-thumb-item active" data-index="0" id="pmodal-thumb-0" style="width:76px; height:76px; border-radius:12px; overflow:hidden; border:3px solid #D4AF37; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
                             <img id="pmodal-thumb-img-0" src="" style="width:100%; height:100%; object-fit:cover;">
                         </div>
-                        <div class="pmodal-thumb-item" data-index="1" id="pmodal-thumb-1" style="width:84px; height:84px; border-radius:12px; overflow:hidden; border:2px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                        <div class="pmodal-thumb-item" data-index="1" id="pmodal-thumb-1" style="width:76px; height:76px; border-radius:12px; overflow:hidden; border:2px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
                             <img id="pmodal-thumb-img-1" src="" style="width:100%; height:100%; object-fit:cover;">
                         </div>
-                        <div class="pmodal-thumb-item" data-index="2" id="pmodal-thumb-2" style="width:84px; height:84px; border-radius:12px; overflow:hidden; border:2px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                        <div class="pmodal-thumb-item" data-index="2" id="pmodal-thumb-2" style="width:76px; height:76px; border-radius:12px; overflow:hidden; border:2px solid #CBD5E1; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
                             <img id="pmodal-thumb-img-2" src="" style="width:100%; height:100%; object-fit:cover;">
                         </div>
                     </div>

@@ -191,7 +191,7 @@ $(document).ready(function () {
                 if (!isAutoScrollPaused) {
                     setGalleryActiveImage(currentGalleryIndex + 1);
                 }
-            }, 1400); // Fast auto-scrolls every 1.4 seconds
+            }, 2600); // Smooth relaxed auto-scroll every 2.6 seconds
         }
     }
 
@@ -201,13 +201,12 @@ $(document).ready(function () {
         if (index >= currentGalleryImages.length) index = 0;
         
         currentGalleryIndex = index;
+        let activeSrc = currentGalleryImages[index];
 
-        // Perform fast horizontal sliding transform on carousel track
-        const slideShift = index * 33.333333;
-        $('#pmodal-carousel-track').css('transform', `translateX(-${slideShift}%)`);
-
-        // Update photo counter badge
-        $('#pmodal-photo-counter').text(`Photo ${index + 1} of ${currentGalleryImages.length}`);
+        $('#pmodal-img').css('opacity', 0.2);
+        setTimeout(function() {
+            $('#pmodal-img').attr('src', activeSrc).css('opacity', 1);
+        }, 120);
 
         $('.pmodal-thumb-item').each(function(i) {
             if (i === index) {
