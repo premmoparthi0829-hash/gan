@@ -131,7 +131,7 @@ $(document).ready(function () {
         });
     });
 
-    // ── Grid Product Cards Auto-Scroll Slideshow ──
+    // ── Grid Product Cards Cinematic Crossfade + Zoom Slideshow ──
     let gridCardsAutoScrollTimer = null;
 
     function startGridCardsAutoScroll() {
@@ -139,20 +139,34 @@ $(document).ready(function () {
         gridCardsAutoScrollTimer = setInterval(function() {
             $('.cat-products-pane:visible .product-card-item').each(function() {
                 let card = $(this);
-                let track = card.find('.grid-card-carousel-track');
-                if (!track.length) return;
+                let slider = card.find('.grid-card-stylish-slider');
+                if (!slider.length) return;
                 
-                let count = parseInt(track.attr('data-count')) || 1;
+                let count = parseInt(slider.attr('data-count')) || 1;
                 if (count <= 1) return;
 
-                let activeIdx = parseInt(track.attr('data-active-idx')) || 0;
+                let activeIdx = parseInt(slider.attr('data-active-idx')) || 0;
                 let nextIdx = (activeIdx + 1) % count;
 
-                track.attr('data-active-idx', nextIdx);
-                let slideShift = nextIdx * (100 / count);
-                track.css('transform', `translateX(-${slideShift}%)`);
+                slider.attr('data-active-idx', nextIdx);
+
+                slider.find('.grid-card-slide-item').each(function(i) {
+                    if (i === nextIdx) {
+                        $(this).css({
+                            'opacity': '1',
+                            'transform': 'scale(1.06)',
+                            'z-index': '2'
+                        }).addClass('active');
+                    } else {
+                        $(this).css({
+                            'opacity': '0',
+                            'transform': 'scale(1)',
+                            'z-index': '1'
+                        }).removeClass('active');
+                    }
+                });
             });
-        }, 1800); // Automatically slides every 1.8 seconds
+        }, 2200);
     }
 
     startGridCardsAutoScroll();

@@ -229,9 +229,9 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                 data-img3="<?php echo escape_output($img3); ?>"
                                 data-cat="<?php echo escape_output($cat['name']); ?>">
                                 <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
-                                    <div class="grid-card-carousel-track" data-count="<?php echo $photo_count; ?>" data-active-idx="0" style="position:absolute; top:0; left:0; display:flex; width:<?php echo $track_width; ?>%; height:100%; transition:transform 0.35s ease-out; transform:translateX(0%);">
+                                    <div class="grid-card-stylish-slider" data-count="<?php echo $photo_count; ?>" data-active-idx="0" style="position:absolute; top:0; left:0; width:100%; height:100%;">
                                         <?php foreach ($photos as $p_idx => $p_img): ?>
-                                            <div style="width:<?php echo 100 / $photo_count; ?>%; height:100%; flex-shrink:0; position:relative;">
+                                            <div class="grid-card-slide-item <?php echo $p_idx === 0 ? 'active' : ''; ?>" data-slide="<?php echo $p_idx; ?>" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:<?php echo $p_idx === 0 ? '1' : '0'; ?>; transition:opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 2.5s ease-out; transform:scale(<?php echo $p_idx === 0 ? '1.06' : '1'; ?>); z-index:<?php echo $p_idx === 0 ? '2' : '1'; ?>;">
                                                 <img src="<?php echo escape_output($p_img); ?>" alt="<?php echo escape_output($prod['name']); ?> Photo <?php echo $p_idx + 1; ?>" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;">
                                             </div>
                                         <?php endforeach; ?>
