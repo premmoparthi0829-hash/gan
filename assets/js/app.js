@@ -352,8 +352,127 @@ $(document).ready(function () {
         $('#pmodal-desc').text(desc);
         $('#pmodal-category').text(cat);
 
+        // Product Add-ons UI Render inside Product Details Modal
+        let addonsData = card.data('addons');
+        let productAddonGroups = [];
+        if (addonsData) {
+            if (typeof addonsData === 'string') {
+                try {
+                    let decoded = decodeURIComponent(addonsData);
+                    productAddonGroups = JSON.parse(decoded);
+                } catch(e) {
+                    try { productAddonGroups = JSON.parse(addonsData); } catch(err) {}
+                }
+            } else if (Array.isArray(addonsData)) {
+                productAddonGroups = addonsData;
+            }
+        }
+
+        let basePriceNum = parseFloat(price);
+        let $addonsBox = $('#pmodal-addons-container');
+        $addonsBox.empty();
+
+        if (productAddonGroups && productAddonGroups.length > 0) {
+            let addonsHtml = `<div style="background:#FFFDF5; border:1.5px solid #FCD34D; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:14px;">`;
+            addonsHtml += `<div style="font-weight:800; color:#92400E; font-size:0.95rem; border-bottom:1px dashed #FCD34D; padding-bottom:8px; display:flex; align-items:center; gap:6px;">🧩 Customize Your Add-ons</div>`;
+
+            productAddonGroups.forEach(group => {
+                let activeItems = (group.items || []).filter(i => i.status !== 'inactive');
+                if (activeItems.length === 0) return;
+
+                let isReq = group.is_required == 1;
+                let isMulti = group.selection_type === 'multiple';
+                let reqBadge = isReq ? `<span style="background:#EF4444; color:#FFF; font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:4px; margin-left:6px;">REQUIRED</span>` : `<span style="background:#E2E8F0; color:#475569; font-size:0.65rem; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px;">OPTIONAL</span>`;
+                let hintText = isMulti ? (group.max_selection > 0 ? `(Choose up to ${group.max_selection})` : `(Choose multiple)`) : `(Choose 1)`;
+
+                addonsHtml += `
+                    <div class="pmodal-addon-group-row" data-group-id="${group.id}" data-group-name="${escapeHtml(group.name)}" data-required="${isReq ? '1' : '0'}" data-type="${group.selection_type}" data-min="${group.min_selection || 0}" data-max="${group.max_selection || 0}" style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="font-weight:700; font-size:0.88rem; color:#1E293B;">
+                            ${escapeHtml(group.name)} ${reqBadge} <span style="font-size:0.75rem; color:#64748B; font-weight:normal;">${hintText}</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px;">`;
+
+                activeItems.forEach(item => {
+                    let inputType = isMulti ? 'checkbox' : 'radio';
+                    let inputName = `pmodal_addon_group_${group.id}`;
+                    let itemImg = item.image_path ? `<img src="${escapeHtml(item.image_path)}" style="width:32px; height:32px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">` : '';
+
+                    addonsHtml += `
+                        <label style="display:flex; align-items:center; gap:8px; background:#FFFFFF; border:1.5px solid #CBD5E1; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.2s;" class="pmodal-addon-item-label">
+                            <input type="${inputType}" name="${inputName}" class="pmodal-addon-input" data-item-id="${item.id}" data-item-name="${escapeHtml(item.name)}" data-item-price="${item.price}" data-group-name="${escapeHtml(group.name)}">
+                            ${itemImg}
+                            <div style="flex:1; display:flex; flex-direction:column;">
+                                <span style="font-size:0.83rem; font-weight:700; color:#0F172A;">${escapeHtml(item.name)}</span>
+                                <span style="font-size:0.78rem; font-weight:800; color:#4A0B17;">+${currencySymbol}${parseFloat(item.price).toFixed(2)}</span>
+                            </div>
+                        </label>`;
+                });
+
+                addonsHtml += `</div></div>`;
+            });
+
+            addonsHtml += `</div>`;
+            $addonsBox.html(addonsHtml);
+            $addonsBox.show();
+        } else {
+            $addonsBox.hide();
+        }
+
+        function calculatePmodalPrice() {
+            let addTotal = 0;
+            $('.pmodal-addon-input:checked').each(function() {
+                addTotal += parseFloat($(this).data('item-price')) || 0;
+            });
+            let finalPrice = (basePriceNum + addTotal).toFixed(2);
+            $('#pmodal-price').html(`&pound;${finalPrice}`);
+            $('#pmodal-btn-price').html(`&pound;${finalPrice}`);
+        }
+
+        $(document).off('change', '.pmodal-addon-input').on('change', '.pmodal-addon-input', function() {
+            calculatePmodalPrice();
+        });
+
+        calculatePmodalPrice();
+
         $('#pmodal-add-cart-btn').off('click').on('click', function() {
-            addToCart(id, name, parseFloat(price), currentGalleryImages[0]);
+            let selectedAddons = [];
+            let isValid = true;
+            let errorMsg = '';
+
+            $('.pmodal-addon-group-row').each(function() {
+                let groupName = $(this).data('group-name');
+                let isReq = $(this).data('required') == '1';
+                let minSel = parseInt($(this).data('min')) || 0;
+                let checkedCount = $(this).find('.pmodal-addon-input:checked').length;
+
+                if (isReq && checkedCount === 0) {
+                    isValid = false;
+                    errorMsg = `Please select required add-on for "${groupName}".`;
+                    return false;
+                }
+                if (minSel > 0 && checkedCount < minSel) {
+                    isValid = false;
+                    errorMsg = `Please select at least ${minSel} option(s) for "${groupName}".`;
+                    return false;
+                }
+            });
+
+            if (!isValid) {
+                showToast(errorMsg, 'error');
+                return;
+            }
+
+            $('.pmodal-addon-input:checked').each(function() {
+                selectedAddons.push({
+                    group_name: $(this).data('group-name'),
+                    name: $(this).data('item-name'),
+                    price: parseFloat($(this).data('item-price')) || 0
+                });
+            });
+
+            let finalPrice = basePriceNum + selectedAddons.reduce((sum, a) => sum + a.price, 0);
+
+            addToCart(id, name, basePriceNum, currentGalleryImages[0], selectedAddons, finalPrice);
             stopModalAutoSlide();
             $('#product-info-modal-overlay').removeClass('active');
         });
@@ -379,31 +498,65 @@ $(document).ready(function () {
     // Add to Cart Action
     $(document).on('click', '.btn-add-to-cart', function(e) {
         e.preventDefault();
+        let card = $(this).closest('.product-card-item');
         let id = parseInt($(this).data('id'));
         let name = $(this).data('name');
         let price = parseFloat($(this).data('price'));
         let img = $(this).data('img');
 
-        addToCart(id, name, price, img);
+        let addonsData = card.data('addons');
+        let productAddonGroups = [];
+        if (addonsData) {
+            if (typeof addonsData === 'string') {
+                try {
+                    let decoded = decodeURIComponent(addonsData);
+                    productAddonGroups = JSON.parse(decoded);
+                } catch(e) {
+                    try { productAddonGroups = JSON.parse(addonsData); } catch(err) {}
+                }
+            } else if (Array.isArray(addonsData)) {
+                productAddonGroups = addonsData;
+            }
+        }
+
+        let hasRequiredAddons = productAddonGroups && productAddonGroups.some(g => g.is_required == 1 && (g.items || []).some(i => i.status !== 'inactive'));
+
+        if (hasRequiredAddons) {
+            // Trigger product details modal so user configures required add-ons first
+            card.find('.prod-img-wrap').trigger('click');
+            return;
+        }
+
+        addToCart(id, name, price, img, []);
     });
 
-    function addToCart(id, name, price, img) {
+    function addToCart(id, name, basePrice, img, selectedAddons = [], unitPriceWithAddons = null) {
         let totalQty = getCartTotalQty();
         if (totalQty >= 20) {
             showToast('You can buy a maximum of 20 items in a single order.', 'error');
             return;
         }
 
-        let existing = cart.find(item => item.id === id);
+        let price = unitPriceWithAddons !== null ? unitPriceWithAddons : basePrice;
+        if (selectedAddons && selectedAddons.length > 0 && unitPriceWithAddons === null) {
+            price = basePrice + selectedAddons.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+        }
+
+        let cartKey = id + '_' + (selectedAddons && selectedAddons.length ? JSON.stringify(selectedAddons) : '');
+
+        let existing = cart.find(item => (item.cart_key || item.id) === cartKey);
         if (existing) {
             existing.quantity += 1;
         } else {
             cart.push({
                 id: id,
+                cart_key: cartKey,
                 name: name,
+                base_price: basePrice,
                 price: price,
                 image: img,
-                quantity: 1
+                quantity: 1,
+                selected_addons: selectedAddons
             });
         }
 
@@ -411,8 +564,8 @@ $(document).ready(function () {
         openCartSidebar();
     }
 
-    function updateCartQty(id, delta) {
-        let item = cart.find(i => i.id === id);
+    function updateCartQty(cartKey, delta) {
+        let item = cart.find(i => (i.cart_key || i.id) === cartKey || i.id === cartKey);
         if (!item) return;
 
         let newQty = item.quantity + delta;
@@ -424,15 +577,15 @@ $(document).ready(function () {
         }
 
         if (newQty <= 0) {
-            removeFromCart(id);
+            removeFromCart(cartKey);
         } else {
             item.quantity = newQty;
             renderCart();
         }
     }
 
-    function removeFromCart(id) {
-        cart = cart.filter(i => i.id !== id && parseInt(i.id) !== parseInt(id));
+    function removeFromCart(cartKey) {
+        cart = cart.filter(i => (i.cart_key || i.id) !== cartKey && i.id !== cartKey);
         renderCart();
     }
 
@@ -517,23 +670,31 @@ $(document).ready(function () {
 
             let fallbackImg = isAddon1 ? 'assets/images/rakhi_rudraksha.png' : (isAddon2 ? 'assets/images/rakhi_peacock.png' : 'assets/images/ganesh_hero.png');
             let itemImg = (item.image && item.image.length > 5) ? item.image : fallbackImg;
+            let itemKey = item.cart_key || item.id;
+
+            let addonsBulletsHtml = '';
+            if (item.selected_addons && Array.isArray(item.selected_addons) && item.selected_addons.length > 0) {
+                addonsBulletsHtml = `<div class="cart-item-addons" style="font-size:0.75rem; color:#64748B; margin-top:3px; display:flex; flex-direction:column; gap:2px;">` +
+                    item.selected_addons.map(a => `<div>• ${escapeHtml(a.name || a.item_name)} (+${currencySymbol}${parseFloat(a.price || 0).toFixed(2)})</div>`).join('') +
+                    `</div>`;
+            }
 
             let row = $(`
                 <div class="cart-item-row ${isAddon ? 'cart-item-gift-row' : ''}" style="${isAddon ? 'background:#FFFDF5; border:1px solid #FCD34D;' : ''}">
                     <img src="${itemImg}" alt="${item.name}" class="cart-item-img" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #CBD5E1;">
                     <div class="cart-item-info">
-                        <div class="cart-item-name" style="font-weight:700; color:#1E293B; line-height:1.3;">${addonBadgeHtml}${item.name}</div>
-                        <div class="cart-item-price" style="font-weight:800; color:#4A0B17; margin-top:2px;">${currencySymbol}${item.price.toFixed(2)}</div>
+                        <div class="cart-item-name" style="font-weight:700; color:#1E293B; line-height:1.3;">${addonBadgeHtml}${escapeHtml(item.name)}${addonsBulletsHtml}</div>
+                        <div class="cart-item-price" style="font-weight:800; color:#4A0B17; margin-top:2px;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</div>
                     </div>
                     <div class="cart-item-actions">
                         ${!isAddon ? `
                             <div class="cart-qty-ctrl">
-                                <button type="button" class="cart-qty-btn cart-minus" data-id="${item.id}">&minus;</button>
+                                <button type="button" class="cart-qty-btn cart-minus" data-id="${itemKey}">&minus;</button>
                                 <span class="cart-qty-val">${item.quantity}</span>
-                                <button type="button" class="cart-qty-btn cart-plus" data-id="${item.id}">&plus;</button>
+                                <button type="button" class="cart-qty-btn cart-plus" data-id="${itemKey}">&plus;</button>
                             </div>
                         ` : ''}
-                        <button type="button" class="cart-remove-btn" data-id="${item.id}">Remove</button>
+                        <button type="button" class="cart-remove-btn" data-id="${itemKey}">Remove</button>
                     </div>
                 </div>
             `);

@@ -47,8 +47,11 @@ if (!is_admin_logged_in()) {
     json_response(false, 'Unauthorized. Please login.', ['logged_in' => false], 401);
 }
 
-// CSRF Validation for POST operations
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, ['update_booking_status', 'save_settings'])) {
+// CSRF Validation for state-changing admin operations
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, [
+    'update_booking_status', 'save_settings', 'toggle_addon',
+    'save_category', 'delete_category', 'save_product', 'delete_product'
+], true)) {
     $csrf = $_POST['csrf_token'] ?? '';
     if (!validate_csrf_token($csrf)) {
         json_response(false, 'Security token expired. Please refresh page.', [], 403);
@@ -369,6 +372,10 @@ if ($action === 'admin_get_categories_products') {
         try {
             $categories = $db->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
             $products = $db->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
+            foreach ($products as &$p) {
+                $p['addons'] = get_product_addons($p['id']);
+            }
+            unset($p);
             $settings = get_all_settings();
         } catch (Exception $e) {
             log_system_error("Admin get categories/products error: " . $e->getMessage());
@@ -584,6 +591,75 @@ if ($action === 'save_product') {
                     ':gallery_images' => $gallery_json
                 ]);
             }
+            
+            $target_prod_id = $id > 0 ? $id : (int)$db->lastInsertId();
+
+            // Save Add-on Groups and Items
+            if ($target_prod_id > 0 && isset($_POST['addons'])) {
+                $addons_raw = $_POST['addons'];
+                $addons_list = is_array($addons_raw) ? $addons_raw : (json_decode($addons_raw, true) ?: []);
+                
+                // Delete old addon groups for this product (cascades to items)
+                $db->prepare("DELETE FROM product_addon_groups WHERE product_id = :pid")->execute([':pid' => $target_prod_id]);
+                
+                $stmt_ig = $db->prepare("INSERT INTO product_addon_groups (product_id, name, is_required, selection_type, min_selection, max_selection, sort_order) VALUES (:pid, :name, :is_req, :sel_type, :min_sel, :max_sel, :sort_order)");
+                $stmt_ii = $db->prepare("INSERT INTO product_addon_items (group_id, name, price, image_path, status, sort_order) VALUES (:gid, :name, :price, :img_path, :status, :sort_order)");
+                
+                foreach ($addons_list as $g_idx => $group) {
+                    $g_name = sanitize_input($group['name'] ?? '');
+                    if (empty($g_name)) continue;
+                    $is_req = !empty($group['is_required']) ? 1 : 0;
+                    $sel_type = ($group['selection_type'] ?? 'single') === 'multiple' ? 'multiple' : 'single';
+                    $min_sel = max(0, (int)($group['min_selection'] ?? 0));
+                    $max_sel = max(0, (int)($group['max_selection'] ?? 0));
+                    $g_sort = (int)($group['sort_order'] ?? $g_idx);
+                    
+                    $stmt_ig->execute([
+                        ':pid' => $target_prod_id,
+                        ':name' => $g_name,
+                        ':is_req' => $is_req,
+                        ':sel_type' => $sel_type,
+                        ':min_sel' => $min_sel,
+                        ':max_sel' => $max_sel,
+                        ':sort_order' => $g_sort
+                    ]);
+                    $group_id = (int)$db->lastInsertId();
+                    
+                    if ($group_id > 0 && !empty($group['items']) && is_array($group['items'])) {
+                        foreach ($group['items'] as $i_idx => $item) {
+                            $i_name = sanitize_input($item['name'] ?? '');
+                            if (empty($i_name)) continue;
+                            $i_price = max(0.0, (float)($item['price'] ?? 0.0));
+                            $i_status = ($item['status'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+                            $i_sort = (int)($item['sort_order'] ?? $i_idx);
+                            $i_img = sanitize_input($item['image_path'] ?? '');
+                            
+                            // Check file upload for addon item image
+                            $file_key = "addon_item_img_{$g_idx}_{$i_idx}";
+                            if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
+                                $file = $_FILES[$file_key];
+                                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                                if (in_array($ext, $allowed_exts) && $file['size'] <= 10 * 1024 * 1024) {
+                                    $new_filename = 'addon_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+                                    if (move_uploaded_file($file['tmp_name'], $target_dir . $new_filename)) {
+                                        $i_img = 'assets/images/' . $new_filename;
+                                    }
+                                }
+                            }
+                            
+                            $stmt_ii->execute([
+                                ':gid' => $group_id,
+                                ':name' => $i_name,
+                                ':price' => $i_price,
+                                ':img_path' => $i_img,
+                                ':status' => $i_status,
+                                ':sort_order' => $i_sort
+                            ]);
+                        }
+                    }
+                }
+            }
+
             // Auto-sync settings table if product is an Add-On
             $addon_enabled = isset($_POST['addon_enabled']) ? ($_POST['addon_enabled'] == '1' ? '1' : '0') : null;
 

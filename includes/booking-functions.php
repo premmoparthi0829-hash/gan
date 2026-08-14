@@ -55,6 +55,63 @@ function get_product_by_id($id) {
 }
 
 /**
+ * Helper to fetch add-on groups & items for a product
+ */
+function get_product_addons($product_id) {
+    $db = Database::getConnection();
+    $groups = [];
+    if ($db) {
+        try {
+            // Auto migrate tables if missing
+            $db->exec("CREATE TABLE IF NOT EXISTS product_addon_groups (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                product_id INT NOT NULL,
+                name VARCHAR(150) NOT NULL,
+                is_required TINYINT(1) NOT NULL DEFAULT 0,
+                selection_type ENUM('single', 'multiple') NOT NULL DEFAULT 'single',
+                min_selection INT NOT NULL DEFAULT 0,
+                max_selection INT NOT NULL DEFAULT 0,
+                sort_order INT NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            $db->exec("CREATE TABLE IF NOT EXISTS product_addon_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                group_id INT NOT NULL,
+                name VARCHAR(150) NOT NULL,
+                price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                image_path VARCHAR(255) NULL,
+                status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+                sort_order INT NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES product_addon_groups(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            try {
+                $db->exec("ALTER TABLE booking_items ADD COLUMN selected_addons LONGTEXT NULL");
+            } catch (Exception $e) {}
+
+            $stmt_g = $db->prepare("SELECT * FROM product_addon_groups WHERE product_id = :pid ORDER BY sort_order ASC, id ASC");
+            $stmt_g->execute([':pid' => (int)$product_id]);
+            $groups = $stmt_g->fetchAll();
+
+            if (!empty($groups)) {
+                $stmt_i = $db->prepare("SELECT * FROM product_addon_items WHERE group_id = :gid ORDER BY sort_order ASC, id ASC");
+                foreach ($groups as &$group) {
+                    $stmt_i->execute([':gid' => (int)$group['id']]);
+                    $group['items'] = $stmt_i->fetchAll();
+                }
+                unset($group);
+            }
+        } catch (Exception $e) {
+            log_system_error("Error fetching product addons: " . $e->getMessage());
+        }
+    }
+    return $groups;
+}
+
+/**
  * Calculate order totals server-side (NEVER trust client total)
  * Expects an array of items: [ ["id" => X, "quantity" => Y], ... ]
  */
@@ -72,6 +129,10 @@ function calculate_order_totals($cart_items) {
         $id = (int)($item['id'] ?? 0);
         $qty = max(1, (int)($item['quantity'] ?? 1));
         $item_name = sanitize_input($item['name'] ?? $item['product_name'] ?? '');
+        $selected_addons = $item['selected_addons'] ?? [];
+        if (is_string($selected_addons)) {
+            $selected_addons = json_decode($selected_addons, true) ?: [];
+        }
         
         $product = get_product_by_id($id);
         $price = 0.0;
@@ -79,7 +140,14 @@ function calculate_order_totals($cart_items) {
         $img_path = '';
 
         if ($product) {
-            $price = (float)$product['price'];
+            $base_price = (float)$product['price'];
+            $addon_total = 0.0;
+            if (!empty($selected_addons) && is_array($selected_addons)) {
+                foreach ($selected_addons as $sa) {
+                    $addon_total += (float)($sa['price'] ?? 0.0);
+                }
+            }
+            $price = isset($item['price']) && (float)$item['price'] > 0 ? (float)$item['price'] : ($base_price + $addon_total);
             $name = $product['name'];
             $img_path = $product['image_path'];
         } elseif ($id === 99998 || stripos($item_name, 'Wrapping') !== false || stripos($item_name, 'Gift Wrap') !== false) {
@@ -110,6 +178,7 @@ function calculate_order_totals($cart_items) {
                 'product_name' => $name,
                 'quantity' => $qty,
                 'price' => $price,
+                'selected_addons' => $selected_addons,
                 'image_path' => $img_path,
                 'subtotal' => $item_subtotal
             ];
@@ -261,15 +330,17 @@ function create_new_booking($customer_data) {
             
             // Insert cart items into booking_items
             if ($booking_id) {
-                $stmt_item = $db->prepare("INSERT INTO booking_items (booking_id, product_id, product_name, quantity, price) 
-                    VALUES (:booking_id, :product_id, :product_name, :quantity, :price)");
+                $stmt_item = $db->prepare("INSERT INTO booking_items (booking_id, product_id, product_name, quantity, price, selected_addons) 
+                    VALUES (:booking_id, :product_id, :product_name, :quantity, :price, :selected_addons)");
                 foreach ($totals['items'] as $item) {
+                    $addons_json = !empty($item['selected_addons']) ? json_encode($item['selected_addons']) : null;
                     $stmt_item->execute([
                         ':booking_id' => $booking_id,
                         ':product_id' => $item['product_id'],
                         ':product_name' => $item['product_name'],
                         ':quantity' => $item['quantity'],
-                        ':price' => $item['price']
+                        ':price' => $item['price'],
+                        ':selected_addons' => $addons_json
                     ]);
                 }
             }

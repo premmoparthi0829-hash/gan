@@ -177,8 +177,43 @@ CREATE TABLE IF NOT EXISTS `booking_items` (
   `product_name` VARCHAR(150) NOT NULL,
   `quantity` INT NOT NULL DEFAULT 1,
   `price` DECIMAL(10,2) NOT NULL,
+  `selected_addons` LONGTEXT NULL,
   FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- Table: product_addon_groups
+-- Purpose: Product add-on groups (e.g. Choose Chutney, Choose Sambar)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `product_addon_groups` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `product_id` INT NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `is_required` TINYINT(1) NOT NULL DEFAULT 0,
+  `selection_type` ENUM('single', 'multiple') NOT NULL DEFAULT 'single',
+  `min_selection` INT NOT NULL DEFAULT 0,
+  `max_selection` INT NOT NULL DEFAULT 0,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- Table: product_addon_items
+-- Purpose: Add-on items inside a group (e.g. Coconut Chutney ₹10)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `product_addon_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `group_id` INT NOT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `image_path` VARCHAR(255) NULL,
+  `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`group_id`) REFERENCES `product_addon_groups`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- Seed initial categories
 INSERT INTO `categories` (`id`, `name`, `description`, `image_path`) VALUES

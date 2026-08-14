@@ -202,7 +202,39 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             qty = int(form_data.get('quantity', 1))
             unit_price = float(SETTINGS['unit_price'])
             shipping_fee = float(SETTINGS['shipping_charge'])
-            subtotal = round(qty * unit_price, 2)
+
+            cart_raw = form_data.get('cart', '[]')
+            try:
+                cart_items = json.loads(cart_raw) if isinstance(cart_raw, str) else cart_raw
+            except:
+                cart_items = []
+
+            subtotal = 0.0
+            total_qty = 0
+            items_list = []
+            if cart_items and isinstance(cart_items, list):
+                for ci in cart_items:
+                    c_qty = int(ci.get('quantity', 1))
+                    c_price = float(ci.get('price', 0.0))
+                    c_name = ci.get('name') or ci.get('product_name') or 'Product'
+                    c_addons = ci.get('selected_addons', [])
+                    subtotal += round(c_qty * c_price, 2)
+                    total_qty += c_qty
+                    items_list.append({
+                        "product_id": ci.get('id', 1),
+                        "product_name": c_name,
+                        "quantity": c_qty,
+                        "price": c_price,
+                        "selected_addons": c_addons,
+                        "unit_price": c_price,
+                        "total_price": round(c_qty * c_price, 2)
+                    })
+
+            if not items_list:
+                subtotal = round(qty * unit_price, 2)
+                total_qty = qty
+                items_list = [{"product_id": 1, "product_name": SETTINGS['product_name'], "quantity": qty, "price": unit_price, "unit_price": unit_price, "total_price": subtotal}]
+
             total = round(subtotal + shipping_fee, 2)
             
             booking = {
@@ -217,8 +249,8 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "county": form_data.get('county', ''),
                 "postcode": form_data.get('postcode', ''),
                 "country": "United Kingdom",
-                "quantity": qty,
-                "unit_price": unit_price,
+                "quantity": total_qty,
+                "unit_price": items_list[0]['price'] if items_list else unit_price,
                 "subtotal": subtotal,
                 "shipping_charge": shipping_fee,
                 "total_amount": total,
@@ -229,7 +261,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "payment_status": "PAID" if form_data.get('payment_method') == 'paypal' else "PAYMENT VERIFICATION PENDING",
                 "booking_status": "CONFIRMED",
                 "created_at": "2026-08-08 10:00:00",
-                "items": [{"item_name": SETTINGS['product_name'], "quantity": qty, "unit_price": unit_price, "total_price": subtotal}]
+                "items": items_list
             }
             
             BOOKINGS[ref] = booking
@@ -462,23 +494,36 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif action == 'admin_get_categories_products':
+            cat_map = {c['id']: c['name'] for c in CATEGORIES}
+            for p in PRODUCTS:
+                p['category_name'] = cat_map.get(p.get('category_id'), 'General Category')
             self.send_json({
                 "success": True,
                 "categories": CATEGORIES,
-                "products": PRODUCTS
+                "products": PRODUCTS,
+                "settings": SETTINGS
             })
             return
 
         elif action == 'save_category':
             cat_id = int(form_data.get('id', 0))
             cat_name = form_data.get('name', 'New Category')
+            cat_desc = form_data.get('description', '')
+            cat_img = form_data.get('current_image_path', '')
             if cat_id > 0:
                 for c in CATEGORIES:
                     if c['id'] == cat_id:
                         c['name'] = cat_name
+                        if cat_desc: c['description'] = cat_desc
+                        if cat_img: c['image_path'] = cat_img
             else:
                 new_id = max([c['id'] for c in CATEGORIES], default=0) + 1
-                CATEGORIES.append({"id": new_id, "name": cat_name})
+                CATEGORIES.append({
+                    "id": new_id,
+                    "name": cat_name,
+                    "description": cat_desc,
+                    "image_path": cat_img or "assets/images/ganesh_hero.png"
+                })
             self.send_json({"success": True, "message": "Category saved successfully"})
             return
 
@@ -486,15 +531,23 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             cat_id = int(form_data.get('id', 0))
             CATEGORIES = [c for c in CATEGORIES if c['id'] != cat_id]
             PRODUCTS = [p for p in PRODUCTS if p['category_id'] != cat_id]
-            self.send_json({"success": True, "message": "Category deleted"})
+            self.send_json({"success": True, "message": "Category deleted successfully"})
             return
 
         elif action == 'save_product':
             prod_id = int(form_data.get('id', 0))
-            name = form_data.get('name', 'Product')
+            name = form_data.get('name', 'New Product')
             price = float(form_data.get('price', 0.0))
             cat_id = int(form_data.get('category_id', 1))
             desc = form_data.get('description', '')
+            addons_raw = form_data.get('addons', '[]')
+            try:
+                addons_list = json.loads(addons_raw) if isinstance(addons_raw, str) else addons_raw
+            except:
+                addons_list = []
+
+            cat_map = {c['id']: c['name'] for c in CATEGORIES}
+            cat_name = cat_map.get(cat_id, 'General Category')
 
             if prod_id > 0:
                 for p in PRODUCTS:
@@ -502,17 +555,28 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                         p['name'] = name
                         p['price'] = price
                         p['category_id'] = cat_id
+                        p['category_name'] = cat_name
                         p['description'] = desc
+                        p['addons'] = addons_list
             else:
                 new_id = max([p['id'] for p in PRODUCTS], default=0) + 1
-                PRODUCTS.append({"id": new_id, "name": name, "price": price, "category_id": cat_id, "description": desc})
+                PRODUCTS.append({
+                    "id": new_id,
+                    "name": name,
+                    "price": price,
+                    "category_id": cat_id,
+                    "category_name": cat_name,
+                    "description": desc,
+                    "image_path": "assets/images/ganesh_hero.png",
+                    "addons": addons_list
+                })
             self.send_json({"success": True, "message": "Product saved successfully"})
             return
 
         elif action == 'delete_product':
             prod_id = int(form_data.get('id', 0))
             PRODUCTS = [p for p in PRODUCTS if p['id'] != prod_id]
-            self.send_json({"success": True, "message": "Product deleted"})
+            self.send_json({"success": True, "message": "Product deleted successfully"})
             return
 
         self.send_json({"success": False, "message": "Unknown action"})
@@ -548,6 +612,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             prod_cards = ''
             for prod in prods:
                 img = prod.get('image_path', 'assets/images/ganesh_hero.png')
+                addons_json_attr = urllib.parse.quote(json.dumps(prod.get('addons', [])))
                 prod_cards += f'''
                             <div class="product-card-item"
                                 data-id="{prod['id']}"
@@ -555,6 +620,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                                 data-price="{prod['price']}"
                                 data-desc="{prod.get('description', '')}"
                                 data-img="{img}"
+                                data-addons="{addons_json_attr}"
                                 data-cat="{cat['name']}">
                                 <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view product details">
                                     <img src="{img}" alt="{prod['name']}" loading="lazy">
@@ -628,6 +694,27 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
         content = content.replace("<?php echo $is_logged_in ? 'display:none;' : 'display:flex;'; ?>", is_logged_in_str)
         content = content.replace("<?php echo $is_logged_in ? 'display:block;' : 'display:none;'; ?>", is_main_str)
         content = content.replace("<?php echo escape_output($csrf_token); ?>", SETTINGS['csrf_token'])
+
+        # The preview server does not execute PHP.  Populate the values used by
+        # the admin JavaScript before removing the remaining PHP blocks; leaving
+        # these expressions empty makes the script invalid and disables every
+        # catalog control.
+        content = content.replace(
+            "<?php echo json_encode($initial_bookings); ?>",
+            json.dumps(list(BOOKINGS.values()))
+        )
+        content = content.replace(
+            "<?php echo json_encode($catalog_categories); ?>",
+            json.dumps(CATEGORIES)
+        )
+        content = content.replace(
+            "<?php echo json_encode($catalog_products); ?>",
+            json.dumps(PRODUCTS)
+        )
+        content = content.replace(
+            "<?php echo json_encode($settings); ?>",
+            json.dumps(SETTINGS)
+        )
         
         # Populate settings fields in HTML if present
         for field, val in SETTINGS.items():

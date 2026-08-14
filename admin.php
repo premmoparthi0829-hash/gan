@@ -37,11 +37,74 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- CSS -->
+    <!-- CSS Stylesheets -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/animations.css">
+
+    <!-- Catalog Management Action Buttons Styling -->
+    <style>
+        .btn-catalog-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+            outline: none;
+            border: none;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .btn-catalog-action:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        .btn-catalog-action:active {
+            transform: translateY(0);
+            filter: brightness(0.96);
+        }
+
+        .btn-add-cat-style {
+            background: linear-gradient(135deg, #F3C649 0%, #D4AF37 50%, #AA7C11 100%);
+            color: #3A2500;
+            border: 1px solid #B38F26 !important;
+            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+        }
+
+        .btn-add-cat-style:hover {
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .btn-add-addon-style {
+            background: linear-gradient(135deg, #BE185D 0%, #9D174D 50%, #701A75 100%);
+            color: #FFFFFF;
+            border: 1px solid #831843 !important;
+            box-shadow: 0 4px 14px rgba(157, 23, 77, 0.35);
+        }
+
+        .btn-add-addon-style:hover {
+            box-shadow: 0 6px 20px rgba(157, 23, 77, 0.5);
+        }
+
+        .btn-add-prod-style {
+            background: linear-gradient(135deg, #800F29 0%, #4A0B17 40%, #C2410C 100%);
+            color: #FFFFFF;
+            border: 1px solid #991B1B !important;
+            box-shadow: 0 4px 14px rgba(194, 65, 12, 0.4);
+        }
+
+        .btn-add-prod-style:hover {
+            box-shadow: 0 6px 20px rgba(194, 65, 12, 0.55);
+        }
+    </style>
 </head>
-<body class="admin-body">
+<body class="admin-body" data-csrf-token="<?php echo escape_output($csrf_token); ?>">
 
     <!-- MEDIUM FLOATING BOX REFERENCE DESIGN -->
     <div class="saleskip-auth-overlay" id="admin-login-screen" style="<?php echo $is_logged_in ? 'display:none;' : 'display:flex;'; ?>">
@@ -572,14 +635,14 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         <h2 style="font-size: 1.6rem; color: #4A0B17; margin: 0; font-weight:800;">Catalog Management</h2>
                         <p style="color: #64748B; font-size: 0.88rem; margin: 4px 0 0 0;">Manage your store categories, products, and pricing.</p>
                     </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" class="btn-gold" id="btn-add-category" style="padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; border: 1px solid #D4AF37;">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                        <button type="button" class="btn-catalog-action btn-add-cat-style" id="btn-add-category">
                             📁 Add Category
                         </button>
-                        <button type="button" id="btn-add-addon" style="background:#9D174D; color:#fff; border:1px solid #9D174D; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                        <button type="button" class="btn-catalog-action btn-add-addon-style" id="btn-add-addon">
                             🍫 Add Festive Add-On
                         </button>
-                        <button type="button" class="btn-modal-save" id="btn-add-product" style="background:#4A0B17; color:#fff; border:1px solid #4A0B17; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer;">
+                        <button type="button" class="btn-catalog-action btn-add-prod-style" id="btn-add-product">
                             🛒 Add Product / Item
                         </button>
                     </div>
@@ -913,10 +976,30 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                             </button>
                         </div>
                     </div>
+
+                    <!-- PRODUCT ADD-ONS SECTION -->
+                    <div style="background:#F8FAFC; border:1.5px solid #CBD5E1; padding:18px; border-radius:12px; margin-top:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:8px;">
+                            <div>
+                                <h4 style="margin:0 0 4px 0; color:#4A0B17; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:6px;">
+                                    🧩 Product Add-ons
+                                </h4>
+                                <span style="font-size:0.78rem; color:#64748B;">Configure add-on groups and items (e.g. Choose Chutney, Choose Sambar)</span>
+                            </div>
+                            <button type="button" id="btn-add-addon-group" style="background:#065F46; color:#FFFFFF; border:none; padding:8px 14px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+                                ➕ Add Group
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Container for Add-on Groups -->
+                        <div id="addon-groups-container" style="display:flex; flex-direction:column; gap:14px;">
+                            <!-- Rendered dynamically by JS -->
+                        </div>
+                    </div>
                 </div>
                 <div class="admin-modal-footer">
                     <button type="button" class="btn-modal-cancel" id="product-modal-cancel-btn">Cancel</button>
-                    <button type="submit" class="btn-modal-save" style="background:#4A0B17; color:#FFFFFF; font-weight:800;">Save Product &amp; 3 Photos</button>
+                    <button type="submit" class="btn-modal-save" style="background:#4A0B17; color:#FFFFFF; font-weight:800;">Save Product &amp; Add-ons</button>
                 </div>
             </form>
         </div>
@@ -1727,6 +1810,18 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                                         let badge = '<span style="background:#E0F2FE; color:#0369A1; font-size:0.65rem; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px;">PRODUCT</span>';
                                         if (item.product_name.includes('Wrapping') || item.product_name.includes('Add-On 1')) badge = '<span style="background:#FEF3C7; color:#92400E; font-size:0.65rem; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px;">🎁 ADD-ON 1</span>';
                                         else if (item.product_name.includes('Chocolate') || item.product_name.includes('Sweet') || item.product_name.includes('Add-On 2')) badge = '<span style="background:#FCE7F3; color:#9D174D; font-size:0.65rem; font-weight:800; padding:1px 5px; border-radius:4px; margin-right:4px;">🍫 ADD-ON 2</span>';
+                                        
+                                        let addonsHtml = '';
+                                        let addonsArr = item.selected_addons;
+                                        if (typeof addonsArr === 'string') {
+                                            try { addonsArr = JSON.parse(addonsArr); } catch(err) { addonsArr = []; }
+                                        }
+                                        if (Array.isArray(addonsArr) && addonsArr.length > 0) {
+                                            addonsHtml = `<div style="margin-top:4px; font-size:0.75rem; color:#475569; display:flex; flex-direction:column; gap:2px;">` +
+                                                addonsArr.map(a => `<div style="display:flex; align-items:center; gap:4px;"><span style="color:#059669; font-weight:800;">+</span> <span>${escapeHtml(a.name || a.item_name || 'Add-on')}</span> <span style="color:#64748B;">(&pound;${parseFloat(a.price || 0).toFixed(2)})</span></div>`).join('') +
+                                                `</div>`;
+                                        }
+
                                         let itemSub = (item.quantity * parseFloat(item.price)).toFixed(2);
 
                                         return `
@@ -1737,6 +1832,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                                                     <div>
                                                         ${badge}
                                                         <strong style="color:#0F172A; font-size:0.83rem;">${escapeHtml(item.product_name)}</strong>
+                                                        ${addonsHtml}
                                                     </div>
                                                 </div>
                                             </td>
@@ -1782,10 +1878,10 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 document.getElementById('view-details-modal').style.display = 'flex';
             }
 
-            // Catalog Management functions
-            let catalogCategories = [];
-            let catalogProducts = [];
-            let adminSettings = {};
+            // Catalog Management functions. These values are initialized at the
+            // top of the script from PHP/preview data. Do not redeclare them in
+            // this callback: the first catalog load runs before this point and
+            // a block-scoped redeclaration puts them in JavaScript's TDZ.
 
             function loadCatalogData() {
                 fetch('ajax/admin-actions.php?action=admin_get_categories_products')
@@ -1878,15 +1974,12 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 if (!tbody) return;
                 tbody.innerHTML = '';
                 
-                // Exclude Add-On category from main categories table (Add-Ons have dedicated status panel)
-                let mainCategories = catalogCategories.filter(cat => !cat.name.includes('Add-On'));
-
-                if (mainCategories.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748B;">No shop categories found.</td></tr>';
+                if (catalogCategories.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; color:#64748B;">No shop categories found. Click <strong>+ Add Category</strong> above to create one.</td></tr>';
                     return;
                 }
 
-                mainCategories.forEach(cat => {
+                catalogCategories.forEach(cat => {
                     const tr = document.createElement('tr');
                     const imgPath = cat.image_path || 'assets/images/ganesh_hero.png';
                     const descText = cat.description ? escapeHtml(cat.description) : 'Festive handcrafted items & idol collection.';
@@ -1918,17 +2011,15 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 if (!tbody) return;
                 tbody.innerHTML = '';
 
-                // Exclude Add-On items from main products table (Add-Ons have dedicated status panel & belong in Cart)
-                let shopProducts = catalogProducts.filter(p => p.id != 7 && p.id != 8 && (!p.category_name || !p.category_name.includes('Add-On')));
-
-                if (shopProducts.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No products found.</td></tr>';
+                if (catalogProducts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748B;">No products found in catalog. Click <strong>+ Add Product / Item</strong> above to create one.</td></tr>';
                     return;
                 }
 
-                shopProducts.forEach(p => {
+                catalogProducts.forEach(p => {
                     const tr = document.createElement('tr');
                     const img1 = p.image_path || 'assets/images/ganesh_hero.png';
+                    const catName = p.category_name || (catalogCategories.find(c => c.id == p.category_id) || {}).name || 'General Category';
 
                     tr.innerHTML = `
                         <td style="text-align:center; vertical-align:middle; width:90px; padding:12px;">
@@ -1936,7 +2027,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         </td>
                         <td style="vertical-align:middle;">
                             <strong style="color:#0F172A; font-size:0.9rem; display:block;">${escapeHtml(p.name)}</strong>
-                            <span style="font-size:0.75rem; color:#64748B; font-weight:700; text-transform:uppercase;">${escapeHtml(p.category_name)}</span>
+                            <span style="font-size:0.75rem; color:#64748B; font-weight:700; text-transform:uppercase;">${escapeHtml(catName)}</span>
                         </td>
                         <td style="font-size:0.8rem; color:#475569; vertical-align:middle; max-width:250px;">
                             ${escapeHtml(p.description || '')}
@@ -2012,15 +2103,60 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     document.getElementById('category-description').value = '';
                     document.getElementById('category-current-image').value = '';
                     document.getElementById('category-image-file').value = '';
-                    document.getElementById('category-image-preview-box').style.display = 'none';
-                    document.getElementById('category-modal-title').textContent = 'Add Category';
-                    document.getElementById('category-modal').style.display = 'flex';
+                    
+                    let prevBox = document.getElementById('category-image-preview-box');
+                    if (prevBox) prevBox.style.display = 'none';
+                    
+                    document.getElementById('category-modal-title').textContent = '📁 Add New Category';
+                    let catModal = document.getElementById('category-modal');
+                    catModal.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        let input = document.getElementById('category-name');
+                        if (input) input.focus();
+                    }, 100);
                     return;
                 }
 
-                // 2. Add Product Button (Resets Unlimited Gallery)
+                // 2. Add Product / Item Button (Resets Unlimited Gallery & Addons)
                 let btnAddProd = e.target.closest('#btn-add-product');
                 if (btnAddProd) {
+                    e.preventDefault();
+
+                    if (catalogCategories.length === 0) {
+                        alert('Create a category before adding a product.');
+                        document.getElementById('btn-add-category').click();
+                        return;
+                    }
+                    document.getElementById('product-id').value = '0';
+                    document.getElementById('product-name').value = '';
+                    document.getElementById('product-price').value = '';
+                    document.getElementById('product-description').value = '';
+                    
+                    productGalleryItems = [];
+                    renderProductGalleryPreview();
+                    
+                    currentProductAddonGroups = [];
+                    renderAddonGroups();
+                    
+                    let toggleGroup = document.getElementById('addon-status-toggle-group');
+                    if (toggleGroup) toggleGroup.style.display = 'none';
+                    
+                    populateCategoryDropdown();
+                    document.getElementById('product-modal-title').textContent = '🛒 Add New Product / Item';
+                    let prodModal = document.getElementById('product-modal');
+                    prodModal.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        let input = document.getElementById('product-name');
+                        if (input) input.focus();
+                    }, 100);
+                    return;
+                }
+
+                // 3. Add Festive Add-On Shortcut Button
+                let btnAddAddon = e.target.closest('#btn-add-addon');
+                if (btnAddAddon) {
                     e.preventDefault();
                     document.getElementById('product-id').value = '0';
                     document.getElementById('product-name').value = '';
@@ -2030,44 +2166,35 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     productGalleryItems = [];
                     renderProductGalleryPreview();
                     
-                    document.getElementById('addon-status-toggle-group').style.display = 'none';
-                    populateCategoryDropdown();
-                    document.getElementById('product-modal-title').textContent = 'Add Product (Unlimited Photos)';
-                    document.getElementById('product-modal').style.display = 'flex';
-                    return;
-                }
-
-                // 3. Add Festive Add-On Shortcut Button
-                let btnAddAddon = e.target.closest('#btn-add-addon');
-                if (btnAddAddon) {
-                    e.preventDefault();
-                    document.getElementById('product-id').value = '0';
-                    document.getElementById('product-name').value = '🍫 Add-On 2: Premium Chocolate & Sweets Box';
-                    document.getElementById('product-price').value = '3.99';
-                    document.getElementById('product-description').value = 'Luxury assorted Cadbury chocolates & dry fruit sweets box';
-                    
-                    productGalleryItems = [
-                        { type: 'existing', url: 'assets/images/rakhi_peacock.png', file: null },
-                        { type: 'existing', url: 'assets/images/rakhi_rudraksha.png', file: null },
-                        { type: 'existing', url: 'assets/images/ganesh_product_2.png', file: null }
-                    ];
-                    renderProductGalleryPreview();
+                    currentProductAddonGroups = [];
+                    renderAddonGroups();
                     
                     populateCategoryDropdown();
                     const select = document.getElementById('product-category');
-                    const addonCat = catalogCategories.find(c => c.name.includes('Add-On'));
-                    if (addonCat && select) {
-                        select.value = addonCat.id;
+                    if (catalogCategories && catalogCategories.length > 0 && select) {
+                        const addonCat = catalogCategories.find(c => c.name && (c.name.toLowerCase().includes('add-on') || c.name.toLowerCase().includes('festive')));
+                        if (addonCat) {
+                            select.value = addonCat.id;
+                        }
                     }
                     
-                    document.getElementById('addon-status-toggle-group').style.display = 'block';
-                    document.getElementById('product-addon-enabled').checked = true;
-                    document.getElementById('product-modal-title').textContent = 'Add Festive Add-On Product';
-                    document.getElementById('product-modal').style.display = 'flex';
+                    let toggleGroup = document.getElementById('addon-status-toggle-group');
+                    if (toggleGroup) toggleGroup.style.display = 'block';
+                    let enabledChk = document.getElementById('product-addon-enabled');
+                    if (enabledChk) enabledChk.checked = true;
+                    
+                    document.getElementById('product-modal-title').textContent = '🍫 Add Festive Add-On Product';
+                    let prodModal = document.getElementById('product-modal');
+                    prodModal.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        let input = document.getElementById('product-name');
+                        if (input) input.focus();
+                    }, 100);
                     return;
                 }
 
-                // 4. Edit Product Button (Fills Unlimited Gallery Images and Previews)
+                // 4. Edit Product Button (Fills Unlimited Gallery Images, Previews & Addons)
                 let btnEditProd = e.target.closest('.btn-edit-product');
                 if (btnEditProd) {
                     e.preventDefault();
@@ -2105,6 +2232,9 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     }
                     renderProductGalleryPreview();
                     
+                    currentProductAddonGroups = p.addons ? JSON.parse(JSON.stringify(p.addons)) : [];
+                    renderAddonGroups();
+                    
                     let isAddon = p.id == 7 || p.id == 8 || (p.name && (p.name.includes('Wrapping') || p.name.includes('Chocolate') || p.name.includes('Add-On')));
                     let toggleGroup = document.getElementById('addon-status-toggle-group');
                     if (isAddon && toggleGroup) {
@@ -2120,7 +2250,7 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         toggleGroup.style.display = 'none';
                     }
                     
-                    document.getElementById('product-modal-title').textContent = 'Edit Product (Unlimited Gallery)';
+                    document.getElementById('product-modal-title').textContent = 'Edit Product';
                     document.getElementById('product-modal').style.display = 'flex';
                     return;
                 }
@@ -2217,6 +2347,265 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                     return;
                 }
             });
+
+            // PRODUCT ADD-ONS STATE MANAGEMENT & REORDER CONTROLLER
+            let currentProductAddonGroups = [];
+
+            function renderAddonGroups() {
+                const container = document.getElementById('addon-groups-container');
+                if (!container) return;
+                container.innerHTML = '';
+
+                if (currentProductAddonGroups.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:16px; background:#FFFFFF; border:1px dashed #CBD5E1; border-radius:8px; color:#64748B; font-size:0.83rem;">
+                            No Add-on Groups configured yet. Click <strong>+ Add Group</strong> above to create one.
+                        </div>`;
+                    return;
+                }
+
+                currentProductAddonGroups.forEach((group, gIdx) => {
+                    let itemsHtml = '';
+                    if (!group.items || group.items.length === 0) {
+                        itemsHtml = `<div style="text-align:center; padding:10px; color:#94A3B8; font-size:0.78rem;">No items in this group. Click <strong>+ Add Item</strong> below.</div>`;
+                    } else {
+                        group.items.forEach((item, iIdx) => {
+                            let imgPreview = item.image_path ? `<img src="${escapeHtml(item.image_path)}" style="width:28px; height:28px; object-fit:cover; border-radius:4px; border:1px solid #CBD5E1;">` : `<span style="font-size:0.72rem; color:#94A3B8;">No img</span>`;
+                            itemsHtml += `
+                            <div class="addon-item-row" style="display:grid; grid-template-columns: auto 2fr 1fr 1fr auto auto; gap:8px; align-items:center; background:#FFFFFF; border:1px solid #E2E8F0; padding:8px 10px; border-radius:8px;">
+                                <div style="display:flex; flex-direction:column; gap:2px;">
+                                    <button type="button" class="btn-move-item-up" data-gidx="${gIdx}" data-iidx="${iIdx}" style="padding:0 5px; font-size:0.65rem; font-weight:700; border:1px solid #CBD5E1; background:#F8FAFC; border-radius:3px; cursor:pointer;" ${iIdx === 0 ? 'disabled style="opacity:0.4"' : ''}>▲</button>
+                                    <button type="button" class="btn-move-item-down" data-gidx="${gIdx}" data-iidx="${iIdx}" style="padding:0 5px; font-size:0.65rem; font-weight:700; border:1px solid #CBD5E1; background:#F8FAFC; border-radius:3px; cursor:pointer;" ${iIdx === group.items.length - 1 ? 'disabled style="opacity:0.4"' : ''}>▼</button>
+                                </div>
+                                <div>
+                                    <input type="text" class="addon-item-name-input" data-gidx="${gIdx}" data-iidx="${iIdx}" value="${escapeHtml(item.name || '')}" placeholder="Item Name (e.g. Coconut Chutney)" style="width:100%; padding:6px; font-size:0.8rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <input type="number" step="0.01" min="0" class="addon-item-price-input" data-gidx="${gIdx}" data-iidx="${iIdx}" value="${item.price !== undefined ? item.price : ''}" placeholder="Price (10.00)" style="width:100%; padding:6px; font-size:0.8rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                </div>
+                                <div>
+                                    <select class="addon-item-status-select" data-gidx="${gIdx}" data-iidx="${iIdx}" style="width:100%; padding:6px; font-size:0.8rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                        <option value="active" ${item.status !== 'inactive' ? 'selected' : ''}>Active</option>
+                                        <option value="inactive" ${item.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    ${imgPreview}
+                                    <label style="background:#F1F5F9; border:1px solid #CBD5E1; padding:4px 8px; border-radius:4px; font-size:0.72rem; cursor:pointer;" title="Upload Optional Image">
+                                        📷
+                                        <input type="file" class="addon-item-file-input" data-gidx="${gIdx}" data-iidx="${iIdx}" accept="image/*" style="display:none;">
+                                    </label>
+                                </div>
+                                <button type="button" class="btn-delete-addon-item" data-gidx="${gIdx}" data-iidx="${iIdx}" style="background:#FEF2F2; color:#DC2626; border:1px solid #FCA5A5; padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;" title="Delete Item">🗑️</button>
+                            </div>`;
+                        });
+                    }
+
+                    const groupCard = document.createElement('div');
+                    groupCard.className = 'addon-group-card';
+                    groupCard.style.cssText = 'background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:10px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:12px;';
+                    groupCard.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#F8FAFC; padding:8px 12px; border-radius:8px; border:1px solid #E2E8F0;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <button type="button" class="btn-move-group-up" data-gidx="${gIdx}" style="padding:2px 6px; font-size:0.7rem; font-weight:700; border:1px solid #CBD5E1; background:#FFF; border-radius:4px; cursor:pointer;" ${gIdx === 0 ? 'disabled style="opacity:0.4"' : ''}>▲ Move Up</button>
+                                <button type="button" class="btn-move-group-down" data-gidx="${gIdx}" style="padding:2px 6px; font-size:0.7rem; font-weight:700; border:1px solid #CBD5E1; background:#FFF; border-radius:4px; cursor:pointer;" ${gIdx === currentProductAddonGroups.length - 1 ? 'disabled style="opacity:0.4"' : ''}>▼ Move Down</button>
+                                <strong style="color:#4A0B17; font-size:0.9rem;">Group ${gIdx + 1}: ${escapeHtml(group.name || 'Untitled Group')}</strong>
+                            </div>
+                            <button type="button" class="btn-delete-addon-group" data-gidx="${gIdx}" style="background:#FEF2F2; color:#DC2626; border:1px solid #FCA5A5; padding:4px 10px; border-radius:6px; font-size:0.78rem; font-weight:700; cursor:pointer;">🗑️ Delete Group</button>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:10px; align-items:end;">
+                            <div>
+                                <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:4px;">Group Title / Name</label>
+                                <input type="text" class="addon-group-name-input" data-gidx="${gIdx}" value="${escapeHtml(group.name || '')}" placeholder="e.g. Choose Chutney" style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:4px;">Requirement</label>
+                                <select class="addon-group-required-select" data-gidx="${gIdx}" style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                    <option value="1" ${group.is_required ? 'selected' : ''}>Required</option>
+                                    <option value="0" ${!group.is_required ? 'selected' : ''}>Optional</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:4px;">Selection Type</label>
+                                <select class="addon-group-type-select" data-gidx="${gIdx}" style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                                    <option value="single" ${group.selection_type !== 'multiple' ? 'selected' : ''}>Single (Radio)</option>
+                                    <option value="multiple" ${group.selection_type === 'multiple' ? 'selected' : ''}>Multiple (Checkbox)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:4px;">Min Selection</label>
+                                <input type="number" min="0" class="addon-group-min-input" data-gidx="${gIdx}" value="${group.min_selection !== undefined ? group.min_selection : 0}" style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-weight:700; font-size:0.78rem; color:#475569; display:block; margin-bottom:4px;">Max Selection</label>
+                                <input type="number" min="0" class="addon-group-max-input" data-gidx="${gIdx}" value="${group.max_selection !== undefined ? group.max_selection : 0}" placeholder="0=Unlimited" style="width:100%; padding:8px; font-size:0.85rem; border:1px solid #CBD5E1; border-radius:6px; box-sizing:border-box;">
+                            </div>
+                        </div>
+
+                        <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-weight:700; font-size:0.8rem; color:#334155;">Items in this group</span>
+                                <button type="button" class="btn-add-addon-item" data-gidx="${gIdx}" style="background:#1E293B; color:#FFFFFF; border:none; padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; cursor:pointer;">➕ Add Item</button>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(groupCard);
+                });
+            }
+
+            // Add-on Group event bindings
+            const btnAddAddonGroup = document.getElementById('btn-add-addon-group');
+            if (btnAddAddonGroup) {
+                btnAddAddonGroup.addEventListener('click', function() {
+                    currentProductAddonGroups.push({
+                        id: 'temp_' + Date.now(),
+                        name: 'New Group',
+                        is_required: 1,
+                        selection_type: 'single',
+                        min_selection: 1,
+                        max_selection: 1,
+                        items: []
+                    });
+                    renderAddonGroups();
+                });
+            }
+
+            const addonContainer = document.getElementById('addon-groups-container');
+            if (addonContainer) {
+                addonContainer.addEventListener('input', function(e) {
+                    const gIdx = parseInt(e.target.getAttribute('data-gidx'));
+                    const iIdx = parseInt(e.target.getAttribute('data-iidx'));
+
+                    if (e.target.classList.contains('addon-group-name-input')) {
+                        currentProductAddonGroups[gIdx].name = e.target.value;
+                    } else if (e.target.classList.contains('addon-group-min-input')) {
+                        currentProductAddonGroups[gIdx].min_selection = parseInt(e.target.value) || 0;
+                    } else if (e.target.classList.contains('addon-group-max-input')) {
+                        currentProductAddonGroups[gIdx].max_selection = parseInt(e.target.value) || 0;
+                    } else if (e.target.classList.contains('addon-item-name-input')) {
+                        currentProductAddonGroups[gIdx].items[iIdx].name = e.target.value;
+                    } else if (e.target.classList.contains('addon-item-price-input')) {
+                        currentProductAddonGroups[gIdx].items[iIdx].price = parseFloat(e.target.value) || 0;
+                    }
+                });
+
+                addonContainer.addEventListener('change', function(e) {
+                    const gIdx = parseInt(e.target.getAttribute('data-gidx'));
+                    const iIdx = parseInt(e.target.getAttribute('data-iidx'));
+
+                    if (e.target.classList.contains('addon-group-required-select')) {
+                        currentProductAddonGroups[gIdx].is_required = parseInt(e.target.value);
+                    } else if (e.target.classList.contains('addon-group-type-select')) {
+                        currentProductAddonGroups[gIdx].selection_type = e.target.value;
+                    } else if (e.target.classList.contains('addon-item-status-select')) {
+                        currentProductAddonGroups[gIdx].items[iIdx].status = e.target.value;
+                    } else if (e.target.classList.contains('addon-item-file-input')) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            currentProductAddonGroups[gIdx].items[iIdx].file = file;
+                            currentProductAddonGroups[gIdx].items[iIdx].image_path = URL.createObjectURL(file);
+                            renderAddonGroups();
+                        }
+                    }
+                });
+
+                addonContainer.addEventListener('click', function(e) {
+                    const btnAdd = e.target.closest('.btn-add-addon-item');
+                    if (btnAdd) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnAdd.getAttribute('data-gidx'));
+                        if (!currentProductAddonGroups[gIdx].items) currentProductAddonGroups[gIdx].items = [];
+                        currentProductAddonGroups[gIdx].items.push({
+                            id: 'temp_item_' + Date.now(),
+                            name: '',
+                            price: 0.00,
+                            status: 'active',
+                            image_path: ''
+                        });
+                        renderAddonGroups();
+                        return;
+                    }
+
+                    const btnDelGroup = e.target.closest('.btn-delete-addon-group');
+                    if (btnDelGroup) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnDelGroup.getAttribute('data-gidx'));
+                        currentProductAddonGroups.splice(gIdx, 1);
+                        renderAddonGroups();
+                        return;
+                    }
+
+                    const btnDelItem = e.target.closest('.btn-delete-addon-item');
+                    if (btnDelItem) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnDelItem.getAttribute('data-gidx'));
+                        const iIdx = parseInt(btnDelItem.getAttribute('data-iidx'));
+                        currentProductAddonGroups[gIdx].items.splice(iIdx, 1);
+                        renderAddonGroups();
+                        return;
+                    }
+
+                    const btnGroupUp = e.target.closest('.btn-move-group-up');
+                    if (btnGroupUp) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnGroupUp.getAttribute('data-gidx'));
+                        if (gIdx > 0) {
+                            let temp = currentProductAddonGroups[gIdx];
+                            currentProductAddonGroups[gIdx] = currentProductAddonGroups[gIdx - 1];
+                            currentProductAddonGroups[gIdx - 1] = temp;
+                            renderAddonGroups();
+                        }
+                        return;
+                    }
+
+                    const btnGroupDown = e.target.closest('.btn-move-group-down');
+                    if (btnGroupDown) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnGroupDown.getAttribute('data-gidx'));
+                        if (gIdx < currentProductAddonGroups.length - 1) {
+                            let temp = currentProductAddonGroups[gIdx];
+                            currentProductAddonGroups[gIdx] = currentProductAddonGroups[gIdx + 1];
+                            currentProductAddonGroups[gIdx + 1] = temp;
+                            renderAddonGroups();
+                        }
+                        return;
+                    }
+
+                    const btnItemUp = e.target.closest('.btn-move-item-up');
+                    if (btnItemUp) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnItemUp.getAttribute('data-gidx'));
+                        const iIdx = parseInt(btnItemUp.getAttribute('data-iidx'));
+                        if (iIdx > 0) {
+                            let items = currentProductAddonGroups[gIdx].items;
+                            let temp = items[iIdx];
+                            items[iIdx] = items[iIdx - 1];
+                            items[iIdx - 1] = temp;
+                            renderAddonGroups();
+                        }
+                        return;
+                    }
+
+                    const btnItemDown = e.target.closest('.btn-move-item-down');
+                    if (btnItemDown) {
+                        e.preventDefault();
+                        const gIdx = parseInt(btnItemDown.getAttribute('data-gidx'));
+                        const iIdx = parseInt(btnItemDown.getAttribute('data-iidx'));
+                        let items = currentProductAddonGroups[gIdx].items;
+                        if (iIdx < items.length - 1) {
+                            let temp = items[iIdx];
+                            items[iIdx] = items[iIdx + 1];
+                            items[iIdx + 1] = temp;
+                            renderAddonGroups();
+                        }
+                        return;
+                    }
+                });
+            }
 
             // UNLIMITED PRODUCT GALLERY STATE MANAGEMENT & REORDER CONTROLLER
             let productGalleryItems = []; // items: { type: 'existing'|'new', url: string, file: File|null }
@@ -2347,6 +2736,19 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 });
             }
 
+            const catFileInput = document.getElementById('category-image-file');
+            if (catFileInput) {
+                catFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    const prevBox = document.getElementById('category-image-preview-box');
+                    const prevImg = document.getElementById('category-image-preview-img');
+                    if (file && prevBox && prevImg) {
+                        prevImg.src = URL.createObjectURL(file);
+                        prevBox.style.display = 'flex';
+                    }
+                });
+            }
+
             // Form submissions
             const closeCategoryModal = () => document.getElementById('category-modal').style.display = 'none';
             const closeProductModal = () => document.getElementById('product-modal').style.display = 'none';
@@ -2355,6 +2757,11 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 e.preventDefault();
                 let fd = new FormData(this);
                 fd.append('csrf_token', csrfToken);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                }
                 
                 fetch('ajax/admin-actions.php?action=save_category', {
                     method: 'POST',
@@ -2362,12 +2769,23 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                 })
                 .then(res => res.json())
                 .then(res => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Category';
+                    }
                     if (res.success) {
                         closeCategoryModal();
                         loadCatalogData();
                     } else {
-                        alert(res.message);
+                        alert(res.message || 'Unable to save the category.');
                     }
+                })
+                .catch(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Category';
+                    }
+                    alert('Network error saving category. Please try again.');
                 });
             });
 
@@ -2396,6 +2814,18 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
                         fd.append('existing_gallery_images[]', item.url);
                     } else if (item.type === 'new' && item.file) {
                         fd.append('product_gallery_files[]', item.file);
+                    }
+                });
+
+                // Append Product Add-ons data
+                fd.append('addons', JSON.stringify(currentProductAddonGroups));
+                currentProductAddonGroups.forEach((g, gIdx) => {
+                    if (g.items) {
+                        g.items.forEach((item, iIdx) => {
+                            if (item.file) {
+                                fd.append(`addon_item_img_${gIdx}_${iIdx}`, item.file);
+                            }
+                        });
                     }
                 });
 
@@ -2437,5 +2867,6 @@ $catalog_products   = $db_conn ? $db_conn->query("SELECT p.*, c.name as category
             }
         });
     </script>
+    <script src="assets/js/catalog-actions.js?v=20260815"></script>
 </body>
 </html>

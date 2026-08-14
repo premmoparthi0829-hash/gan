@@ -237,6 +237,8 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                     $photo_count = count($photos);
                                     $img1 = $photos[0] ?? 'assets/images/ganesh_hero.png';
                                     $gallery_json_attr = htmlspecialchars(json_encode($photos), ENT_QUOTES, 'UTF-8');
+                                    $prod_addons = get_product_addons($prod['id']);
+                                    $addons_json_attr = htmlspecialchars(json_encode($prod_addons), ENT_QUOTES, 'UTF-8');
                                 ?>
                                     <div class="swiper-slide product-card-item"
                                         data-id="<?php echo $prod['id']; ?>"
@@ -245,6 +247,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                         data-desc="<?php echo escape_output($prod['description']); ?>"
                                         data-img="<?php echo escape_output($img1); ?>"
                                         data-gallery="<?php echo $gallery_json_attr; ?>"
+                                        data-addons="<?php echo $addons_json_attr; ?>"
                                         data-cat="<?php echo escape_output($cat['name']); ?>">
                                         <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
                                             <div class="card-track-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden;">
@@ -748,6 +751,11 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                             <div class="pm-highlight-item">
                                 <span class="pm-icon">🛡️</span> Breakage-Safe Protective Packaging
                             </div>
+                        </div>
+
+                        <!-- PRODUCT ADD-ONS CONTAINER FOR USER SELECTION -->
+                        <div id="pmodal-addons-container" style="margin-top:16px; display:flex; flex-direction:column; gap:14px;">
+                            <!-- Dynamically populated by JS when product has add-ons -->
                         </div>
                     </div>
                     <div class="pmodal-actions">
