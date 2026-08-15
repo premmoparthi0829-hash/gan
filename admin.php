@@ -1920,15 +1920,22 @@ if ($db_conn && !empty($catalog_products)) {
                         method: 'POST',
                         body: formData
                     })
-                    .then(res => res.json())
-                    .then(data => {
+                    .then(async res => {
+                        const text = await res.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch(err) {
+                            throw new Error(text || 'Invalid JSON response');
+                        }
                         btn.disabled = false;
                         btn.textContent = '💾 Save UPI Settings';
-                        if (data.success) {
+                        if (res.ok && data.success) {
                             alert('✅ UPI Payment Settings saved successfully!');
                             const badge = document.getElementById('upi-status-badge');
                             if (badge) {
-                                const isEnabled = document.getElementById('is_enabled').checked;
+                                const isEnabledEl = document.getElementById('is_enabled');
+                                const isEnabled = isEnabledEl ? isEnabledEl.checked : true;
                                 badge.style.background = isEnabled ? '#10B981' : '#EF4444';
                                 badge.textContent = isEnabled ? '🟢 ENABLED & ACTIVE' : '🔴 DISABLED';
                             }
@@ -1939,7 +1946,7 @@ if ($db_conn && !empty($catalog_products)) {
                     .catch(err => {
                         btn.disabled = false;
                         btn.textContent = '💾 Save UPI Settings';
-                        alert('❌ Network error while saving UPI settings.');
+                        alert('❌ Error saving UPI settings: ' + err.message);
                     });
                 });
             }

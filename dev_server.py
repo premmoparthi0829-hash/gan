@@ -455,10 +455,12 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif action in ['save_settings', 'save_payment_settings', 'save_upi_settings']:
-            for key in list(SETTINGS.keys()) + ['upi_id', 'upi_account_name', 'upi_qr_image', 'bank_name', 'bank_account_name', 'bank_sort_code', 'bank_account_number']:
+            for key in list(SETTINGS.keys()) + ['upi_id', 'upi_account_name', 'account_name', 'instructions', 'upi_instructions', 'upi_qr_image', 'bank_name', 'bank_account_name', 'bank_sort_code', 'bank_account_number']:
                 if key in form_data:
                     SETTINGS[key] = form_data[key]
-            self.send_json({"success": True, "message": "All store and payment settings saved successfully!"})
+                    if key == 'account_name': SETTINGS['upi_account_name'] = form_data[key]
+                    if key == 'instructions': SETTINGS['upi_instructions'] = form_data[key]
+            self.send_json({"success": True, "message": "UPI Payment Settings saved successfully!"})
             return
 
         elif action == 'save_paypal_settings':

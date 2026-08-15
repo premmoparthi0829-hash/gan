@@ -50,7 +50,8 @@ if (!is_admin_logged_in()) {
 // CSRF Validation for state-changing admin operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($action, [
     'update_booking_status', 'save_settings', 'toggle_addon',
-    'save_category', 'delete_category', 'save_product', 'delete_product', 'save_addon', 'delete_addon', 'toggle_master_addon'
+    'save_category', 'delete_category', 'save_product', 'delete_product', 'save_addon', 'delete_addon', 'toggle_master_addon',
+    'save_upi_settings', 'save_payment_settings'
 ], true)) {
     $csrf = $_POST['csrf_token'] ?? '';
     if (!validate_csrf_token($csrf)) {
