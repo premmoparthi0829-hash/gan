@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/booking-functions.php';
 
 /**
  * Validate UK Postcode Format (Flexible validation)

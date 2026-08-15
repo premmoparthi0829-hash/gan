@@ -35,8 +35,7 @@ SETTINGS = {
 
 CATEGORIES = [
     {"id": 1, "name": "Ganesh Statue", "description": "Handcrafted eco-friendly clay Ganesh statues with complete Mukut & ornament accessories delivered across the UK.", "image_path": "assets/images/ganesh_hero.png"},
-    {"id": 2, "name": "Rakhi", "description": "Designer Rudraksha & Silver-Plated Peacock Rakhi sets handcrafted for festive celebrations.", "image_path": "assets/images/rakhi_peacock.png"},
-    {"id": 3, "name": "Festive Add-Ons & Gift Kits", "description": "Luxury chocolate boxes and gift wrapping accessories.", "image_path": "assets/images/rakhi_rudraksha.png"}
+    {"id": 2, "name": "Rakhi", "description": "Designer Rudraksha & Silver-Plated Peacock Rakhi sets handcrafted for festive celebrations.", "image_path": "assets/images/rakhi_peacock.png"}
 ]
 
 PRODUCTS = [
@@ -44,8 +43,8 @@ PRODUCTS = [
     {"id": 2, "name": "Premium Golden Ganesh Idol", "price": 24.99, "category_id": 1, "description": "Exquisite golden-painted eco-friendly clay idol with velvet base.", "image_path": "assets/images/ganesh_product_2.png", "image_path_2": "assets/images/ganesh_hero.png", "image_path_3": "assets/images/ganesh_product_4.png"},
     {"id": 3, "name": "Designer Rudraksha Rakhi", "price": 4.99, "category_id": 2, "description": "Beautifully crafted pure Rudraksha Rakhi with gold-plated beads.", "image_path": "assets/images/rakhi_rudraksha.png", "image_path_2": "assets/images/rakhi_peacock.png", "image_path_3": "assets/images/prod_1786450092_4a247638.png"},
     {"id": 4, "name": "Silver Plated Peacock Rakhi", "price": 6.99, "category_id": 2, "description": "Elegant silver-plated peacock designer Rakhi with premium thread.", "image_path": "assets/images/rakhi_peacock.png", "image_path_2": "assets/images/rakhi_rudraksha.png", "image_path_3": "assets/images/prod_1786450274_3733079c.png"},
-    {"id": 7, "name": "🎁 Add-On 1: Festive Gift Wrapping & Card", "price": 1.99, "category_id": 3, "description": "Luxury golden gift wrap with customized festive greeting card", "image_path": "assets/images/rakhi_rudraksha.png", "image_path_2": "assets/images/rakhi_peacock.png", "image_path_3": "assets/images/ganesh_hero.png"},
-    {"id": 8, "name": "🍫 Add-On 2: Premium Chocolate & Sweet Box", "price": 3.99, "category_id": 3, "description": "Luxury assorted Cadbury chocolates & dry fruit sweets box", "image_path": "assets/images/rakhi_peacock.png", "image_path_2": "assets/images/rakhi_rudraksha.png", "image_path_3": "assets/images/ganesh_product_2.png"}
+    {"id": 7, "name": "🎁 Add-On 1: Festive Gift Wrapping & Card", "price": 1.99, "category_id": 1, "description": "Luxury golden gift wrap with customized festive greeting card", "image_path": "assets/images/rakhi_rudraksha.png", "image_path_2": "assets/images/rakhi_peacock.png", "image_path_3": "assets/images/ganesh_hero.png"},
+    {"id": 8, "name": "🍫 Add-On 2: Premium Chocolate & Sweet Box", "price": 3.99, "category_id": 2, "description": "Luxury assorted Cadbury chocolates & dry fruit sweets box", "image_path": "assets/images/rakhi_peacock.png", "image_path_2": "assets/images/rakhi_rudraksha.png", "image_path_3": "assets/images/ganesh_product_2.png"}
 ]
 
 # Reusable add-ons are intentionally empty in preview; administrators create
@@ -632,22 +631,35 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # --- Generate category card HTML (for cat-pick-grid section) ---
+        def htmlspecialchars(s):
+            if s is None:
+                return ""
+            return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").replace("'", "&#039;")
+
+        # --- Generate category card HTML (for cat-2col-grid section) ---
         cat_cards_html = ''
         for cat in CATEGORIES:
+            cat_name_lower = (cat.get('name') or '').lower()
+            if 'add-on' in cat_name_lower or 'addon' in cat_name_lower or 'festive add' in cat_name_lower:
+                continue
             prods = [p for p in PRODUCTS if p['category_id'] == cat['id']]
-            cat_img = next((p.get('image_path','') for p in prods if p.get('image_path')), '')
-            img_html = f'<img src="{cat_img}" alt="{cat["name"]}">' if cat_img else '<div class="cat-clean-img-placeholder">🎁</div>'
+            cat_img = cat.get('image_path') or next((p.get('image_path','') for p in prods if p.get('image_path')), '')
+            img_html = f'<img src="{htmlspecialchars(cat_img)}" alt="{htmlspecialchars(cat["name"])}" loading="lazy">' if cat_img else '<div class="cat-clean-img-placeholder" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:3rem; position:absolute; top:0; left:0;">🎁</div>'
             cat_cards_html += f'''
-                        <div class="cat-clean-card" data-cat-id="{cat['id']}"
-                            data-cat-name="{cat['name']}" role="button" tabindex="0"
-                            aria-label="Browse {cat['name']}">
-                            <div class="cat-clean-img-wrap">
+                        <div class="product-card-item cat-clean-card" data-cat-id="{cat['id']}"
+                            data-cat-name="{htmlspecialchars(cat['name'])}" role="button" tabindex="0"
+                            aria-label="Browse {htmlspecialchars(cat['name'])}" style="cursor:pointer;">
+                            <div class="cat-img-wrap">
                                 {img_html}
                             </div>
-                            <div class="cat-clean-footer">
-                                <h2 class="cat-clean-name">{cat['name']}</h2>
-                                <span class="cat-clean-btn">Shop Now &rarr;</span>
+                            <div class="prod-details">
+                                <h3 class="prod-name cat-clean-name">{htmlspecialchars(cat['name'])}</h3>
+                                <p class="prod-desc">{htmlspecialchars(cat.get('description', ''))}</p>
+                                <div class="prod-actions-row">
+                                    <span class="btn-shop-collection btn-gold" style="width:100%; text-align:center; display:block;">
+                                        Shop Collection &rarr;
+                                    </span>
+                                </div>
                             </div>
                         </div>'''
 
@@ -657,54 +669,81 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
             prods = [p for p in PRODUCTS if p['category_id'] == cat['id']]
             prod_cards = ''
             for prod in prods:
-                img = prod.get('image_path', 'assets/images/ganesh_hero.png')
-                addons_json_attr = urllib.parse.quote(json.dumps(prod.get('addons', [])))
+                photos = [p for p in [prod.get('image_path'), prod.get('image_path_2'), prod.get('image_path_3')] if p]
+                if not photos:
+                    photos = ['assets/images/ganesh_hero.png']
+                photo_count = len(photos)
+                img1 = photos[0]
+                gallery_json_attr = htmlspecialchars(json.dumps(photos))
+                addons_json_attr = htmlspecialchars(json.dumps(prod.get('addons', [])))
                 reusable_addons = [a for a in ADDONS if a.get('status') == 'active' and a.get('id') in prod.get('reusable_addon_ids', [])]
-                reusable_json_attr = json.dumps(reusable_addons).replace("'", "&#39;")
+                reusable_json_attr = htmlspecialchars(json.dumps(reusable_addons))
+
+                slides_html = ''.join([
+                    f'<div class="card-slide-photo" style="flex:0 0 100%; width:100%; height:100%;"><img src="{htmlspecialchars(p_img)}" alt="{htmlspecialchars(prod["name"])}" loading="lazy" style="width:100%; height:100%; object-fit:cover; display:block;"></div>'
+                    for p_img in photos
+                ])
+                dots_html = ''
+                if photo_count > 1:
+                    dots = ''.join([f'<span class="card-slide-dot {"active" if d==0 else ""}" data-dot="{d}"></span>' for d in range(photo_count)])
+                    dots_html = f'<div class="card-slide-dots">{dots}</div>'
+
                 prod_cards += f'''
-                            <div class="product-card-item"
-                                data-id="{prod['id']}"
-                                data-name="{prod['name']}"
-                                data-price="{prod['price']}"
-                                data-desc="{prod.get('description', '')}"
-                                data-img="{img}"
-                                data-addons="{addons_json_attr}"
-                                data-reusable-addons='{reusable_json_attr}'
-                                data-cat="{cat['name']}">
-                                <div class="prod-img-wrap" style="cursor:pointer;" title="Click to view product details">
-                                    <img src="{img}" alt="{prod['name']}" loading="lazy">
-                                    <span class="prod-price-badge">&pound;{prod['price']:.2f}</span>
-                                </div>
-                                <div class="prod-details">
-                                    <h3 class="prod-name">{prod['name']}</h3>
-                                    <p class="prod-desc">{prod.get('description', '')}</p>
-                                    <div class="prod-actions-row">
-                                        <button type="button" class="btn-add-to-cart btn-gold"
-                                            data-id="{prod['id']}"
-                                            data-name="{prod['name']}"
-                                            data-price="{prod['price']}"
-                                            data-img="{img}">
-                                            🛒 Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>'''
+                                    <div class="swiper-slide product-card-item"
+                                        data-id="{prod['id']}"
+                                        data-name="{htmlspecialchars(prod['name'])}"
+                                        data-price="{prod['price']}"
+                                        data-desc="{htmlspecialchars(prod.get('description', ''))}"
+                                        data-img="{htmlspecialchars(img1)}"
+                                        data-gallery="{gallery_json_attr}"
+                                        data-addons="{addons_json_attr}"
+                                        data-reusable-addons="{reusable_json_attr}"
+                                        data-cat="{htmlspecialchars(cat['name'])}">
+                                        <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
+                                            <div class="card-track-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden;">
+                                                <div class="card-slider-track" data-count="{photo_count}" data-active="0" style="display:flex; width:100%; height:100%; transition:transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); will-change:transform;">
+                                                    {slides_html}
+                                                </div>
+                                            </div>
+                                            {dots_html}
+                                            <span class="prod-price-badge">&pound;{prod['price']:.2f}</span>
+                                        </div>
+                                        <div class="prod-details">
+                                            <h3 class="prod-name">{htmlspecialchars(prod['name'])}</h3>
+                                            <p class="prod-desc">{htmlspecialchars(prod.get('description', ''))}</p>
+                                            <div class="prod-actions-row">
+                                                <button type="button" class="btn-add-to-cart btn-gold" data-id="{prod['id']}"
+                                                    data-name="{htmlspecialchars(prod['name'])}"
+                                                    data-price="{prod['price']}"
+                                                    data-img="{htmlspecialchars(img1)}">
+                                                    🛒 Add to Cart
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>'''
+
             cat_panes_html += f'''
-                    <div class="products-grid cat-products-pane" id="products-pane-{cat['id']}" style="display:none;">
-                        {prod_cards}
+                    <div class="myntra-swiper-container cat-products-pane" id="products-pane-{cat['id']}" style="display:none;">
+                        <div class="swiper myntra-prod-swiper" id="swiper-pane-{cat['id']}">
+                            <div class="swiper-wrapper">
+                                {prod_cards}
+                            </div>
+                            <div class="swiper-button-next myntra-arrow-next"></div>
+                            <div class="swiper-button-prev myntra-arrow-prev"></div>
+                        </div>
                     </div>'''
 
-        # Inject category cards: replace everything inside <div class="cat-pick-grid">...</div>
+        # Inject category cards into cat-2col-grid
         content = re.sub(
-            r'(<div class="cat-pick-grid">).*?(</div>\s*</div>\s*<!--\s*/catalog-step-categories-->)',
-            lambda m: m.group(1) + cat_cards_html + '\n                </div>\n            </div>\n            <!-- /catalog-step-categories-->',
+            r'(<div class="cat-2col-grid"[^>]*>).*?(</div>\s*</div>\s*<!--)',
+            lambda m: m.group(1) + cat_cards_html + '\n                </div>\n            </div>\n\n            <!--',
             content, flags=re.DOTALL, count=1
         )
 
-        # Inject product panes: replace the PHP foreach block between the comment and the closing div
+        # Inject product panes after <!-- Per-category product panes -->
         content = re.sub(
-            r'(<!-- Per-category product panes -->)\s*<\?php.*?endforeach; \?>\s*(\n\s*</div><!-- /catalog-step-products -->)',
-            lambda m: m.group(1) + '\n' + cat_panes_html + '\n\n            ' + m.group(2).strip(),
+            r'(<!-- Per-category product panes -->).*?(</div>\s*<!--\s*/catalog-step-products\s*-->)',
+            lambda m: m.group(1) + '\n' + cat_panes_html + '\n\n            </div><!-- /catalog-step-products -->',
             content, flags=re.DOTALL, count=1
         )
 

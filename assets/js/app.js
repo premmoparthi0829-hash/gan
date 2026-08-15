@@ -126,11 +126,13 @@ $(document).ready(function () {
         }, 300);
     }
 
-    // Click on category card
-    $(document).on('click keypress', '.cat-stylish-card, .cat-clean-card, .collection-card', function(e) {
+    // Click on category card or shop collection button
+    $(document).on('click keypress', '.cat-stylish-card, .cat-clean-card, .collection-card, .btn-shop-collection, [data-cat-id]', function(e) {
         if (e.type === 'keypress' && e.which !== 13) return;
-        let catId   = $(this).data('cat-id');
-        let catName = $(this).data('cat-name') || $(this).find('.cat-stylish-title, .cat-clean-name, .collection-card-title').text().trim();
+        let $card = $(this).closest('[data-cat-id]');
+        if (!$card.length) return;
+        let catId   = $card.data('cat-id');
+        let catName = $card.data('cat-name') || $card.find('.cat-stylish-title, .cat-clean-name, .collection-card-title, .prod-name').text().trim();
         showCategoryProducts(catId, catName);
     });
 
