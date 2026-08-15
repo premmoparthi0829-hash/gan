@@ -5,8 +5,8 @@
 -- Consolidated & Ported from SQLite
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS `vk_logistics` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `vk_logistics`;
+SET FOREIGN_KEY_CHECKS = 0;
+SET NAMES utf8mb4;
 
 -- ------------------------------------------------------------
 -- Table: settings
@@ -66,13 +66,14 @@ CREATE TABLE `bookings` (
   `subtotal` DECIMAL(10,2) NOT NULL,
   `shipping_charge` DECIMAL(10,2) NOT NULL DEFAULT 3.99,
   `total_amount` DECIMAL(10,2) NOT NULL,
-  `payment_method` ENUM('paypal', 'bank_transfer') NOT NULL,
+  `payment_method` VARCHAR(50) NOT NULL DEFAULT 'bank_transfer',
   `payment_reference` VARCHAR(100) NULL COMMENT 'Bank Transfer User Reference or Txn Ref',
   `payment_proof_image` VARCHAR(255) NULL COMMENT 'Uploaded Payment Receipt Image File Path',
+  `payment_screenshot` VARCHAR(255) NULL COMMENT 'Uploaded Payment Screenshot File Path',
   `paypal_order_id` VARCHAR(100) NULL COMMENT 'PayPal SDK Order ID',
   `paypal_transaction_id` VARCHAR(100) NULL COMMENT 'PayPal Capture / Txn ID',
   `payment_status` ENUM('PAID', 'PAYMENT VERIFICATION PENDING', 'FAILED', 'CANCELLED') NOT NULL DEFAULT 'PAYMENT VERIFICATION PENDING',
-  `booking_status` ENUM('CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED') NOT NULL DEFAULT 'CONFIRMED',
+  `booking_status` VARCHAR(50) NOT NULL DEFAULT 'CONFIRMED',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
@@ -278,3 +279,5 @@ ON DUPLICATE KEY UPDATE `category_id` = VALUES(`category_id`), `name` = VALUES(`
 INSERT INTO `booking_items` (`booking_id`, `product_id`, `product_name`, `quantity`, `price`)
 SELECT `id`, 1, 'Ganesh Statue / Vinayaka Vigraha', `quantity`, `unit_price` FROM `bookings`
 WHERE `id` NOT IN (SELECT DISTINCT `booking_id` FROM `booking_items`);
+
+SET FOREIGN_KEY_CHECKS = 1;

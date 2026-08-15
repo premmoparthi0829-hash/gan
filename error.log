@@ -449,3 +449,4 @@
 [2026-08-14 18:08:07] UPI verification error: SQLSTATE[HY093]: Invalid parameter number
 [2026-08-14 18:09:04] UPI verification error: SQLSTATE[HY093]: Invalid parameter number
 [2026-08-14 18:09:25] UPI verification error: SQLSTATE[HY093]: Invalid parameter number
+[2026-08-15 04:40:52] Failed to insert booking: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'payment_screenshot' in 'field list'
