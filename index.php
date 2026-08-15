@@ -13,7 +13,14 @@ $products = [];
 if ($db) {
     try {
         $categories = $db->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
-        $products = $db->query("SELECT * FROM products ORDER BY id ASC")->fetchAll();
+        $products = $db->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id ASC")->fetchAll();
+        if (!empty($products)) {
+            foreach ($products as &$p) {
+                $p['addons'] = get_product_addons($p['id']);
+                $p['reusable_addons'] = get_product_reusable_addons($p['id'], true);
+            }
+            unset($p);
+        }
     } catch (Exception $e) {
         log_system_error("Failed to load catalog in index.php: " . $e->getMessage());
     }
@@ -323,13 +330,13 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                             <span class="prod-price-badge">&pound;<?php echo number_format($prod['price'], 2); ?></span>
                                         </div>
                                         <div class="prod-details">
-                                            <h3 class="prod-name"><?php echo escape_output($prod['name']); ?></h3>
+                                            <h3 class="prod-name" style="cursor:pointer;" title="Click to view details"><?php echo escape_output($prod['name']); ?></h3>
                                             <p class="prod-desc"><?php echo escape_output($prod['description']); ?></p>
-                                            <div class="prod-actions-row">
+                                            <div class="prod-actions-row" style="display:flex; width:100%; margin-top:10px;">
                                                 <button type="button" class="btn-add-to-cart btn-gold" data-id="<?php echo $prod['id']; ?>"
                                                     data-name="<?php echo escape_output($prod['name']); ?>"
                                                     data-price="<?php echo $prod['price']; ?>"
-                                                    data-img="<?php echo escape_output($prod['image_path']); ?>">
+                                                    data-img="<?php echo escape_output($prod['image_path']); ?>" style="width:100%; padding:8px 12px; font-size:0.8rem; font-weight:700; border-radius:8px;">
                                                     🛒 Add to Cart
                                                 </button>
                                             </div>
@@ -763,57 +770,115 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
         </div>
     </div>
 
-    <!-- PRODUCT INFO QUICK VIEW MODAL (MEDIUM-LARGE DESKTOP SCREEN SIZE) -->
-    <div class="prod-modal-overlay" id="product-info-modal-overlay">
-        <div class="prod-modal-card" id="product-info-modal" style="max-width: 920px; width: 92%; border-radius: 24px; border: 2px solid #D4AF37; padding: 28px;">
+    <!-- PRODUCT INFO QUICK VIEW MODAL (NEW LUXURY FESTIVE DESIGN) -->
+    <div class="prod-modal-overlay" id="product-info-modal-overlay" style="display:none;">
+        <div class="prod-modal-card" id="product-info-modal">
             <button type="button" class="prod-modal-close" id="btn-close-prod-modal" aria-label="Close">&times;</button>
-            <div class="prod-modal-grid" style="display: grid; grid-template-columns: 400px 1fr; gap: 32px; align-items: start;">
-                <div class="prod-modal-media" style="display:flex; flex-direction:column; gap:16px;">
-                    <!-- Single Hero Image Container with Prev/Next Controls -->
-                    <div class="pmodal-hero-container" style="position:relative; width:100%; border-radius:18px; overflow:hidden; background:#F8FAFC; border:1px solid #CBD5E1; aspect-ratio:1/1; min-height:360px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
-                        <div class="pmodal-track-viewport" style="width:100%; height:100%; overflow:hidden;">
-                            <div class="pmodal-slider-track" id="pmodal-slider-track" style="display:flex; width:100%; height:100%; transition:transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); will-change:transform;">
-                                <!-- Dynamic unlimited hero slides populated by JS -->
-                            </div>
+            <div class="prod-modal-grid">
+                <!-- Left: Media & Gallery Showcase -->
+                <div class="prod-modal-media">
+                    <div class="pmodal-hero-container">
+                        <div class="pmodal-hero-img-wrap">
+                            <img id="pmodal-main-image" src="assets/images/ganesh_hero.png" alt="Product Showcase" loading="eager">
                         </div>
                         
-                        <span class="pmodal-price-tag" id="pmodal-price" style="font-size: 1.25rem; font-weight: 800; padding: 8px 16px; border-radius: 24px;">&pound;0.00</span>
+                        <!-- Navigation Arrows for Gallery -->
+                        <button type="button" class="pmodal-nav-arrow pmodal-nav-prev" id="pmodal-btn-prev-img" aria-label="Previous Image">&#8249;</button>
+                        <button type="button" class="pmodal-nav-arrow pmodal-nav-next" id="pmodal-btn-next-img" aria-label="Next Image">&#8250;</button>
+
+                        <div class="pmodal-floating-badge" id="pmodal-festive-badge">
+                            ✨ Authentic Handcrafted Idol
+                        </div>
+                        <div class="pmodal-price-tag" id="pmodal-price">&pound;0.00</div>
                     </div>
 
-                    <!-- UNLIMITED Thumbnails Gallery Switcher (Scrollable) -->
-                    <div class="pmodal-thumbnails-wrapper" id="pmodal-thumbs-box" style="display:flex; gap:10px; justify-content:center; align-items:center; padding:6px 2px; overflow-x:auto; max-width:100%; scrollbar-width:thin;">
-                        <!-- Dynamic unlimited thumbnails populated by JS -->
+                    <!-- Scrollable Thumbnails Strip -->
+                    <div class="pmodal-thumbnails-wrapper" id="pmodal-thumbs-box">
+                        <!-- Dynamic thumbnails generated by JS -->
+                    </div>
+
+                    <!-- Feature Highlights -->
+                    <div class="pmodal-highlights-grid">
+                        <div class="pmodal-hl-chip">
+                            <span class="pmodal-hl-icon">&#127793;</span>
+                            <div class="pmodal-hl-text">
+                                <strong>100% Eco Clay</strong>
+                                <span>Organic &amp; dissolvable</span>
+                            </div>
+                        </div>
+                        <div class="pmodal-hl-chip">
+                            <span class="pmodal-hl-icon">&#128666;</span>
+                            <div class="pmodal-hl-text">
+                                <strong>UK Delivery</strong>
+                                <span>Tracked doorstep delivery</span>
+                            </div>
+                        </div>
+                        <div class="pmodal-hl-chip">
+                            <span class="pmodal-hl-icon">&#128737;&#65039;</span>
+                            <div class="pmodal-hl-text">
+                                <strong>Safe Packaging</strong>
+                                <span>Zero breakage transit</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Right: Product Info & Add-ons Configurator -->
                 <div class="prod-modal-info">
-                    <div>
-                        <span class="pmodal-badge" id="pmodal-category">Festive Item</span>
-                        <h2 class="pmodal-title" id="pmodal-name">Product Name</h2>
-                        <div class="pmodal-desc-box">
-                            <h4>Product Description &amp; Details</h4>
-                            <p id="pmodal-desc">Detailed product description...</p>
+                    <div class="pmodal-header-meta">
+                        <span class="pmodal-category-badge" id="pmodal-category">Festive Item</span>
+                        <div class="pmodal-rating-badge">
+                            <span style="color:#F59E0B;">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                            <span style="font-weight:700; color:#0F172A;">4.9</span>
+                            <span style="color:#64748B;">(120+ UK Devotees)</span>
                         </div>
-                        <div class="pmodal-highlights">
-                            <div class="pm-highlight-item">
-                                <span class="pm-icon">🌱</span> 100% Eco-Friendly &amp; Handcrafted
+                    </div>
+
+                    <h2 class="pmodal-title" id="pmodal-name">Product Name</h2>
+                    
+                    <div class="pmodal-pricing-banner">
+                        <div class="pmodal-current-price" id="pmodal-price-display">&pound;0.00</div>
+                        <div class="pmodal-price-subtext">Inclusive of all UK taxes &middot; Doorstep Dispatch</div>
+                    </div>
+
+                    <div class="pmodal-desc-container">
+                        <h4 class="pmodal-desc-heading">Item Specifications &amp; Details</h4>
+                        <div class="pmodal-desc-text" id="pmodal-desc">Detailed product description...</div>
+                    </div>
+
+                    <!-- PRODUCT ADD-ONS SECTION (LOADED DIRECTLY FROM ADMIN) -->
+                    <div class="pmodal-addons-section" id="pmodal-addons-wrapper">
+                        <div class="pmodal-addons-header">
+                            <div class="pmodal-addons-title">
+                                <span>&#129513;</span>
+                                <h4>Festive Add-ons &amp; Customization</h4>
                             </div>
-                            <div class="pm-highlight-item">
-                                <span class="pm-icon">🚚</span> Doorstep UK Delivery Guaranteed
-                            </div>
-                            <div class="pm-highlight-item">
-                                <span class="pm-icon">🛡️</span> Breakage-Safe Protective Packaging
+                            <span class="pmodal-addons-subtitle">Select matching accessories and kits for this item</span>
+                        </div>
+                        <div id="pmodal-addons-container" class="pmodal-addons-list">
+                            <!-- Dynamic add-on cards rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selector & Action Buttons Footer -->
+                    <div class="pmodal-footer-actions">
+                        <div class="pmodal-qty-container">
+                            <span class="pmodal-qty-label">Quantity:</span>
+                            <div class="pmodal-qty-stepper">
+                                <button type="button" class="pmodal-qty-btn" id="pmodal-qty-minus">&minus;</button>
+                                <input type="number" id="pmodal-qty-val" value="1" min="1" max="20" readonly>
+                                <button type="button" class="pmodal-qty-btn" id="pmodal-qty-plus">&plus;</button>
                             </div>
                         </div>
 
-                        <!-- PRODUCT ADD-ONS CONTAINER FOR USER SELECTION -->
-                        <div id="pmodal-addons-container" style="margin-top:16px; display:flex; flex-direction:column; gap:14px;">
-                            <!-- Dynamically populated by JS when product has add-ons -->
+                        <div class="pmodal-buttons-row">
+                            <button type="button" class="btn-pmodal-add" id="pmodal-add-cart-btn">
+                                &#128722; Add to Cart &bull; <span id="pmodal-btn-price">&pound;0.00</span>
+                            </button>
+                            <button type="button" class="btn-pmodal-buy-now" id="pmodal-buy-now-btn">
+                                &#9889; Buy Now
+                            </button>
                         </div>
-                    </div>
-                    <div class="pmodal-actions">
-                        <button type="button" class="btn-gold pmodal-add-btn" id="pmodal-add-cart-btn">
-                            🛒 Add to Cart &bull; <span id="pmodal-btn-price">&pound;0.00</span>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -905,6 +970,8 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
 
     <!-- JavaScript -->
     <script>
+        window.VK_PRODUCTS = <?php echo json_encode($products, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        window.VK_CATEGORIES = <?php echo json_encode($categories, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
         window.VK_PAYPAL_CONFIG = {
             mode: "<?php echo escape_output($settings['paypal_mode'] ?? 'sandbox'); ?>",
             clientId: "<?php echo escape_output($settings['paypal_client_id'] ?? 'sb'); ?>",

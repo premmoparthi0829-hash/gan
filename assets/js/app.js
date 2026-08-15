@@ -1,6 +1,13 @@
-/**
- * VK Logistics - Ganesh Statue Booking JS Application
- */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+window.escapeHtml = escapeHtml;
 
 $(document).ready(function () {
     // Dynamic Settings & Pricing Data
@@ -8,7 +15,33 @@ $(document).ready(function () {
     let shippingCharge = 3.99;
     let currencySymbol = '£';
 
-    // Fetch live settings on load
+    // Fetch live settings and catalog data on load
+    function fetchSettings() {
+        $.ajax({
+            url: 'ajax/get-settings.php',
+            type: 'GET',
+            dataType: 'json',
+            success: function(res) {
+                if (res && res.success) {
+                    let s = res.settings || (res.data && res.data.settings);
+                    if (s) {
+                        if (s.unit_price) unitPrice = parseFloat(s.unit_price);
+                        if (s.shipping_charge) shippingCharge = parseFloat(s.shipping_charge);
+                        if (s.currency_symbol) currencySymbol = s.currency_symbol;
+                    }
+                    let prods = res.products || (res.data && res.data.products);
+                    if (prods && Array.isArray(prods)) {
+                        window.VK_PRODUCTS = prods;
+                    }
+                    let cats = res.categories || (res.data && res.data.categories);
+                    if (cats && Array.isArray(cats)) {
+                        window.VK_CATEGORIES = cats;
+                    }
+                }
+            }
+        });
+    }
+
     fetchSettings();
 
     // Country code flag switcher
@@ -227,7 +260,10 @@ $(document).ready(function () {
         }
     });
 
-    // Product Info Quick View Modal Handler (Continuous Auto-Moving Slideshow)
+    // ==========================================================================
+    // PRODUCT INFO QUICK VIEW MODAL HANDLER (NEW LUXURY FESTIVE DESIGN)
+    // ==========================================================================
+    let currentModalProduct = null;
     let currentGalleryImages = [];
     let currentGalleryIndex = 0;
     let modalAutoSlideTimer = null;
@@ -245,28 +281,8 @@ $(document).ready(function () {
             modalAutoSlideTimer = setInterval(function() {
                 let nextIdx = (currentGalleryIndex + 1) % currentGalleryImages.length;
                 setGalleryActiveIndex(nextIdx);
-            }, 1800); // Auto-slide modal photos every 1.8 seconds
+            }, 3000); // Cycles smoothly
         }
-    }
-
-    function updateGalleryThumbnails(index) {
-        $('.pmodal-thumb-item').each(function(i) {
-            if (i === index) {
-                $(this).addClass('active').css({
-                    'border': '3.5px solid #D4AF37',
-                    'transform': 'scale(1.08)',
-                    'box-shadow': '0 6px 16px rgba(212,175,55,0.4)',
-                    'opacity': '1'
-                });
-            } else {
-                $(this).removeClass('active').css({
-                    'border': '2px solid #CBD5E1',
-                    'transform': 'scale(1)',
-                    'box-shadow': 'none',
-                    'opacity': '0.65'
-                });
-            }
-        });
     }
 
     function setGalleryActiveIndex(index) {
@@ -275,287 +291,401 @@ $(document).ready(function () {
         if (index >= currentGalleryImages.length) index = 0;
 
         currentGalleryIndex = index;
+        let mainImgEl = document.getElementById('pmodal-main-image');
+        if (mainImgEl) {
+            mainImgEl.src = currentGalleryImages[currentGalleryIndex];
+        }
 
-        $('#pmodal-slider-track').css({
-            'transform': `translateX(-${index * 100}%)`,
-            'transition': 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
+        // Update thumbnail active state
+        $('.pmodal-thumb-item').each(function(i) {
+            if (i === currentGalleryIndex) {
+                $(this).addClass('active');
+            } else {
+                $(this).removeClass('active');
+            }
         });
-
-        updateGalleryThumbnails(index);
     }
 
-    $(document).on('click', '.cat-products-pane .prod-img-wrap', function(e) {
-        if ($(e.target).closest('.btn-add-to-cart, .card-slide-arrow, .card-slide-dot').length) return;
-        
-        let card = $(this).closest('.product-card-item');
+    function openProductQuickView(target) {
+        let prodId = null;
+        let card = null;
 
-        let id = card.data('id');
-        let name = card.data('name');
-        let price = parseFloat(card.data('price')).toFixed(2);
-        let desc = card.data('desc') || 'High quality handcrafted item delivered across the UK.';
-        let mainImg = card.data('img') || 'assets/images/ganesh_hero.png';
-        let galleryData = card.data('gallery');
-        let cat = card.data('cat') || 'Festive Collection';
+        if (typeof target === 'number' || (typeof target === 'string' && /^\d+$/.test(target))) {
+            prodId = parseInt(target);
+            card = $(`.product-card-item[data-id="${prodId}"]`);
+        } else if (target instanceof jQuery || target instanceof HTMLElement) {
+            card = $(target).closest('.product-card-item');
+            prodId = parseInt(card.data('id'));
+        }
 
+        let pData = null;
+        if (window.VK_PRODUCTS && Array.isArray(window.VK_PRODUCTS)) {
+            pData = window.VK_PRODUCTS.find(p => parseInt(p.id) === prodId);
+        }
+
+        let name = pData ? pData.name : (card ? card.data('name') : 'Festive Idol');
+        let price = pData ? parseFloat(pData.price) : (card ? parseFloat(card.data('price')) : 14.99);
+        let desc = pData ? pData.description : (card ? card.data('desc') : 'Handcrafted authentic idol delivered across the United Kingdom.');
+        let cat = pData ? (pData.category_name || 'Festive Collection') : (card ? (card.data('cat') || 'Festive Item') : 'Festive Item');
+
+        currentModalProduct = {
+            id: prodId,
+            name: name,
+            base_price: price,
+            description: desc,
+            category: cat,
+            raw: pData
+        };
+
+        // Extract and deduplicate all images
         currentGalleryImages = [];
-        if (galleryData) {
-            if (typeof galleryData === 'string') {
-                try { currentGalleryImages = JSON.parse(galleryData); } catch(err) {}
-            } else if (Array.isArray(galleryData)) {
-                currentGalleryImages = galleryData;
+        if (pData) {
+            if (pData.gallery_images) {
+                try {
+                    let parsed = (typeof pData.gallery_images === 'string') ? JSON.parse(pData.gallery_images) : pData.gallery_images;
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(img => { if (img && !currentGalleryImages.includes(img)) currentGalleryImages.push(img); });
+                    }
+                } catch(e) {}
             }
+            if (pData.image_path && !currentGalleryImages.includes(pData.image_path)) currentGalleryImages.push(pData.image_path);
+            if (pData.image_path_2 && !currentGalleryImages.includes(pData.image_path_2)) currentGalleryImages.push(pData.image_path_2);
+            if (pData.image_path_3 && !currentGalleryImages.includes(pData.image_path_3)) currentGalleryImages.push(pData.image_path_3);
         }
-        if (!currentGalleryImages || currentGalleryImages.length === 0) {
-            currentGalleryImages = [mainImg];
-            let img2 = card.data('img2');
-            let img3 = card.data('img3');
-            if (img2) currentGalleryImages.push(img2);
-            if (img3) currentGalleryImages.push(img3);
+        if (card && currentGalleryImages.length === 0) {
+            let galleryAttr = card.data('gallery');
+            if (galleryAttr) {
+                try {
+                    let parsed = (typeof galleryAttr === 'string') ? JSON.parse(galleryAttr) : galleryAttr;
+                    if (Array.isArray(parsed)) currentGalleryImages = parsed;
+                } catch(e) {}
+            }
+            let img1 = card.data('img');
+            if (img1 && !currentGalleryImages.includes(img1)) currentGalleryImages.push(img1);
+        }
+        if (currentGalleryImages.length === 0) {
+            currentGalleryImages = ['assets/images/ganesh_hero.png'];
         }
 
-        // Dynamically build slider track slides
-        let $track = $('#pmodal-slider-track');
-        $track.empty();
-        currentGalleryImages.forEach(function(imgUrl, idx) {
-            $track.append(`
-                <div class="pmodal-slide-item" style="flex:0 0 100%; width:100%; height:100%;">
-                    <img src="${imgUrl}" alt="${name} Photo ${idx + 1}" style="width:100%; height:100%; object-fit:cover; display:block;">
-                </div>
-            `);
-        });
+        // Render main hero image
+        let $mainImg = $('#pmodal-main-image');
+        $mainImg.attr('src', currentGalleryImages[0]).attr('alt', name);
 
-        // Dynamically build gallery thumbnails
+        // Render thumbnails strip
         let $thumbsBox = $('#pmodal-thumbs-box');
         $thumbsBox.empty();
-        currentGalleryImages.forEach(function(imgUrl, idx) {
+        currentGalleryImages.forEach((imgUrl, idx) => {
             $thumbsBox.append(`
-                <div class="pmodal-thumb-item ${idx === 0 ? 'active' : ''}" data-index="${idx}" style="flex:0 0 68px; width:68px; height:68px; border-radius:12px; overflow:hidden; border:${idx === 0 ? '3.5px solid #D4AF37' : '2px solid #CBD5E1'}; cursor:pointer; background:#F1F5F9; transition:all 0.25s ease; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
-                    <img src="${imgUrl}" alt="Thumb ${idx + 1}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                <div class="pmodal-thumb-item ${idx === 0 ? 'active' : ''}" data-index="${idx}">
+                    <img src="${imgUrl}" alt="${escapeHtml(name)} Thumbnail ${idx + 1}" loading="lazy">
                 </div>
             `);
         });
 
         if (currentGalleryImages.length > 1) {
             $thumbsBox.show();
+            $('#pmodal-btn-prev-img, #pmodal-btn-next-img').show();
         } else {
             $thumbsBox.hide();
+            $('#pmodal-btn-prev-img, #pmodal-btn-next-img').hide();
+        }
+
+        // Set text content
+        $('#pmodal-name').text(name);
+        $('#pmodal-category').text(cat);
+        $('#pmodal-desc').text(desc || 'Handcrafted traditional idol made from 100% eco-friendly dissolvable clay with certified safe organic colors. Delivered securely to your doorstep across the UK.');
+
+        // Reset Quantity Stepper to 1
+        $('#pmodal-qty-val').val(1);
+
+        // ── Render Respective Product Add-ons directly from Admin DB ──
+        let $addonsContainer = $('#pmodal-addons-container');
+        let $addonsWrapper = $('#pmodal-addons-wrapper');
+        $addonsContainer.empty();
+
+        let allAddons = [];
+
+        // 1. Check reusable_addons assigned to product
+        if (pData && pData.reusable_addons && Array.isArray(pData.reusable_addons)) {
+            pData.reusable_addons.forEach(a => {
+                if (a.status !== 'inactive') {
+                    allAddons.push({
+                        id: a.id,
+                        name: a.name,
+                        price: parseFloat(a.price || 0),
+                        description: a.description || 'Festive handcrafted accessory for puja and celebrations.',
+                        image_path: a.image_path || '',
+                        type: 'reusable'
+                    });
+                }
+            });
+        }
+
+        // 2. Check legacy grouped addons if any
+        if (pData && pData.addons && Array.isArray(pData.addons)) {
+            pData.addons.forEach(group => {
+                if (group.items && Array.isArray(group.items)) {
+                    group.items.forEach(item => {
+                        if (item.status !== 'inactive') {
+                            allAddons.push({
+                                id: item.id || ('group_' + Date.now()),
+                                name: item.name,
+                                price: parseFloat(item.price || 0),
+                                description: item.description || group.name || 'Custom festive accessory.',
+                                image_path: item.image_path || '',
+                                type: 'group',
+                                group_name: group.name,
+                                is_required: group.is_required == 1
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // 3. Fallback to card attributes if pData was not in array
+        if (allAddons.length === 0 && card) {
+            let reData = card.attr('data-reusable-addons');
+            if (reData) {
+                try {
+                    let parsed = JSON.parse(reData);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(a => {
+                            if (a.status !== 'inactive') {
+                                allAddons.push({
+                                    id: a.id,
+                                    name: a.name,
+                                    price: parseFloat(a.price || 0),
+                                    description: a.description || 'Festive add-on accessory.',
+                                    image_path: a.image_path || '',
+                                    type: 'reusable'
+                                });
+                            }
+                        });
+                    }
+                } catch(e) {}
+            }
+        }
+
+        if (allAddons.length > 0) {
+            allAddons.forEach((addon, idx) => {
+                let imgHtml = addon.image_path
+                    ? `<img src="${escapeHtml(addon.image_path)}" alt="${escapeHtml(addon.name)}" class="pmodal-addon-thumb">`
+                    : `<div style="width:44px; height:44px; background:#FEF3C7; color:#92400E; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; border:1px solid #FDE68A;">🧩</div>`;
+
+                let cardHtml = `
+                    <div class="pmodal-addon-card" data-idx="${idx}">
+                        <input type="checkbox" class="pmodal-addon-checkbox" id="pmodal_addon_chk_${idx}" data-id="${addon.id}" data-name="${escapeHtml(addon.name)}" data-desc="${escapeHtml(addon.description || '')}" data-price="${addon.price}" data-img="${escapeHtml(addon.image_path || '')}">
+                        ${imgHtml}
+                        <div class="pmodal-addon-info">
+                            <div class="pmodal-addon-name">${escapeHtml(addon.name)}</div>
+                            <div class="pmodal-addon-desc">${escapeHtml(addon.description)}</div>
+                        </div>
+                        <div class="pmodal-addon-price-badge">+${currencySymbol}${addon.price.toFixed(2)}</div>
+                    </div>
+                `;
+                $addonsContainer.append(cardHtml);
+            });
+            $addonsWrapper.show();
+        } else {
+            $addonsWrapper.hide();
         }
 
         currentGalleryIndex = 0;
-        $track.css({
-            'transition': 'none',
-            'transform': 'translateX(0%)'
-        });
-        updateGalleryThumbnails(0);
-
-        $('#pmodal-name').text(name);
-        $('#pmodal-price').html(`&pound;${price}`);
-        $('#pmodal-btn-price').html(`&pound;${price}`);
-        $('#pmodal-desc').text(desc);
-        $('#pmodal-category').text(cat);
-
-        // Product Add-ons UI Render inside Product Details Modal
-        let addonsData = card.data('addons');
-        let productAddonGroups = [];
-        if (addonsData) {
-            if (typeof addonsData === 'string') {
-                try {
-                    let decoded = decodeURIComponent(addonsData);
-                    productAddonGroups = JSON.parse(decoded);
-                } catch(e) {
-                    try { productAddonGroups = JSON.parse(addonsData); } catch(err) {}
-                }
-            } else if (Array.isArray(addonsData)) {
-                productAddonGroups = addonsData;
-            }
-        }
-        // Reusable add-ons assigned by the admin are rendered as one optional
-        // multi-select group; legacy per-product groups remain supported.
-        let reusableAddonsData = card.attr('data-reusable-addons');
-        if (reusableAddonsData) {
-            try {
-                let reusableAddons = JSON.parse(reusableAddonsData);
-                if (Array.isArray(reusableAddons) && reusableAddons.length) {
-                    productAddonGroups.push({ id: 'reusable', name: 'Select Add-ons', is_required: 0, selection_type: 'multiple', min_selection: 0, max_selection: 0, items: reusableAddons });
-                }
-            } catch (err) { /* Invalid attributes must not block product purchase. */ }
-        }
-
-        let basePriceNum = parseFloat(price);
-        let $addonsBox = $('#pmodal-addons-container');
-        $addonsBox.empty();
-
-        if (productAddonGroups && productAddonGroups.length > 0) {
-            let addonsHtml = `<div style="background:#FFFDF5; border:1.5px solid #FCD34D; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:14px;">`;
-            addonsHtml += `<div style="font-weight:800; color:#92400E; font-size:0.95rem; border-bottom:1px dashed #FCD34D; padding-bottom:8px; display:flex; align-items:center; gap:6px;">🧩 Customize Your Add-ons</div>`;
-
-            productAddonGroups.forEach(group => {
-                let activeItems = (group.items || []).filter(i => i.status !== 'inactive');
-                if (activeItems.length === 0) return;
-
-                let isReq = group.is_required == 1;
-                let isMulti = group.selection_type === 'multiple';
-                let reqBadge = isReq ? `<span style="background:#EF4444; color:#FFF; font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:4px; margin-left:6px;">REQUIRED</span>` : `<span style="background:#E2E8F0; color:#475569; font-size:0.65rem; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px;">OPTIONAL</span>`;
-                let hintText = isMulti ? (group.max_selection > 0 ? `(Choose up to ${group.max_selection})` : `(Choose multiple)`) : `(Choose 1)`;
-
-                addonsHtml += `
-                    <div class="pmodal-addon-group-row" data-group-id="${group.id}" data-group-name="${escapeHtml(group.name)}" data-required="${isReq ? '1' : '0'}" data-type="${group.selection_type}" data-min="${group.min_selection || 0}" data-max="${group.max_selection || 0}" style="display:flex; flex-direction:column; gap:8px;">
-                        <div style="font-weight:700; font-size:0.88rem; color:#1E293B;">
-                            ${escapeHtml(group.name)} ${reqBadge} <span style="font-size:0.75rem; color:#64748B; font-weight:normal;">${hintText}</span>
-                        </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px;">`;
-
-                activeItems.forEach(item => {
-                    let inputType = isMulti ? 'checkbox' : 'radio';
-                    let inputName = `pmodal_addon_group_${group.id}`;
-                    let itemImg = item.image_path ? `<img src="${escapeHtml(item.image_path)}" style="width:32px; height:32px; object-fit:cover; border-radius:6px; border:1px solid #CBD5E1;">` : '';
-
-                    addonsHtml += `
-                        <label style="display:flex; align-items:center; gap:8px; background:#FFFFFF; border:1.5px solid #CBD5E1; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.2s;" class="pmodal-addon-item-label">
-                            <input type="${inputType}" name="${inputName}" class="pmodal-addon-input" data-item-id="${item.id}" data-item-name="${escapeHtml(item.name)}" data-item-price="${item.price}" data-group-name="${escapeHtml(group.name)}">
-                            ${itemImg}
-                            <div style="flex:1; display:flex; flex-direction:column;">
-                                <span style="font-size:0.83rem; font-weight:700; color:#0F172A;">${escapeHtml(item.name)}</span>
-                                <span style="font-size:0.78rem; font-weight:800; color:#4A0B17;">+${currencySymbol}${parseFloat(item.price).toFixed(2)}</span>
-                            </div>
-                        </label>`;
-                });
-
-                addonsHtml += `</div></div>`;
-            });
-
-            addonsHtml += `</div>`;
-            $addonsBox.html(addonsHtml);
-            $addonsBox.show();
-        } else {
-            $addonsBox.hide();
-        }
-
-        function calculatePmodalPrice() {
-            let addTotal = 0;
-            $('.pmodal-addon-input:checked').each(function() {
-                addTotal += parseFloat($(this).data('item-price')) || 0;
-            });
-            let finalPrice = (basePriceNum + addTotal).toFixed(2);
-            $('#pmodal-price').html(`&pound;${finalPrice}`);
-            $('#pmodal-btn-price').html(`&pound;${finalPrice}`);
-        }
-
-        $(document).off('change', '.pmodal-addon-input').on('change', '.pmodal-addon-input', function() {
-            calculatePmodalPrice();
-        });
-
-        calculatePmodalPrice();
-
-        $('#pmodal-add-cart-btn').off('click').on('click', function() {
-            let selectedAddons = [];
-            let isValid = true;
-            let errorMsg = '';
-
-            $('.pmodal-addon-group-row').each(function() {
-                let groupName = $(this).data('group-name');
-                let isReq = $(this).data('required') == '1';
-                let minSel = parseInt($(this).data('min')) || 0;
-                let checkedCount = $(this).find('.pmodal-addon-input:checked').length;
-
-                if (isReq && checkedCount === 0) {
-                    isValid = false;
-                    errorMsg = `Please select required add-on for "${groupName}".`;
-                    return false;
-                }
-                if (minSel > 0 && checkedCount < minSel) {
-                    isValid = false;
-                    errorMsg = `Please select at least ${minSel} option(s) for "${groupName}".`;
-                    return false;
-                }
-            });
-
-            if (!isValid) {
-                showToast(errorMsg, 'error');
-                return;
-            }
-
-            $('.pmodal-addon-input:checked').each(function() {
-                selectedAddons.push({
-                    addon_id: $(this).data('item-id'),
-                    group_name: $(this).data('group-name'),
-                    name: $(this).data('item-name'),
-                    price: parseFloat($(this).data('item-price')) || 0
-                });
-            });
-
-            let finalPrice = basePriceNum + selectedAddons.reduce((sum, a) => sum + a.price, 0);
-
-            addToCart(id, name, basePriceNum, currentGalleryImages[0], selectedAddons, finalPrice);
-            stopModalAutoSlide();
-            $('#product-info-modal-overlay').removeClass('active');
-        });
-
+        calculatePmodalTotalPrice();
         startModalAutoSlide();
-        $('#product-info-modal-overlay').addClass('active');
+
+        $('#product-info-modal-overlay').fadeIn(200).addClass('active');
+    }
+
+    window.openProductQuickView = openProductQuickView;
+
+    function calculatePmodalTotalPrice() {
+        if (!currentModalProduct) return;
+        let basePrice = currentModalProduct.base_price;
+        let addonsTotal = 0;
+
+        $('.pmodal-addon-checkbox:checked').each(function() {
+            addonsTotal += parseFloat($(this).data('price')) || 0;
+        });
+
+        let qty = parseInt($('#pmodal-qty-val').val()) || 1;
+        let singleItemPrice = basePrice + addonsTotal;
+        let total = singleItemPrice * qty;
+
+        $('#pmodal-price').html(`&pound;${singleItemPrice.toFixed(2)}`);
+        $('#pmodal-price-display').html(`&pound;${singleItemPrice.toFixed(2)}`);
+        $('#pmodal-btn-price').html(`&pound;${total.toFixed(2)}`);
+    }
+
+    // ── Quantity Stepper Handlers ──
+    $(document).on('click', '#pmodal-qty-minus', function() {
+        let input = $('#pmodal-qty-val');
+        let val = parseInt(input.val()) || 1;
+        if (val > 1) {
+            input.val(val - 1);
+            calculatePmodalTotalPrice();
+        }
     });
 
-    // Gallery Thumbnail Clicks
+    $(document).on('click', '#pmodal-qty-plus', function() {
+        let input = $('#pmodal-qty-val');
+        let val = parseInt(input.val()) || 1;
+        if (val < 20) {
+            input.val(val + 1);
+            calculatePmodalTotalPrice();
+        }
+    });
+
+    // ── Add-on Card Checkbox Toggle ──
+    $(document).on('click', '.pmodal-addon-card', function(e) {
+        if (e.target.type === 'checkbox') {
+            $(this).toggleClass('selected', e.target.checked);
+        } else {
+            let chk = $(this).find('.pmodal-addon-checkbox');
+            chk.prop('checked', !chk.prop('checked'));
+            $(this).toggleClass('selected', chk.prop('checked'));
+        }
+        calculatePmodalTotalPrice();
+    });
+
+    // ── Gallery Navigation ──
+    $(document).on('click', '#pmodal-btn-prev-img', function() {
+        setGalleryActiveIndex(currentGalleryIndex - 1);
+        startModalAutoSlide();
+    });
+
+    $(document).on('click', '#pmodal-btn-next-img', function() {
+        setGalleryActiveIndex(currentGalleryIndex + 1);
+        startModalAutoSlide();
+    });
+
     $(document).on('click', '.pmodal-thumb-item', function() {
         let idx = parseInt($(this).data('index'));
         setGalleryActiveIndex(idx);
         startModalAutoSlide();
     });
 
+    // ── Close Modal ──
+    function closeProductQuickView() {
+        stopModalAutoSlide();
+        $('#product-info-modal-overlay').fadeOut(200).removeClass('active');
+    }
+
     $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function(e) {
         if (e.target === this || $(this).hasClass('prod-modal-close')) {
-            stopModalAutoSlide();
-            $('#product-info-modal-overlay').removeClass('active');
+            closeProductQuickView();
         }
     });
 
-    // Add to Cart Action
+    $(document).on('keydown', function(e) {
+        if ($('#product-info-modal-overlay').hasClass('active')) {
+            if (e.key === 'Escape') closeProductQuickView();
+            if (e.key === 'ArrowLeft') $('#pmodal-btn-prev-img').click();
+            if (e.key === 'ArrowRight') $('#pmodal-btn-next-img').click();
+        }
+    });
+
+    // ── Open Modal Trigger on Product Card, Title, Quick View Button ──
+    $(document).on('click', '.btn-quick-view, .product-card-item .prod-img-wrap, .product-card-item .prod-name', function(e) {
+        if ($(e.target).closest('.btn-add-to-cart, .card-slide-arrow, .card-slide-dot').length) return;
+        e.preventDefault();
+        openProductQuickView($(this));
+    });
+
+    // ── Add to Cart from Product Modal ──
+    $('#pmodal-add-cart-btn').on('click', function(e) {
+        e.preventDefault();
+        if (!currentModalProduct) return;
+
+        let selectedAddons = [];
+        $('.pmodal-addon-checkbox:checked').each(function() {
+            selectedAddons.push({
+                addon_id: $(this).data('id'),
+                name: $(this).data('name'),
+                description: $(this).data('desc') || '',
+                price: parseFloat($(this).data('price')) || 0,
+                image_path: $(this).data('img') || ''
+            });
+        });
+
+        let qty = parseInt($('#pmodal-qty-val').val()) || 1;
+        let singleUnitPrice = currentModalProduct.base_price + selectedAddons.reduce((sum, a) => sum + a.price, 0);
+
+        addToCart(
+            currentModalProduct.id,
+            currentModalProduct.name,
+            currentModalProduct.base_price,
+            currentGalleryImages[0],
+            selectedAddons,
+            singleUnitPrice,
+            qty
+        );
+
+        showToast(`Added ${qty} × ${currentModalProduct.name} to cart!`, 'success');
+        closeProductQuickView();
+    });
+
+    // ── Buy Now (Express Direct Checkout) ──
+    $('#pmodal-buy-now-btn').on('click', function(e) {
+        e.preventDefault();
+        if (!currentModalProduct) return;
+
+        let selectedAddons = [];
+        $('.pmodal-addon-checkbox:checked').each(function() {
+            selectedAddons.push({
+                addon_id: $(this).data('id'),
+                name: $(this).data('name'),
+                description: $(this).data('desc') || '',
+                price: parseFloat($(this).data('price')) || 0,
+                image_path: $(this).data('img') || ''
+            });
+        });
+
+        let qty = parseInt($('#pmodal-qty-val').val()) || 1;
+        let singleUnitPrice = currentModalProduct.base_price + selectedAddons.reduce((sum, a) => sum + a.price, 0);
+
+        addToCart(
+            currentModalProduct.id,
+            currentModalProduct.name,
+            currentModalProduct.base_price,
+            currentGalleryImages[0],
+            selectedAddons,
+            singleUnitPrice,
+            qty
+        );
+
+        closeProductQuickView();
+        openBookingModal();
+    });
+
+    // ── Quick Add to Cart button on product card ──
     $(document).on('click', '.btn-add-to-cart', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         let card = $(this).closest('.product-card-item');
         let id = parseInt($(this).data('id'));
         let name = $(this).data('name');
         let price = parseFloat($(this).data('price'));
         let img = $(this).data('img');
 
-        let addonsData = card.data('addons');
-        let productAddonGroups = [];
-        if (addonsData) {
-            if (typeof addonsData === 'string') {
-                try {
-                    let decoded = decodeURIComponent(addonsData);
-                    productAddonGroups = JSON.parse(decoded);
-                } catch(e) {
-                    try { productAddonGroups = JSON.parse(addonsData); } catch(err) {}
-                }
-            } else if (Array.isArray(addonsData)) {
-                productAddonGroups = addonsData;
-            }
-        }
-        let reusableAddonsData = card.attr('data-reusable-addons');
-        if (reusableAddonsData) {
-            try {
-                let reusableAddons = JSON.parse(reusableAddonsData);
-                if (Array.isArray(reusableAddons) && reusableAddons.length) {
-                    productAddonGroups.push({ id: 'reusable', name: 'Select Add-ons', is_required: 0, selection_type: 'multiple', min_selection: 0, max_selection: 0, items: reusableAddons });
-                }
-            } catch (err) {}
-        }
+        // Check if product has add-ons; if so, open modal to let user choose
+        let pData = (window.VK_PRODUCTS && Array.isArray(window.VK_PRODUCTS)) ? window.VK_PRODUCTS.find(p => parseInt(p.id) === id) : null;
+        let hasAddons = (pData && pData.reusable_addons && pData.reusable_addons.length > 0) || (pData && pData.addons && pData.addons.length > 0);
 
-        let hasRequiredAddons = productAddonGroups && productAddonGroups.some(g => g.is_required == 1 && (g.items || []).some(i => i.status !== 'inactive'));
-
-        if (hasRequiredAddons) {
-            // Trigger product details modal so user configures required add-ons first
-            card.find('.prod-img-wrap').trigger('click');
+        if (hasAddons) {
+            openProductQuickView(card);
             return;
         }
 
-        addToCart(id, name, price, img, []);
+        addToCart(id, name, price, img, [], price, 1);
+        showToast(`Added ${name} to cart!`, 'success');
     });
 
-    function addToCart(id, name, basePrice, img, selectedAddons = [], unitPriceWithAddons = null) {
+    function addToCart(id, name, basePrice, img, selectedAddons = [], unitPriceWithAddons = null, quantityToAdd = 1) {
+        quantityToAdd = parseInt(quantityToAdd) || 1;
         let totalQty = getCartTotalQty();
-        if (totalQty >= 20) {
+        if (totalQty + quantityToAdd > 20) {
             showToast('You can buy a maximum of 20 items in a single order.', 'error');
             return;
         }
@@ -569,7 +699,7 @@ $(document).ready(function () {
 
         let existing = cart.find(item => (item.cart_key || item.id) === cartKey);
         if (existing) {
-            existing.quantity += 1;
+            existing.quantity += quantityToAdd;
         } else {
             cart.push({
                 id: id,
@@ -577,8 +707,8 @@ $(document).ready(function () {
                 name: name,
                 base_price: basePrice,
                 price: price,
-                image: img,
-                quantity: 1,
+                image: img || 'assets/images/ganesh_hero.png',
+                quantity: quantityToAdd,
                 selected_addons: selectedAddons
             });
         }
@@ -617,49 +747,20 @@ $(document).ready(function () {
     }
 
     function renderCartAddonUpsells(listContainer) {
-        // 1. Render Festive Gift Wrapping Add-On Banner if enabled and not in cart
-        let hasGiftWrap = cart.some(item => item.id === 7 || item.id === 99998 || (item.name && (item.name.indexOf('Wrapping') !== -1 || item.name.indexOf('Gift Wrap') !== -1 || item.name.indexOf('Add-On 1') !== -1)));
-        let isGwEnabled = window.VK_GIFT_WRAP_CONFIG && (window.VK_GIFT_WRAP_CONFIG.enabled === true || window.VK_GIFT_WRAP_CONFIG.enabled == '1' || window.VK_GIFT_WRAP_CONFIG.enabled == 'true');
-        if (isGwEnabled && !hasGiftWrap) {
-            let gwConfig = window.VK_GIFT_WRAP_CONFIG;
-            let wrapCardHtml = `
-                <div class="cart-gift-box-upsell" style="background:#FFFDF5; border:1.5px dashed #FCD34D; border-radius:14px; padding:12px 14px; margin:14px 0 8px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(217,119,6,0.06);">
-                    <img src="${gwConfig.image}" alt="${gwConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FDE68A;">
-                    <div style="flex-grow:1;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#92400E; line-height:1.2;">${gwConfig.name}</div>
-                        <div style="font-size:0.74rem; color:#78350F; margin-top:2px; line-height:1.3;">${gwConfig.desc}</div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn-add-gift-wrap" style="background:#D97706; color:#FFFFFF; border:none; padding:6px 14px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(217,119,6,0.3); white-space:nowrap;">
-                            + Add (+${currencySymbol}${parseFloat(gwConfig.price).toFixed(2)})
-                        </button>
-                    </div>
-                </div>
-            `;
-            listContainer.append(wrapCardHtml);
-        }
+        // Disabled auto festive add-on upsell banners in cart as per user request
+    }
 
-        // 2. Render Premium Chocolate Box Add-On Banner if enabled and not in cart
-        let hasChocBox = cart.some(item => item.id === 8 || item.id === 99999 || (item.name && (item.name.indexOf('Chocolate') !== -1 || item.name.indexOf('Sweet') !== -1 || item.name.indexOf('Add-On 2') !== -1)));
-        let isCbEnabled = window.VK_CHOC_BOX_CONFIG && (window.VK_CHOC_BOX_CONFIG.enabled === true || window.VK_CHOC_BOX_CONFIG.enabled == '1' || window.VK_CHOC_BOX_CONFIG.enabled == 'true');
-        if (isCbEnabled && !hasChocBox) {
-            let cbConfig = window.VK_CHOC_BOX_CONFIG;
-            let chocCardHtml = `
-                <div class="cart-gift-box-upsell" style="background:#FDF2F8; border:1.5px dashed #F472B6; border-radius:14px; padding:12px 14px; margin:8px 0 10px 0; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 12px rgba(157,23,77,0.06);">
-                    <img src="${cbConfig.image}" alt="${cbConfig.name}" style="width:44px; height:44px; object-fit:cover; border-radius:10px; border:1px solid #FBCFE8;">
-                    <div style="flex-grow:1;">
-                        <div style="font-weight:800; font-size:0.86rem; color:#9D174D; line-height:1.2;">${cbConfig.name}</div>
-                        <div style="font-size:0.74rem; color:#831843; margin-top:2px; line-height:1.3;">${cbConfig.desc}</div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn-add-choc-box" style="background:#DB2777; color:#FFFFFF; border:none; padding:6px 14px; border-radius:20px; font-size:0.77rem; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(219,39,119,0.3); white-space:nowrap;">
-                            + Add (+${currencySymbol}${parseFloat(cbConfig.price).toFixed(2)})
-                        </button>
-                    </div>
-                </div>
-            `;
-            listContainer.append(chocCardHtml);
-        }
+    function getAddonIcon(name) {
+        if (!name) return '✨';
+        let n = String(name).toLowerCase();
+        if (n.includes('wrap') || n.includes('gift') || n.includes('box')) return '🎁';
+        if (n.includes('chocolate') || n.includes('sweet') || n.includes('cadbury')) return '🍫';
+        if (n.includes('flower') || n.includes('garland') || n.includes('mala') || n.includes('rose')) return '🌸';
+        if (n.includes('puja') || n.includes('thali') || n.includes('diya') || n.includes('aarti')) return '🪔';
+        if (n.includes('silver') || n.includes('gold') || n.includes('coin')) return '🪙';
+        if (n.includes('card') || n.includes('greeting') || n.includes('letter')) return '💌';
+        if (n.includes('mukut') || n.includes('crown') || n.includes('ornament')) return '👑';
+        return '✨';
     }
 
     function renderCart() {
@@ -671,10 +772,9 @@ $(document).ready(function () {
                 <div class="cart-empty-state" style="padding: 25px 20px; text-align: center;">
                     <span style="font-size:3.2rem; display:block; margin-bottom:12px; opacity:0.8;">🛒</span>
                     <div style="font-weight:700; font-size:1.05rem; color:#1E293B; margin-bottom:6px;">Your cart is empty</div>
-                    <p style="font-size:0.85rem; color:#64748B; margin-bottom:12px;">Browse our festival collections or add festive add-ons below.</p>
+                    <p style="font-size:0.85rem; color:#64748B; margin-bottom:12px;">Browse our catalog to add items to your cart.</p>
                 </div>
             `);
-            renderCartAddonUpsells(listContainer);
             recalculateTotals();
             return;
         }
@@ -695,36 +795,72 @@ $(document).ready(function () {
             let itemImg = (item.image && item.image.length > 5) ? item.image : fallbackImg;
             let itemKey = item.cart_key || item.id;
 
-            let addonsBulletsHtml = '';
+            let addonsDetailsSection = '';
             if (item.selected_addons && Array.isArray(item.selected_addons) && item.selected_addons.length > 0) {
-                addonsBulletsHtml = `<div class="cart-item-addons" style="font-size:0.75rem; color:#64748B; margin-top:3px; display:flex; flex-direction:column; gap:2px;">` +
-                    item.selected_addons.map(a => `<div>• ${escapeHtml(a.name || a.item_name)} (+${currencySymbol}${parseFloat(a.price || 0).toFixed(2)})</div>`).join('') +
-                    `</div>`;
+                let cards = item.selected_addons.map(a => {
+                    let nameStr = escapeHtml(a.name || a.item_name || 'Add-on');
+                    let descStr = escapeHtml(a.description || a.desc || '');
+                    let priceVal = parseFloat(a.price || 0);
+                    let icon = getAddonIcon(a.name || a.item_name);
+
+                    let imgPath = a.image_path || a.img || a.image || '';
+                    let addonImgHtml = '';
+                    if (imgPath && imgPath.length > 5) {
+                        addonImgHtml = `<img src="${escapeHtml(imgPath)}" alt="${nameStr}" class="cart-addon-item-img">`;
+                    } else {
+                        addonImgHtml = `<div class="cart-addon-item-avatar">${icon}</div>`;
+                    }
+
+                    return `
+                        <div class="cart-addon-item-card">
+                            ${addonImgHtml}
+                            <div class="cart-addon-item-details">
+                                <div class="cart-addon-item-title">
+                                    <span>${icon}</span>
+                                    <span>${nameStr}</span>
+                                </div>
+                                ${descStr ? `<div class="cart-addon-item-desc">${descStr}</div>` : ''}
+                            </div>
+                            ${priceVal > 0 ? `<div class="cart-addon-item-price">+${currencySymbol}${priceVal.toFixed(2)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                addonsDetailsSection = `
+                    <div class="cart-item-addons-wrapper">
+                        <div class="cart-addons-section-title">✨ Included Add-Ons & Customizations</div>
+                        <div class="cart-addons-list-container">${cards}</div>
+                    </div>
+                `;
             }
 
             let row = $(`
-                <div class="cart-item-row ${isAddon ? 'cart-item-gift-row' : ''}" style="${isAddon ? 'background:#FFFDF5; border:1px solid #FCD34D;' : ''}">
-                    <img src="${itemImg}" alt="${item.name}" class="cart-item-img" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #CBD5E1;">
-                    <div class="cart-item-info">
-                        <div class="cart-item-name" style="font-weight:700; color:#1E293B; line-height:1.3;">${addonBadgeHtml}${escapeHtml(item.name)}${addonsBulletsHtml}</div>
-                        <div class="cart-item-price" style="font-weight:800; color:#4A0B17; margin-top:2px;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</div>
+                <div class="cart-item-card ${isAddon ? 'cart-item-gift-card' : ''}">
+                    <div class="cart-item-main-row">
+                        <img src="${itemImg}" alt="${escapeHtml(item.name)}" class="cart-item-img">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${addonBadgeHtml}${escapeHtml(item.name)}</div>
+                            <div class="cart-item-price">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</div>
+                        </div>
+                        <div class="cart-item-actions">
+                            ${!isAddon ? `
+                                <div class="cart-qty-ctrl">
+                                    <button type="button" class="cart-qty-btn cart-minus" data-id="${itemKey}">&minus;</button>
+                                    <span class="cart-qty-val">${item.quantity}</span>
+                                    <button type="button" class="cart-qty-btn cart-plus" data-id="${itemKey}">&plus;</button>
+                                </div>
+                            ` : ''}
+                            <button type="button" class="cart-remove-btn" data-id="${itemKey}" title="Remove Item">
+                                <span>🗑️</span> Remove
+                            </button>
+                        </div>
                     </div>
-                    <div class="cart-item-actions">
-                        ${!isAddon ? `
-                            <div class="cart-qty-ctrl">
-                                <button type="button" class="cart-qty-btn cart-minus" data-id="${itemKey}">&minus;</button>
-                                <span class="cart-qty-val">${item.quantity}</span>
-                                <button type="button" class="cart-qty-btn cart-plus" data-id="${itemKey}">&plus;</button>
-                            </div>
-                        ` : ''}
-                        <button type="button" class="cart-remove-btn" data-id="${itemKey}">Remove</button>
-                    </div>
+                    ${addonsDetailsSection}
                 </div>
             `);
             listContainer.append(row);
         });
 
-        renderCartAddonUpsells(listContainer);
         recalculateTotals();
     }
 

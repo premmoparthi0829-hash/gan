@@ -711,11 +711,11 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                                         <div class="prod-details">
                                             <h3 class="prod-name">{htmlspecialchars(prod['name'])}</h3>
                                             <p class="prod-desc">{htmlspecialchars(prod.get('description', ''))}</p>
-                                            <div class="prod-actions-row">
+                                            <div class="prod-actions-row" style="display:flex; width:100%; margin-top:10px;">
                                                 <button type="button" class="btn-add-to-cart btn-gold" data-id="{prod['id']}"
                                                     data-name="{htmlspecialchars(prod['name'])}"
                                                     data-price="{prod['price']}"
-                                                    data-img="{htmlspecialchars(img1)}">
+                                                    data-img="{htmlspecialchars(img1)}" style="width:100%; padding:8px 12px; font-size:0.8rem; font-weight:700; border-radius:8px;">
                                                     🛒 Add to Cart
                                                 </button>
                                             </div>
