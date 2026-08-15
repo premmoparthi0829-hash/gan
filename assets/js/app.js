@@ -112,9 +112,39 @@ $(document).ready(function () {
     }
 
     // ============================================================
-    // SHOPPING CART STATE MANAGEMENT
+    // SHOPPING CART STATE MANAGEMENT (WITH LOCALSTORAGE PERSISTENCE)
     // ============================================================
-    let cart = [];
+    let CART_STORAGE_KEY = 'vk_festive_cart_v1';
+    let cart = loadCart();
+
+    function saveCart() {
+        try {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+        } catch (e) {
+            console.error('Failed to save cart to localStorage:', e);
+        }
+    }
+
+    function loadCart() {
+        try {
+            let saved = localStorage.getItem(CART_STORAGE_KEY);
+            if (saved) {
+                let parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load cart from localStorage:', e);
+        }
+        return [];
+    }
+
+    function clearCart() {
+        cart = [];
+        saveCart();
+        renderCart();
+    }
 
 
     // ── 2-Step Category Picker ──────────────────────────────────
@@ -775,6 +805,7 @@ $(document).ready(function () {
     }
 
     function renderCart() {
+        saveCart();
         let listContainer = $('#cart-items-list');
         listContainer.empty();
 
@@ -874,6 +905,9 @@ $(document).ready(function () {
 
         recalculateTotals();
     }
+
+    // Immediately render saved cart items on page load
+    renderCart();
 
     // Gift Wrap Add-On Listener
     $(document).on('click', '.btn-add-gift-wrap', function() {
@@ -1371,20 +1405,24 @@ $(document).ready(function () {
 
         let submitBtn = $('#btn-submit-bank');
         let originalText = submitBtn.html();
-        let payRef = $('#payment_reference').val().trim();
+        let payRef = $('#bank_payment_reference').val() ? $('#bank_payment_reference').val().trim() : ($('#payment_reference').val() ? $('#payment_reference').val().trim() : '');
 
         if (!payRef) {
-            showToast('Please enter your Bank Transfer payment reference number.', 'error');
+            showToast('Please enter your Bank Transfer Reference / UTR Number.', 'error');
+            $('#bank_payment_reference').focus();
             return;
         }
         
-        let fileInput = $('#payment_proof_file')[0];
-        if (!fileInput || fileInput.files.length === 0) {
+        let fileInput = $('#bank_payment_proof_file')[0];
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            fileInput = $('#payment_proof_file')[0] || $('#payment_screenshot_file')[0];
+        }
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
             showToast('Please upload a photo of your Bank Transfer receipt.', 'error');
             return;
         }
 
-        submitBtn.prop('disabled', true).html('Creating your booking...');
+        submitBtn.prop('disabled', true).html('⏳ Placing Order...');
 
         let rawMobile = $('#mobile').val().trim();
         let countryCode = $('#country_code').val() || '+44';
@@ -1407,6 +1445,7 @@ $(document).ready(function () {
         formData.append('cart', JSON.stringify(cart));
         formData.append('payment_method', 'bank_transfer');
         formData.append('payment_reference', payRef);
+        formData.append('payment_screenshot', fileInput.files[0]);
         formData.append('payment_proof', fileInput.files[0]);
 
         $.ajax({
@@ -1418,10 +1457,11 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (res) {
                 if (res.success) {
-                    showToast('Booking created! Redirecting to confirmation...', 'success');
+                    clearCart();
+                    showToast('🎉 Bank Transfer Order created! Redirecting...', 'success');
                     setTimeout(function () {
                         window.location.href = res.redirect_url;
-                    }, 1200);
+                    }, 1000);
                 } else {
                     showToast(res.message || 'Error creating booking', 'error');
                     submitBtn.prop('disabled', false).html(originalText);
@@ -1495,6 +1535,39 @@ $(document).ready(function () {
         $('#upi-upload-idle-state').show();
     });
 
+    // Bank Upload Handlers
+    $(document).on('click', '#bank-upload-idle-state, #bank-screenshot-upload-zone', function(e) {
+        if ($(e.target).closest('#btn-remove-bank-screenshot').length > 0) return;
+        $('#bank_payment_proof_file').trigger('click');
+    });
+
+    $(document).on('change', '#bank_payment_proof_file', function() {
+        let file = this.files[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Image file size must be less than 10MB.', 'error');
+                $(this).val('');
+                return;
+            }
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                $('#bank-screenshot-img-preview').attr('src', evt.target.result);
+                $('#bank-upload-file-name').text(file.name);
+                $('#bank-upload-idle-state').hide();
+                $('#bank-upload-preview-state').show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $(document).on('click', '#btn-remove-bank-screenshot', function(e) {
+        e.stopPropagation();
+        $('#bank_payment_proof_file').val('');
+        $('#bank-screenshot-img-preview').attr('src', '');
+        $('#bank-upload-preview-state').hide();
+        $('#bank-upload-idle-state').show();
+    });
+
     // UPI Order Submit
     $(document).on('click', '#btn-submit-upi-booking', function(e) {
         e.preventDefault();
@@ -1539,6 +1612,7 @@ $(document).ready(function () {
             dataType: 'json',
             success: function(res) {
                 if (res.success) {
+                    clearCart();
                     showToast('🎉 Order placed successfully! Redirecting...', 'success');
                     setTimeout(function() {
                         window.location.href = res.redirect_url;

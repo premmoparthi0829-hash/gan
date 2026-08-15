@@ -749,6 +749,30 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                         <span id="bank-num-display" class="bm-bank-val bm-mono"><?php echo escape_output($upi_config['bank_account_number'] ?? '83920144'); ?></span>
                                     </div>
                                 </div>
+
+                                <div class="bm-field" style="margin-top:14px;">
+                                    <label for="bank_payment_reference">Bank Transfer Reference / UTR Number <span class="req">*</span></label>
+                                    <input type="text" id="bank_payment_reference" name="bank_payment_reference" placeholder="e.g. REF12345678 or UTR Number" class="bm-input">
+                                </div>
+
+                                <div class="bm-field" style="margin-top:14px;">
+                                    <label for="bank_payment_proof_file">Upload Bank Transfer Receipt / Photo <span class="req">*</span></label>
+                                    <div class="bm-upload-box" id="bank-screenshot-upload-zone">
+                                        <input type="file" id="bank_payment_proof_file" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                                        <div class="upload-drop-content" id="bank-upload-idle-state">
+                                            <div class="upload-text"><strong>Click to select bank receipt photo</strong> or drag file here</div>
+                                            <div class="upload-sub">Supports JPG, PNG, WEBP (Max 10MB)</div>
+                                        </div>
+                                        <div class="upload-preview-content" id="bank-upload-preview-state" style="display:none;">
+                                            <img id="bank-screenshot-img-preview" src="" alt="Bank Receipt Preview">
+                                            <div class="upload-file-info">
+                                                <span id="bank-upload-file-name">receipt.jpg</span>
+                                                <button type="button" id="btn-remove-bank-screenshot" class="btn-remove-file">&times; Remove Photo</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <button type="button" class="bm-submit-btn" id="btn-submit-bank" style="margin-top:16px;">
                                     Confirm Bank Transfer Booking
                                 </button>
