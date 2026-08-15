@@ -717,8 +717,15 @@ $(document).ready(function () {
         openCartSidebar();
     }
 
-    function updateCartQty(cartKey, delta) {
-        let item = cart.find(i => (i.cart_key || i.id) === cartKey || i.id === cartKey);
+    function updateCartQty(target, delta) {
+        let item = null;
+        let idx = parseInt(target);
+        if (!isNaN(idx) && idx >= 0 && idx < cart.length && String(target).indexOf('_') === -1) {
+            item = cart[idx];
+        }
+        if (!item) {
+            item = cart.find(i => (i.cart_key || String(i.id)) === String(target) || String(i.id) === String(target));
+        }
         if (!item) return;
 
         let newQty = item.quantity + delta;
@@ -730,7 +737,11 @@ $(document).ready(function () {
         }
 
         if (newQty <= 0) {
-            removeFromCart(cartKey);
+            let itemIdx = cart.indexOf(item);
+            if (itemIdx !== -1) {
+                cart.splice(itemIdx, 1);
+            }
+            renderCart();
         } else {
             item.quantity = newQty;
             renderCart();
@@ -779,7 +790,7 @@ $(document).ready(function () {
             return;
         }
 
-        cart.forEach(item => {
+        cart.forEach((item, itemIdx) => {
             let isAddon1 = item.id === 7 || item.id === 99998 || (item.name && (item.name.indexOf('Wrapping') !== -1 || item.name.indexOf('Add-On 1') !== -1));
             let isAddon2 = item.id === 8 || item.id === 99999 || (item.name && (item.name.indexOf('Chocolate') !== -1 || item.name.indexOf('Add-On 2') !== -1));
             let isAddon = item.isAddon || isAddon1 || isAddon2;
@@ -793,11 +804,10 @@ $(document).ready(function () {
 
             let fallbackImg = isAddon1 ? 'assets/images/rakhi_rudraksha.png' : (isAddon2 ? 'assets/images/rakhi_peacock.png' : 'assets/images/ganesh_hero.png');
             let itemImg = (item.image && item.image.length > 5) ? item.image : fallbackImg;
-            let itemKey = item.cart_key || item.id;
 
             let addonsDetailsSection = '';
             if (item.selected_addons && Array.isArray(item.selected_addons) && item.selected_addons.length > 0) {
-                let cards = item.selected_addons.map(a => {
+                let cards = item.selected_addons.map((a, aIdx) => {
                     let nameStr = escapeHtml(a.name || a.item_name || 'Add-on');
                     let descStr = escapeHtml(a.description || a.desc || '');
                     let priceVal = parseFloat(a.price || 0);
@@ -813,6 +823,7 @@ $(document).ready(function () {
 
                     return `
                         <div class="cart-addon-item-card">
+                            <button type="button" class="btn-remove-addon-item" data-item-idx="${itemIdx}" data-addon-idx="${aIdx}" title="Remove ${nameStr}" aria-label="Remove add-on">&times;</button>
                             ${addonImgHtml}
                             <div class="cart-addon-item-details">
                                 <div class="cart-addon-item-title">
@@ -845,12 +856,12 @@ $(document).ready(function () {
                         <div class="cart-item-actions">
                             ${!isAddon ? `
                                 <div class="cart-qty-ctrl">
-                                    <button type="button" class="cart-qty-btn cart-minus" data-id="${itemKey}">&minus;</button>
+                                    <button type="button" class="cart-qty-btn cart-minus" data-id="${itemIdx}">&minus;</button>
                                     <span class="cart-qty-val">${item.quantity}</span>
-                                    <button type="button" class="cart-qty-btn cart-plus" data-id="${itemKey}">&plus;</button>
+                                    <button type="button" class="cart-qty-btn cart-plus" data-id="${itemIdx}">&plus;</button>
                                 </div>
                             ` : ''}
-                            <button type="button" class="cart-remove-btn" data-id="${itemKey}" title="Remove Item">
+                            <button type="button" class="cart-remove-btn" data-id="${itemIdx}" title="Remove Item">
                                 <span>🗑️</span> Remove
                             </button>
                         </div>
@@ -911,8 +922,54 @@ $(document).ready(function () {
         updateCartQty(id, -1);
     });
 
+    function removeFromCart(target) {
+        if (typeof target === 'number' || (!isNaN(parseInt(target)) && String(target).indexOf('_') === -1)) {
+            let idx = parseInt(target);
+            if (idx >= 0 && idx < cart.length) {
+                cart.splice(idx, 1);
+                renderCart();
+                return;
+            }
+        }
+        cart = cart.filter(i => (i.cart_key || String(i.id)) !== String(target) && String(i.id) !== String(target));
+        renderCart();
+    }
+
+    function removeAddonFromCartItem(itemIdx, addonIdx) {
+        itemIdx = parseInt(itemIdx);
+        addonIdx = parseInt(addonIdx);
+        let item = cart[itemIdx];
+        if (!item) {
+            item = cart.find(i => (i.cart_key || String(i.id)) === String(itemIdx) || String(i.id) === String(itemIdx));
+        }
+        if (!item || !item.selected_addons || item.selected_addons.length <= addonIdx) return;
+
+        let removed = item.selected_addons.splice(addonIdx, 1);
+        
+        // Recalculate single item price based on remaining add-ons
+        let base = parseFloat(item.base_price) !== undefined && !isNaN(parseFloat(item.base_price)) ? parseFloat(item.base_price) : item.price;
+        let addonsTotal = item.selected_addons.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+        item.price = base + addonsTotal;
+
+        // Update cart_key to match new selected_addons state
+        item.cart_key = item.id + '_' + (item.selected_addons.length ? JSON.stringify(item.selected_addons) : '');
+
+        renderCart();
+        if (removed && removed[0]) {
+            showToast(`Removed ${removed[0].name || 'add-on'}`, 'info');
+        }
+    }
+
+    $(document).on('click', '.btn-remove-addon-item', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        let itemIdx = $(this).attr('data-item-idx');
+        let addonIdx = $(this).attr('data-addon-idx');
+        removeAddonFromCartItem(itemIdx, addonIdx);
+    });
+
     $(document).on('click', '.cart-remove-btn', function() {
-        let id = parseInt($(this).data('id'));
+        let id = $(this).data('id');
         removeFromCart(id);
     });
 
@@ -1066,13 +1123,64 @@ $(document).ready(function () {
         step3Container.empty();
 
         cart.forEach(item => {
+            let addonsLeftHtml = '';
+            let addonsStep1Html = '';
+            let addonsStep3Html = '';
+
+            if (item.selected_addons && Array.isArray(item.selected_addons) && item.selected_addons.length > 0) {
+                let leftBadges = item.selected_addons.map(a => {
+                    let icon = getAddonIcon(a.name || a.item_name);
+                    let aPrice = parseFloat(a.price || 0);
+                    return `<div style="font-size:0.72rem; color:#FDE68A; display:flex; align-items:center; gap:4px; background:rgba(254, 230, 138, 0.12); padding:2px 6px; border-radius:4px; border:1px solid rgba(254, 230, 138, 0.2);">
+                        <span>${icon}</span>
+                        <span style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(a.name || a.item_name)}</span>
+                        ${aPrice > 0 ? `<span style="color:#F7E096; font-weight:800; margin-left:auto;">+${currencySymbol}${aPrice.toFixed(2)}</span>` : ''}
+                    </div>`;
+                }).join('');
+                addonsLeftHtml = `<div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">${leftBadges}</div>`;
+
+                let step1Badges = item.selected_addons.map(a => {
+                    let icon = getAddonIcon(a.name || a.item_name);
+                    let aDesc = escapeHtml(a.description || a.desc || '');
+                    let aPrice = parseFloat(a.price || 0);
+                    let imgPath = a.image_path || a.img || a.image || '';
+                    let addonImg = (imgPath && imgPath.length > 5) 
+                        ? `<img src="${escapeHtml(imgPath)}" style="width:24px; height:24px; object-fit:cover; border-radius:4px; border:1px solid #FCD34D; flex-shrink:0;">`
+                        : `<span style="font-size:0.85rem;">${icon}</span>`;
+                    return `
+                        <div style="display:flex; align-items:center; gap:6px; background:#FFFDF5; border:1px solid #FDE68A; border-radius:6px; padding:4px 8px; font-size:0.75rem;">
+                            ${addonImg}
+                            <div style="flex-grow:1; min-width:0;">
+                                <div style="font-weight:700; color:#78350F; line-height:1.2;">${escapeHtml(a.name || a.item_name)}</div>
+                                ${aDesc ? `<div style="font-size:0.7rem; color:#92400E; opacity:0.85; margin-top:1px;">${aDesc}</div>` : ''}
+                            </div>
+                            ${aPrice > 0 ? `<div style="font-weight:800; color:#92400E; background:#FEF3C7; padding:1px 5px; border-radius:4px; white-space:nowrap;">+${currencySymbol}${aPrice.toFixed(2)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                addonsStep1Html = `<div style="margin-top:6px; display:flex; flex-direction:column; gap:4px; padding-top:6px; border-top:1px dashed #CBD5E1;">${step1Badges}</div>`;
+
+                let step3Badges = item.selected_addons.map(a => {
+                    let icon = getAddonIcon(a.name || a.item_name);
+                    let aPrice = parseFloat(a.price || 0);
+                    return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#78350F; background:#FFFDF5; border:1px solid #FDE68A; border-radius:6px; padding:4px 8px; margin-top:4px;">
+                            <span>${icon} <strong style="color:#78350F;">${escapeHtml(a.name || a.item_name)}</strong></span>
+                            ${aPrice > 0 ? `<span style="font-weight:800; color:#92400E;">+${currencySymbol}${aPrice.toFixed(2)}</span>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                addonsStep3Html = `<div style="margin-top:6px; padding-top:6px; border-top:1px dashed #E2E8F0;">${step3Badges}</div>`;
+            }
+
             // Left pane row
             let leftRow = $(`
-                <div class="checkout-cart-item-row" style="display:flex; align-items:center; gap:10px; background:rgba(255, 255, 255, 0.05); border-radius:8px; padding:8px; border:1px solid rgba(255,255,255,0.1);">
-                    <img src="${item.image}" alt="${item.name}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
-                    <div style="flex-grow:1; font-size:0.8rem; color:#fff;">
-                        <div style="font-weight:700;">${item.name}</div>
+                <div class="checkout-cart-item-row" style="display:flex; align-items:flex-start; gap:10px; background:rgba(255, 255, 255, 0.05); border-radius:8px; padding:8px; border:1px solid rgba(255,255,255,0.1); margin-bottom:8px;">
+                    <img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid rgba(255,255,255,0.1); flex-shrink:0;">
+                    <div style="flex-grow:1; font-size:0.8rem; color:#fff; min-width:0;">
+                        <div style="font-weight:700; line-height:1.2;">${escapeHtml(item.name)}</div>
                         <div style="color:#D4AF37; font-weight:600; margin-top:2px;">${item.quantity} × ${currencySymbol}${item.price.toFixed(2)}</div>
+                        ${addonsLeftHtml}
                     </div>
                 </div>
             `);
@@ -1080,18 +1188,24 @@ $(document).ready(function () {
 
             // Step 1 summary row
             let step1Row = $(`
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; padding:4px 0;">
-                    <span style="color:#334155; font-weight:600;">${item.name} <span style="color:#64748B;">(x${item.quantity})</span></span>
-                    <span style="color:#0F172A; font-weight:700;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+                        <span style="color:#0F172A; font-weight:700;">${escapeHtml(item.name)} <span style="color:#64748B; font-weight:600;">(x${item.quantity})</span></span>
+                        <span style="color:#4A0B17; font-weight:800;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                    ${addonsStep1Html}
                 </div>
             `);
             step1Container.append(step1Row);
 
             // Step 3 final summary row
             let step3Row = $(`
-                <div class="bm-summary-row">
-                    <span>${item.name} &times; <strong>${item.quantity}</strong></span>
-                    <span>${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+                <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:10px 12px; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
+                        <span style="color:#0F172A; font-weight:700;">${escapeHtml(item.name)} <span style="color:#4A0B17; font-weight:600;">(x${item.quantity})</span></span>
+                        <span style="color:#4A0B17; font-weight:800;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                    ${addonsStep3Html}
                 </div>
             `);
             step3Container.append(step3Row);

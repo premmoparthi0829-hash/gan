@@ -2416,30 +2416,32 @@ body.modal-open { overflow: hidden; }
 
 /* Order Summary card */
 .bm-summary-card {
-  background: linear-gradient(135deg, var(--color-maroon-dark) 0%, var(--color-maroon) 100%);
+  background: #FFFDF7;
+  border: 1.5px solid #FDE68A;
   border-radius: 14px;
   padding: 16px 18px;
   margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.05);
 }
 .bm-summary-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.88rem;
-  color: rgba(255,255,255,0.8);
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 0.9rem;
+  color: #334155;
+  padding: 8px 0;
+  border-bottom: 1px solid #F1F5F9;
 }
 .bm-summary-row:last-child { border-bottom: none; }
 .bm-summary-row.total {
   font-family: var(--font-heading);
-  font-size: 1.05rem;
-  color: var(--color-gold-light);
-  font-weight: 700;
-  padding-top: 10px;
-  border-top: 1px solid rgba(212,175,55,0.3);
+  font-size: 1.15rem;
+  color: #4A0B17;
+  font-weight: 800;
+  padding-top: 12px;
+  border-top: 2px dashed #F59E0B;
   border-bottom: none;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 /* Payment tabs */
@@ -4599,6 +4601,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .cart-addon-item-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -4607,6 +4610,36 @@ body.modal-open { overflow: hidden; }
   border-radius: 9px;
   padding: 8px 10px;
   box-shadow: 0 2px 6px rgba(217, 119, 6, 0.06);
+}
+
+.btn-remove-addon-item {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #EF4444;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  transition: all 0.2s ease;
+  z-index: 5;
+  padding: 0;
+  outline: none;
+}
+
+.btn-remove-addon-item:hover {
+  background: #B91C1C;
+  transform: scale(1.15);
+  box-shadow: 0 4px 10px rgba(185, 28, 28, 0.45);
 }
 
 .cart-addon-item-img {

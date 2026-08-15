@@ -28,6 +28,8 @@ SETTINGS = {
     "paypal_email": "payments@vklogistics.co.uk",
     "paypal_account_name": "VK LOGISTICS LTD",
     "paypal_id": "premmoparthi@paypal",
+    "upi_qr_image": "assets/images/upi_qr_default.png",
+    "upi_id": "vklogistics@upi",
     "support_phone": "+44 7700 900888",
     "support_email": "bappa@vklogistics.co.uk",
     "csrf_token": "demo_token_12345"
@@ -452,11 +454,11 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json({"success": False, "message": "Booking not found"})
             return
 
-        elif action == 'save_settings':
-            for key in SETTINGS.keys():
+        elif action in ['save_settings', 'save_payment_settings', 'save_upi_settings']:
+            for key in list(SETTINGS.keys()) + ['upi_id', 'upi_account_name', 'upi_qr_image', 'bank_name', 'bank_account_name', 'bank_sort_code', 'bank_account_number']:
                 if key in form_data:
                     SETTINGS[key] = form_data[key]
-            self.send_json({"success": True, "message": "All store settings saved successfully!"})
+            self.send_json({"success": True, "message": "All store and payment settings saved successfully!"})
             return
 
         elif action == 'save_paypal_settings':
@@ -808,6 +810,12 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
         for field, val in SETTINGS.items():
             content = content.replace(f"<?php echo escape_output($settings['{field}'] ?? ''); ?>", str(val))
             content = content.replace(f"<?php echo escape_output($settings['{field}'] ?? '{val}'); ?>", str(val))
+
+        qr_img = SETTINGS.get('upi_qr_image') or 'assets/images/upi_qr_default.png'
+        upi_id_val = SETTINGS.get('upi_id') or 'vklogistics@upi'
+        content = content.replace("<?php echo escape_output(($upi_config['upi_qr_image'] ?? '') ?: 'assets/images/upi_qr_default.png'); ?>", qr_img)
+        content = content.replace("<?php echo escape_output($settings['upi_qr_image'] ?? $upi_config['upi_qr_image'] ?? 'assets/images/upi_qr_default.png'); ?>", qr_img)
+        content = content.replace("<?php echo escape_output($upi_config['upi_id'] ?? 'vklogistics@upi'); ?>", upi_id_val)
 
         content = re.sub(r'<\?php.*?\?>', '', content, flags=re.DOTALL)
 

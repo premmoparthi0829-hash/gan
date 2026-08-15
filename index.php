@@ -691,7 +691,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                     <div style="font-weight: 800; font-size: 0.92rem; color: #4A0B17; margin-bottom: 8px;">
                                         📸 Scan QR Code to Pay
                                     </div>
-                                    <img id="checkout-upi-qr-img" src="<?php echo escape_output(($upi_config['upi_qr_image'] ?? '') ?: 'assets/images/upi_qr_default.png'); ?>" alt="UPI QR Code" style="max-width: 200px; width: 100%; height: auto; border-radius: 10px; border: 2px solid #D4AF37; padding: 4px; background: #FFF;">
+                                    <img id="checkout-upi-qr-img" src="<?php echo escape_output($settings['upi_qr_image'] ?? $upi_config['upi_qr_image'] ?? 'assets/images/upi_qr_default.png'); ?>" alt="UPI QR Code" style="max-width: 200px; width: 100%; height: auto; border-radius: 10px; border: 2px solid #D4AF37; padding: 4px; background: #FFF;">
                                 </div>
 
                                 <div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
