@@ -545,53 +545,6 @@ if ($db_conn && !empty($catalog_products)) {
 
                     </div>
                 </form>
-
-                <!-- ADMIN PAYMENT VERIFICATION PANEL -->
-                <div style="background: #FFFFFF; border: 1.5px solid #E2E8F0; border-radius: 14px; padding: 22px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #F1F5F9; padding-bottom: 12px; flex-wrap: wrap; gap: 12px;">
-                        <div>
-                            <h3 style="color: #4A0B17; font-size: 1.25rem; margin: 0; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                                <span>🔍</span> Orders &rarr; Payment Verification Panel (UPI &amp; Bank Transfer)
-                            </h3>
-                            <p style="color: #64748B; font-size: 0.85rem; margin: 4px 0 0 0;">Review uploaded payment screenshots, approve payments, or request re-upload</p>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button type="button" id="btn-filter-upi-pending" class="btn-secondary" style="background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer;">
-                                🟡 Show Pending Verify Only
-                            </button>
-                            <button type="button" id="btn-refresh-upi-table" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; color: #475569;">
-                                🔄 Refresh Table
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Payment Verification Table -->
-                    <div class="admin-table-wrapper">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th style="white-space:nowrap; text-align:center; width: 40px;">#</th>
-                                    <th style="white-space:nowrap; text-align:left;">Order ID / Date</th>
-                                    <th style="text-align:left;">User Name &amp; Contact</th>
-                                    <th style="white-space:nowrap; text-align:right;">Amount</th>
-                                    <th style="white-space:nowrap; text-align:center;">Uploaded Screenshot</th>
-                                    <th style="white-space:nowrap; text-align:center;">Payment Method</th>
-                                    <th style="white-space:nowrap; text-align:center;">Payment Status</th>
-                                    <th style="white-space:nowrap; text-align:center;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="upi-verification-table-body">
-                                <tr>
-                                    <td colspan="8" style="text-align:center; padding: 30px; color: #64748B;">
-                                        Loading payment verification records...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
             </div>
 
             <!-- TAB 3: PDF & CSV REPORTS -->
