@@ -98,6 +98,22 @@ function get_setting($key, $default = '') {
 }
 
 /**
+ * Update or insert a setting value in database settings table
+ */
+function update_setting($key, $value) {
+    $db = Database::getConnection();
+    if ($db) {
+        try {
+            $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value, description) VALUES (:k, :v, 'System Setting') ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+            return $stmt->execute([':k' => $key, ':v' => (string)$value]);
+        } catch (Exception $e) {
+            log_system_error("Error updating setting '$key': " . $e->getMessage());
+        }
+    }
+    return false;
+}
+
+/**
  * Fetch all settings array in 1 single optimized database query
  */
 function get_all_settings() {

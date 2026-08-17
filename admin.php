@@ -531,8 +531,23 @@ if ($db_conn && !empty($catalog_products)) {
 
                                 <div class="admin-field-group" style="margin-bottom: 18px;">
                                     <label for="admin_password" style="font-weight: 700; color: #0F172A; font-size: 0.9rem;">Update Admin Passkey</label>
-                                    <input type="password" id="admin_password" name="admin_password" placeholder="Leave blank to keep current passkey" style="width: 100%; padding: 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px;">
-                                    <small style="color: #64748B; font-size: 0.78rem; margin-top: 4px; display: block;">Default passkey is <strong>admin123</strong>.</small>
+                                    <div style="position: relative;">
+                                        <input type="password" id="admin_password" name="admin_password" placeholder="Enter password" style="width: 100%; padding: 10px 42px 10px 14px; border: 1.5px solid #CBD5E1; border-radius: 8px;">
+                                        <button type="button" id="btn-toggle-new-password" title="Toggle password visibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748B; padding: 4px; display: flex; align-items: center; justify-content: center;">
+                                            <span id="eye-icon-new-show" style="font-size: 1.1rem; line-height: 1;">👁️</span>
+                                            <span id="eye-icon-new-hide" style="font-size: 1.1rem; line-height: 1; display: none;">🙈</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <div style="margin-top: 8px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                        <div style="font-size: 0.82rem; color: #475569; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                            <span>🔑 Active Passkey:</span>
+                                            <input type="password" id="current-passkey-display" value="<?php echo escape_output($upi_sett['admin_password'] ?? 'admin123'); ?>" readonly style="border: none; background: #FFFFFF; padding: 3px 8px; border-radius: 6px; border: 1px solid #CBD5E1; font-weight: 800; font-family: monospace; color: #4A0B17; font-size: 0.9rem; width: 120px; text-align: center;">
+                                        </div>
+                                        <button type="button" id="btn-toggle-active-passkey" style="background: #FFFFFF; border: 1px solid #CBD5E1; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #334155; display: inline-flex; align-items: center; gap: 4px;">
+                                            <span>👁️</span> Show Passkey
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1865,7 +1880,7 @@ if ($db_conn && !empty($catalog_products)) {
                     e.preventDefault();
                     const btn = document.getElementById('btn-save-upi-settings');
                     btn.disabled = true;
-                    btn.textContent = '💾 Saving UPI Settings...';
+                    btn.textContent = '💾 Saving Payment Settings...';
 
                     const formData = new FormData(this);
 
@@ -1879,28 +1894,76 @@ if ($db_conn && !empty($catalog_products)) {
                         try {
                             data = JSON.parse(text);
                         } catch(err) {
-                            throw new Error(text || 'Invalid JSON response');
+                            data = { success: false, message: text ? text.substring(0, 150) : 'Server returned an invalid response' };
                         }
                         btn.disabled = false;
-                        btn.textContent = '💾 Save UPI Settings';
+                        btn.textContent = '💾 Save All Payment & Gateway Settings';
                         if (res.ok && data.success) {
-                            alert('✅ UPI Payment Settings saved successfully!');
-                            const badge = document.getElementById('upi-status-badge');
-                            if (badge) {
+                            alert('✅ ' + (data.message || 'Payment & Gateway Settings saved successfully!'));
+                            
+                            // Reset password field and update active passkey display if updated
+                            const passInput = document.getElementById('admin_password');
+                            if (passInput) {
+                                if (passInput.value.trim() !== '') {
+                                    const activeDisplay = document.getElementById('current-passkey-display');
+                                    if (activeDisplay) activeDisplay.value = passInput.value.trim();
+                                }
+                                passInput.value = '';
+                            }
+
+                            const upiBadge = document.getElementById('upi-status-badge');
+                            if (upiBadge) {
                                 const isEnabledEl = document.getElementById('is_enabled');
                                 const isEnabled = isEnabledEl ? isEnabledEl.checked : true;
-                                badge.style.background = isEnabled ? '#10B981' : '#EF4444';
-                                badge.textContent = isEnabled ? '🟢 ENABLED & ACTIVE' : '🔴 DISABLED';
+                                upiBadge.style.background = isEnabled ? '#10B981' : '#EF4444';
+                                upiBadge.textContent = isEnabled ? '🟢 ENABLED & ACTIVE' : '🔴 DISABLED';
+                            }
+
+                            const bankBadge = document.getElementById('bank-status-badge');
+                            if (bankBadge) {
+                                const isBankEnabledEl = document.getElementById('bank_enabled');
+                                const isBankEnabled = isBankEnabledEl ? isBankEnabledEl.checked : true;
+                                bankBadge.style.background = isBankEnabled ? '#3B82F6' : '#EF4444';
+                                bankBadge.textContent = isBankEnabled ? '🟢 BANK ACTIVE' : '🔴 BANK OFF';
                             }
                         } else {
-                            alert('❌ ' + (data.message || 'Failed to save UPI settings.'));
+                            alert('❌ ' + (data.message || 'Failed to save payment settings.'));
                         }
                     })
                     .catch(err => {
                         btn.disabled = false;
-                        btn.textContent = '💾 Save UPI Settings';
-                        alert('❌ Error saving UPI settings: ' + err.message);
+                        btn.textContent = '💾 Save All Payment & Gateway Settings';
+                        alert('❌ Error saving payment settings: ' + err.message);
                     });
+                });
+            }
+
+            // New Passkey Input Show/Hide Toggle Listener
+            const toggleNewPassBtn = document.getElementById('btn-toggle-new-password');
+            if (toggleNewPassBtn) {
+                toggleNewPassBtn.addEventListener('click', function() {
+                    const input = document.getElementById('admin_password');
+                    if (!input) return;
+                    const isPass = input.getAttribute('type') === 'password';
+                    input.setAttribute('type', isPass ? 'text' : 'password');
+                    const showIcon = document.getElementById('eye-icon-new-show');
+                    const hideIcon = document.getElementById('eye-icon-new-hide');
+                    if (showIcon && hideIcon) {
+                        showIcon.style.display = isPass ? 'none' : 'inline';
+                        hideIcon.style.display = isPass ? 'inline' : 'none';
+                    }
+                });
+            }
+
+            // Active Passkey Show/Hide Toggle Listener
+            const toggleActivePassBtn = document.getElementById('btn-toggle-active-passkey');
+            if (toggleActivePassBtn) {
+                toggleActivePassBtn.addEventListener('click', function() {
+                    const input = document.getElementById('current-passkey-display');
+                    if (!input) return;
+                    const isPass = input.getAttribute('type') === 'password';
+                    input.setAttribute('type', isPass ? 'text' : 'password');
+                    this.innerHTML = isPass ? '<span>🙈</span> Hide Passkey' : '<span>👁️</span> Show Passkey';
                 });
             }
 

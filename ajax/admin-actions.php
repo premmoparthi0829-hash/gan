@@ -227,8 +227,11 @@ if ($action === 'save_settings') {
             $val = sanitize_input($_POST[$key]);
             
             // Skip updating password if blank (leave blank to keep current passkey)
-            if ($key === 'admin_password' && $val === '') {
-                continue;
+            if ($key === 'admin_password') {
+                if ($val === '') {
+                    continue;
+                }
+                $val = password_hash($val, PASSWORD_DEFAULT);
             }
             
             if ($db) {
@@ -812,9 +815,9 @@ if ($action === 'delete_product') {
 // 11. Save UPI & Bank Payment Settings
 if ($action === 'save_upi_settings' || $action === 'save_payment_settings') {
     $upi_id = sanitize_input($_POST['upi_id'] ?? '');
-    $account_name = sanitize_input($_POST['account_name'] ?? '');
-    $instructions = sanitize_input($_POST['instructions'] ?? '');
-    $is_enabled = (int)($_POST['is_enabled'] ?? 1);
+    $account_name = sanitize_input($_POST['account_name'] ?? $_POST['upi_account_name'] ?? '');
+    $instructions = sanitize_input($_POST['instructions'] ?? $_POST['upi_instructions'] ?? '');
+    $is_enabled = isset($_POST['is_enabled']) ? 1 : 0;
     
     if (empty($upi_id) || empty($account_name)) {
         json_response(false, 'UPI ID and Account Holder Name are required.', [], 422);
@@ -847,7 +850,7 @@ if ($action === 'save_upi_settings' || $action === 'save_payment_settings') {
         'bank_sort_code' => sanitize_input($_POST['bank_sort_code'] ?? ''),
         'bank_account_number' => sanitize_input($_POST['bank_account_number'] ?? ''),
         'bank_instructions' => sanitize_input($_POST['bank_instructions'] ?? ''),
-        'bank_enabled' => (int)($_POST['bank_enabled'] ?? 1),
+        'bank_enabled' => isset($_POST['bank_enabled']) ? 1 : 0,
         'support_phone' => sanitize_input($_POST['support_phone'] ?? '')
     ];
 
@@ -861,7 +864,7 @@ if ($action === 'save_upi_settings' || $action === 'save_payment_settings') {
     }
     
     save_upi_settings($upi_id, $account_name, $qr_image_path, $instructions, $is_enabled, $bank_data);
-    json_response(true, 'Payment Settings saved successfully.', [
+    json_response(true, 'Payment & Gateway Settings saved successfully.', [
         'upi_id' => $upi_id,
         'account_name' => $account_name,
         'qr_image' => $qr_image_path

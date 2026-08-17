@@ -1021,7 +1021,6 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
     <script src="https://www.paypal.com/sdk/js?client-id=<?php echo urlencode($paypal_client_id); ?>&currency=<?php echo urlencode($settings['currency_code'] ?? 'GBP'); ?>&intent=capture" data-namespace="paypal" async defer></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="assets/js/app.js?v=<?php echo time(); ?>"></script>
-    <script src="assets/js/paypal-integration.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>

@@ -21,7 +21,7 @@ $(document).ready(function () {
             url: 'ajax/get-settings.php',
             type: 'GET',
             dataType: 'json',
-            success: function(res) {
+            success: function (res) {
                 if (res && res.success) {
                     let s = res.settings || (res.data && res.data.settings);
                     if (s) {
@@ -45,7 +45,7 @@ $(document).ready(function () {
     fetchSettings();
 
     // Country code flag switcher
-    $(document).on('change', '#country_code', function() {
+    $(document).on('change', '#country_code', function () {
         let flag = $(this).find('option:selected').data('flag') || '🇬🇧';
         $('#selected-flag').text(flag);
     });
@@ -175,7 +175,7 @@ $(document).ready(function () {
             initSwiperCarousels();
             let swiperEl = targetPane.find('.myntra-prod-swiper')[0];
             if (swiperEl && activeSwipers[swiperEl.id]) {
-                setTimeout(function() {
+                setTimeout(function () {
                     activeSwipers[swiperEl.id].update();
                     activeSwipers[swiperEl.id].slideTo(0, 0);
                 }, 30);
@@ -190,17 +190,17 @@ $(document).ready(function () {
     }
 
     // Click on category card or shop collection button
-    $(document).on('click keypress', '.cat-stylish-card, .cat-clean-card, .collection-card, .btn-shop-collection, [data-cat-id]', function(e) {
+    $(document).on('click keypress', '.cat-stylish-card, .cat-clean-card, .collection-card, .btn-shop-collection, [data-cat-id]', function (e) {
         if (e.type === 'keypress' && e.which !== 13) return;
         let $card = $(this).closest('[data-cat-id]');
         if (!$card.length) return;
-        let catId   = $card.data('cat-id');
+        let catId = $card.data('cat-id');
         let catName = $card.data('cat-name') || $card.find('.cat-stylish-title, .cat-clean-name, .collection-card-title, .prod-name').text().trim();
         showCategoryProducts(catId, catName);
     });
 
     // Back button — return to category grid
-    $('#btn-back-to-categories').on('click', function() {
+    $('#btn-back-to-categories').on('click', function () {
         $('#catalog-step-products').hide().removeClass('step-fade-in');
         $('body').addClass('single-view-mode');
         $('#catalog-step-categories').css('display', 'block').addClass('step-fade-in');
@@ -211,7 +211,7 @@ $(document).ready(function () {
     });
 
     // Fast Card Arrow Click Handler (Slide Track System)
-    $(document).on('click', '.card-slide-arrow', function(e) {
+    $(document).on('click', '.card-slide-arrow', function (e) {
         e.stopPropagation();
         e.preventDefault();
 
@@ -226,7 +226,7 @@ $(document).ready(function () {
     });
 
     // Fast Card Dot Click Handler
-    $(document).on('click', '.card-slide-dot', function(e) {
+    $(document).on('click', '.card-slide-dot', function (e) {
         e.stopPropagation();
         e.preventDefault();
 
@@ -258,7 +258,7 @@ $(document).ready(function () {
     // Cursor Hover-Only Auto-Slide for Category Product Cards
     let cardHoverTimers = {};
 
-    $(document).on('mouseenter', '.prod-img-wrap', function() {
+    $(document).on('mouseenter', '.prod-img-wrap', function () {
         let $wrap = $(this);
         let $track = $wrap.find('.card-slider-track');
         let count = parseInt($track.data('count')) || 1;
@@ -268,12 +268,12 @@ $(document).ready(function () {
 
         if (cardHoverTimers[cardId]) clearInterval(cardHoverTimers[cardId]);
 
-        cardHoverTimers[cardId] = setInterval(function() {
+        cardHoverTimers[cardId] = setInterval(function () {
             let activeIdx = parseInt($track.data('active')) || 0;
             let nextIdx = (activeIdx + 1) % count;
             slideProductCardTrack($track, nextIdx);
         }, 1200); // Cycles photos smoothly while cursor is over the card
-    }).on('mouseleave', '.prod-img-wrap', function() {
+    }).on('mouseleave', '.prod-img-wrap', function () {
         let $wrap = $(this);
         let $track = $wrap.find('.card-slider-track');
         let cardId = $wrap.closest('.product-card-item').data('id') || Math.random();
@@ -308,7 +308,7 @@ $(document).ready(function () {
     function startModalAutoSlide() {
         stopModalAutoSlide();
         if (currentGalleryImages && currentGalleryImages.length > 1) {
-            modalAutoSlideTimer = setInterval(function() {
+            modalAutoSlideTimer = setInterval(function () {
                 let nextIdx = (currentGalleryIndex + 1) % currentGalleryImages.length;
                 setGalleryActiveIndex(nextIdx);
             }, 3000); // Cycles smoothly
@@ -327,7 +327,7 @@ $(document).ready(function () {
         }
 
         // Update thumbnail active state
-        $('.pmodal-thumb-item').each(function(i) {
+        $('.pmodal-thumb-item').each(function (i) {
             if (i === currentGalleryIndex) {
                 $(this).addClass('active');
             } else {
@@ -376,7 +376,7 @@ $(document).ready(function () {
                     if (Array.isArray(parsed)) {
                         parsed.forEach(img => { if (img && !currentGalleryImages.includes(img)) currentGalleryImages.push(img); });
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
             if (pData.image_path && !currentGalleryImages.includes(pData.image_path)) currentGalleryImages.push(pData.image_path);
             if (pData.image_path_2 && !currentGalleryImages.includes(pData.image_path_2)) currentGalleryImages.push(pData.image_path_2);
@@ -388,7 +388,7 @@ $(document).ready(function () {
                 try {
                     let parsed = (typeof galleryAttr === 'string') ? JSON.parse(galleryAttr) : galleryAttr;
                     if (Array.isArray(parsed)) currentGalleryImages = parsed;
-                } catch(e) {}
+                } catch (e) { }
             }
             let img1 = card.data('img');
             if (img1 && !currentGalleryImages.includes(img1)) currentGalleryImages.push(img1);
@@ -493,7 +493,7 @@ $(document).ready(function () {
                             }
                         });
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
         }
 
@@ -535,7 +535,7 @@ $(document).ready(function () {
         let basePrice = currentModalProduct.base_price;
         let addonsTotal = 0;
 
-        $('.pmodal-addon-checkbox:checked').each(function() {
+        $('.pmodal-addon-checkbox:checked').each(function () {
             addonsTotal += parseFloat($(this).data('price')) || 0;
         });
 
@@ -549,7 +549,7 @@ $(document).ready(function () {
     }
 
     // ── Quantity Stepper Handlers ──
-    $(document).on('click', '#pmodal-qty-minus', function() {
+    $(document).on('click', '#pmodal-qty-minus', function () {
         let input = $('#pmodal-qty-val');
         let val = parseInt(input.val()) || 1;
         if (val > 1) {
@@ -558,7 +558,7 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#pmodal-qty-plus', function() {
+    $(document).on('click', '#pmodal-qty-plus', function () {
         let input = $('#pmodal-qty-val');
         let val = parseInt(input.val()) || 1;
         if (val < 20) {
@@ -568,7 +568,7 @@ $(document).ready(function () {
     });
 
     // ── Add-on Card Checkbox Toggle ──
-    $(document).on('click', '.pmodal-addon-card', function(e) {
+    $(document).on('click', '.pmodal-addon-card', function (e) {
         if (e.target.type === 'checkbox') {
             $(this).toggleClass('selected', e.target.checked);
         } else {
@@ -580,17 +580,17 @@ $(document).ready(function () {
     });
 
     // ── Gallery Navigation ──
-    $(document).on('click', '#pmodal-btn-prev-img', function() {
+    $(document).on('click', '#pmodal-btn-prev-img', function () {
         setGalleryActiveIndex(currentGalleryIndex - 1);
         startModalAutoSlide();
     });
 
-    $(document).on('click', '#pmodal-btn-next-img', function() {
+    $(document).on('click', '#pmodal-btn-next-img', function () {
         setGalleryActiveIndex(currentGalleryIndex + 1);
         startModalAutoSlide();
     });
 
-    $(document).on('click', '.pmodal-thumb-item', function() {
+    $(document).on('click', '.pmodal-thumb-item', function () {
         let idx = parseInt($(this).data('index'));
         setGalleryActiveIndex(idx);
         startModalAutoSlide();
@@ -602,13 +602,13 @@ $(document).ready(function () {
         $('#product-info-modal-overlay').fadeOut(200).removeClass('active');
     }
 
-    $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function(e) {
+    $('#btn-close-prod-modal, #product-info-modal-overlay').on('click', function (e) {
         if (e.target === this || $(this).hasClass('prod-modal-close')) {
             closeProductQuickView();
         }
     });
 
-    $(document).on('keydown', function(e) {
+    $(document).on('keydown', function (e) {
         if ($('#product-info-modal-overlay').hasClass('active')) {
             if (e.key === 'Escape') closeProductQuickView();
             if (e.key === 'ArrowLeft') $('#pmodal-btn-prev-img').click();
@@ -617,19 +617,19 @@ $(document).ready(function () {
     });
 
     // ── Open Modal Trigger on Product Card, Title, Quick View Button ──
-    $(document).on('click', '.btn-quick-view, .product-card-item .prod-img-wrap, .product-card-item .prod-name', function(e) {
+    $(document).on('click', '.btn-quick-view, .product-card-item .prod-img-wrap, .product-card-item .prod-name', function (e) {
         if ($(e.target).closest('.btn-add-to-cart, .card-slide-arrow, .card-slide-dot').length) return;
         e.preventDefault();
         openProductQuickView($(this));
     });
 
     // ── Add to Cart from Product Modal ──
-    $('#pmodal-add-cart-btn').on('click', function(e) {
+    $('#pmodal-add-cart-btn').on('click', function (e) {
         e.preventDefault();
         if (!currentModalProduct) return;
 
         let selectedAddons = [];
-        $('.pmodal-addon-checkbox:checked').each(function() {
+        $('.pmodal-addon-checkbox:checked').each(function () {
             selectedAddons.push({
                 addon_id: $(this).data('id'),
                 name: $(this).data('name'),
@@ -657,12 +657,12 @@ $(document).ready(function () {
     });
 
     // ── Buy Now (Express Direct Checkout) ──
-    $('#pmodal-buy-now-btn').on('click', function(e) {
+    $('#pmodal-buy-now-btn').on('click', function (e) {
         e.preventDefault();
         if (!currentModalProduct) return;
 
         let selectedAddons = [];
-        $('.pmodal-addon-checkbox:checked').each(function() {
+        $('.pmodal-addon-checkbox:checked').each(function () {
             selectedAddons.push({
                 addon_id: $(this).data('id'),
                 name: $(this).data('name'),
@@ -690,7 +690,7 @@ $(document).ready(function () {
     });
 
     // ── Quick Add to Cart button on product card ──
-    $(document).on('click', '.btn-add-to-cart', function(e) {
+    $(document).on('click', '.btn-add-to-cart', function (e) {
         e.preventDefault();
         e.stopPropagation();
         let card = $(this).closest('.product-card-item');
@@ -910,7 +910,7 @@ $(document).ready(function () {
     renderCart();
 
     // Gift Wrap Add-On Listener
-    $(document).on('click', '.btn-add-gift-wrap', function() {
+    $(document).on('click', '.btn-add-gift-wrap', function () {
         if (!window.VK_GIFT_WRAP_CONFIG) return;
         let gwConfig = window.VK_GIFT_WRAP_CONFIG;
         let existing = cart.find(item => item.id === 7 || item.id === 99998 || (item.name && item.name.indexOf('Wrapping') !== -1));
@@ -929,7 +929,7 @@ $(document).ready(function () {
     });
 
     // Chocolate Box Add-On Listener
-    $(document).on('click', '.btn-add-choc-box', function() {
+    $(document).on('click', '.btn-add-choc-box', function () {
         if (!window.VK_CHOC_BOX_CONFIG) return;
         let cbConfig = window.VK_CHOC_BOX_CONFIG;
         let existing = cart.find(item => item.id === 8 || item.id === 99999 || (item.name && item.name.indexOf('Chocolate') !== -1));
@@ -946,12 +946,12 @@ $(document).ready(function () {
         renderCart();
         showToast('Added ' + cbConfig.name + ' to your cart!', 'success');
     });
-    $(document).on('click', '.cart-plus', function() {
+    $(document).on('click', '.cart-plus', function () {
         let id = parseInt($(this).data('id'));
         updateCartQty(id, 1);
     });
 
-    $(document).on('click', '.cart-minus', function() {
+    $(document).on('click', '.cart-minus', function () {
         let id = parseInt($(this).data('id'));
         updateCartQty(id, -1);
     });
@@ -979,7 +979,7 @@ $(document).ready(function () {
         if (!item || !item.selected_addons || item.selected_addons.length <= addonIdx) return;
 
         let removed = item.selected_addons.splice(addonIdx, 1);
-        
+
         // Recalculate single item price based on remaining add-ons
         let base = parseFloat(item.base_price) !== undefined && !isNaN(parseFloat(item.base_price)) ? parseFloat(item.base_price) : item.price;
         let addonsTotal = item.selected_addons.reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
@@ -994,7 +994,7 @@ $(document).ready(function () {
         }
     }
 
-    $(document).on('click', '.btn-remove-addon-item', function(e) {
+    $(document).on('click', '.btn-remove-addon-item', function (e) {
         e.preventDefault();
         e.stopPropagation();
         let itemIdx = $(this).attr('data-item-idx');
@@ -1002,7 +1002,7 @@ $(document).ready(function () {
         removeAddonFromCartItem(itemIdx, addonIdx);
     });
 
-    $(document).on('click', '.cart-remove-btn', function() {
+    $(document).on('click', '.cart-remove-btn', function () {
         let id = $(this).data('id');
         removeFromCart(id);
     });
@@ -1025,7 +1025,7 @@ $(document).ready(function () {
     $('#header-cart-trigger').on('click', openCartSidebar);
 
     // Category Filter Pills Handler
-    $(document).on('click', '.cat-pill-btn', function() {
+    $(document).on('click', '.cat-pill-btn', function () {
         $('.cat-pill-btn').removeClass('active');
         $(this).addClass('active');
 
@@ -1045,19 +1045,19 @@ $(document).ready(function () {
     });
 
     // Track Order Modal Controls
-    $('#nav-track-order-btn').on('click', function(e) {
+    $('#nav-track-order-btn').on('click', function (e) {
         e.preventDefault();
         $('#track-modal-overlay').addClass('active');
         $('#track-ref-input').focus();
     });
 
-    $('#btn-close-track-modal, #track-modal-overlay').on('click', function(e) {
+    $('#btn-close-track-modal, #track-modal-overlay').on('click', function (e) {
         if (e.target === this || $(this).hasClass('track-modal-close')) {
             $('#track-modal-overlay').removeClass('active');
         }
     });
 
-    $('#btn-search-tracking').on('click', function() {
+    $('#btn-search-tracking').on('click', function () {
         let ref = $('#track-ref-input').val().trim();
         if (!ref) {
             showToast('Please enter your Booking Reference (e.g. VKG-2026-000101)', 'error');
@@ -1072,7 +1072,7 @@ $(document).ready(function () {
             type: 'POST',
             dataType: 'json',
             data: { action: 'get_booking_details', booking_ref: ref },
-            success: function(res) {
+            success: function (res) {
                 if (res.success && res.booking) {
                     let b = res.booking;
                     resBox.html(`
@@ -1097,7 +1097,7 @@ $(document).ready(function () {
                     `);
                 }
             },
-            error: function() {
+            error: function () {
                 resBox.html(`
                     <div style="background:#FEF2F2; border:1px solid #FCA5A5; color:#991B1B; padding:14px; border-radius:12px; font-size:0.9rem; text-align:center;">
                         Unable to connect. Please verify your reference or try calling support.
@@ -1111,14 +1111,14 @@ $(document).ready(function () {
     function recalculateTotals() {
         let subtotal = 0.00;
         let totalQty = getCartTotalQty();
-        
+
         cart.forEach(item => {
             subtotal += item.price * item.quantity;
         });
-        
+
         let activeShipping = (totalQty > 0) ? shippingCharge : 0.00;
         let total = (subtotal + activeShipping).toFixed(2);
-        
+
         // Update UI floats
         $('#cart-total-badge').text(totalQty);
         $('#nav-cart-badge').text(totalQty);
@@ -1126,13 +1126,13 @@ $(document).ready(function () {
         $('#cart-subtotal-val').text(currencySymbol + subtotal.toFixed(2));
         $('#cart-shipping-val').text(currencySymbol + activeShipping.toFixed(2));
         $('#cart-total-val').text(currencySymbol + total);
-        
+
         if (totalQty > 0) {
             $('#cart-checkout-btn').prop('disabled', false).css('opacity', '1');
         } else {
             $('#cart-checkout-btn').prop('disabled', true).css('opacity', '0.5');
         }
-        
+
         // Update checkout modal displays
         $('#checkout-total-items-text').text(`Total Items: ${totalQty}`);
         $('#step1-grand-total').text(currencySymbol + subtotal.toFixed(2));
@@ -1178,7 +1178,7 @@ $(document).ready(function () {
                     let aDesc = escapeHtml(a.description || a.desc || '');
                     let aPrice = parseFloat(a.price || 0);
                     let imgPath = a.image_path || a.img || a.image || '';
-                    let addonImg = (imgPath && imgPath.length > 5) 
+                    let addonImg = (imgPath && imgPath.length > 5)
                         ? `<img src="${escapeHtml(imgPath)}" style="width:24px; height:24px; object-fit:cover; border-radius:4px; border:1px solid #FCD34D; flex-shrink:0;">`
                         : `<span style="font-size:0.85rem;">${icon}</span>`;
                     return `
@@ -1272,7 +1272,7 @@ $(document).ready(function () {
         $('#booking-modal-overlay').addClass('active');
         $('body').addClass('modal-open');
         goToStep(1);
-        
+
         // Lazy-load PayPal SDK only on first open
         if (!window._paypalLoaded && !$('#paypal-sdk-script').length) {
             window._paypalLoaded = true;
@@ -1297,7 +1297,7 @@ $(document).ready(function () {
             let s = parseInt($(this).data('step'));
             $(this).removeClass('active done');
             if (s === step) $(this).addClass('active');
-            if (s < step)  $(this).addClass('done');
+            if (s < step) $(this).addClass('done');
         });
         $('.bm-step-line').each(function (i) {
             $(this).toggleClass('done', i + 1 < step);
@@ -1347,11 +1347,11 @@ $(document).ready(function () {
     });
 
     // Drag & Drop / File Click Receipt Uploader Handlers
-    $(document).on('click', '#upload-idle-state', function() {
+    $(document).on('click', '#upload-idle-state', function () {
         $('#payment_proof_file').trigger('click');
     });
 
-    $(document).on('change', '#payment_proof_file', function() {
+    $(document).on('change', '#payment_proof_file', function () {
         let file = this.files[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) {
@@ -1360,7 +1360,7 @@ $(document).ready(function () {
                 return;
             }
             let reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = function (evt) {
                 $('#receipt-img-preview').attr('src', evt.target.result);
                 $('#upload-file-name').text(file.name);
                 $('#upload-idle-state').hide();
@@ -1370,7 +1370,7 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#btn-remove-receipt', function(e) {
+    $(document).on('click', '#btn-remove-receipt', function (e) {
         e.stopPropagation();
         $('#payment_proof_file').val('');
         $('#receipt-img-preview').attr('src', '');
@@ -1378,13 +1378,13 @@ $(document).ready(function () {
         $('#upload-idle-state').show();
     });
 
-    $(document).on('dragover dragenter', '#receipt-upload-zone', function(e) {
+    $(document).on('dragover dragenter', '#receipt-upload-zone', function (e) {
         e.preventDefault();
         e.stopPropagation();
         $(this).addClass('drag-active');
     });
 
-    $(document).on('dragleave drop', '#receipt-upload-zone', function(e) {
+    $(document).on('dragleave drop', '#receipt-upload-zone', function (e) {
         e.preventDefault();
         e.stopPropagation();
         $(this).removeClass('drag-active');
@@ -1398,7 +1398,7 @@ $(document).ready(function () {
     // Bank Transfer Booking Submit (button click in modal)
     $(document).on('click', '#btn-submit-bank', function (e) {
         e.preventDefault();
-        
+
         if (!validateBookingForm()) {
             return;
         }
@@ -1412,7 +1412,7 @@ $(document).ready(function () {
             $('#bank_payment_reference').focus();
             return;
         }
-        
+
         let fileInput = $('#bank_payment_proof_file')[0];
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
             fileInput = $('#payment_proof_file')[0] || $('#payment_screenshot_file')[0];
@@ -1476,7 +1476,7 @@ $(document).ready(function () {
     });
 
     // ===== UPI & SCREENSHOT HANDLERS =====
-    $(document).on('click', '#pay-tab-upi', function() {
+    $(document).on('click', '#pay-tab-upi', function () {
         $('.bm-pay-tab').removeClass('active');
         $(this).addClass('active');
         $('.bm-pay-panel').removeClass('active').hide();
@@ -1484,7 +1484,7 @@ $(document).ready(function () {
         $('#payment_method').val('upi');
     });
 
-    $(document).on('click', '#pay-tab-bank', function() {
+    $(document).on('click', '#pay-tab-bank', function () {
         $('.bm-pay-tab').removeClass('active');
         $(this).addClass('active');
         $('.bm-pay-panel').removeClass('active').hide();
@@ -1492,7 +1492,7 @@ $(document).ready(function () {
         $('#payment_method').val('bank_transfer');
     });
 
-    $(document).on('click', '#btn-copy-checkout-upi', function(e) {
+    $(document).on('click', '#btn-copy-checkout-upi', function (e) {
         e.preventDefault();
         let upiId = $('#checkout-upi-id-text').text().trim() || 'vklogistics@upi';
         if (navigator.clipboard) {
@@ -1504,11 +1504,11 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#upi-upload-idle-state', function() {
+    $(document).on('click', '#upi-upload-idle-state', function () {
         $('#payment_screenshot_file').trigger('click');
     });
 
-    $(document).on('change', '#payment_screenshot_file', function() {
+    $(document).on('change', '#payment_screenshot_file', function () {
         let file = this.files[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) {
@@ -1517,7 +1517,7 @@ $(document).ready(function () {
                 return;
             }
             let reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = function (evt) {
                 $('#upi-screenshot-img-preview').attr('src', evt.target.result);
                 $('#upi-upload-file-name').text(file.name);
                 $('#upi-upload-idle-state').hide();
@@ -1527,7 +1527,7 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#btn-remove-upi-screenshot', function(e) {
+    $(document).on('click', '#btn-remove-upi-screenshot', function (e) {
         e.stopPropagation();
         $('#payment_screenshot_file').val('');
         $('#upi-screenshot-img-preview').attr('src', '');
@@ -1535,13 +1535,18 @@ $(document).ready(function () {
         $('#upi-upload-idle-state').show();
     });
 
+    // Stop propagation on file inputs so click events never trigger infinite recursion loops
+    $(document).on('click', '#bank_payment_proof_file, #payment_screenshot_file', function (e) {
+        e.stopPropagation();
+    });
+
     // Bank Upload Handlers
-    $(document).on('click', '#bank-upload-idle-state, #bank-screenshot-upload-zone', function(e) {
-        if ($(e.target).closest('#btn-remove-bank-screenshot').length > 0) return;
+    $(document).on('click', '#bank-upload-idle-state, #bank-screenshot-upload-zone', function (e) {
+        if ($(e.target).is('#bank_payment_proof_file') || $(e.target).closest('#btn-remove-bank-screenshot').length > 0) return;
         $('#bank_payment_proof_file').trigger('click');
     });
 
-    $(document).on('change', '#bank_payment_proof_file', function() {
+    $(document).on('change', '#bank_payment_proof_file', function () {
         let file = this.files[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) {
@@ -1550,7 +1555,7 @@ $(document).ready(function () {
                 return;
             }
             let reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = function (evt) {
                 $('#bank-screenshot-img-preview').attr('src', evt.target.result);
                 $('#bank-upload-file-name').text(file.name);
                 $('#bank-upload-idle-state').hide();
@@ -1560,7 +1565,7 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#btn-remove-bank-screenshot', function(e) {
+    $(document).on('click', '#btn-remove-bank-screenshot', function (e) {
         e.stopPropagation();
         $('#bank_payment_proof_file').val('');
         $('#bank-screenshot-img-preview').attr('src', '');
@@ -1569,7 +1574,7 @@ $(document).ready(function () {
     });
 
     // UPI Order Submit
-    $(document).on('click', '#btn-submit-upi-booking', function(e) {
+    $(document).on('click', '#btn-submit-upi-booking', function (e) {
         e.preventDefault();
         if (!validateBookingForm()) return;
 
@@ -1610,11 +1615,11 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             dataType: 'json',
-            success: function(res) {
+            success: function (res) {
                 if (res.success) {
                     clearCart();
                     showToast('🎉 Order placed successfully! Redirecting...', 'success');
-                    setTimeout(function() {
+                    setTimeout(function () {
                         window.location.href = res.redirect_url;
                     }, 1000);
                 } else {
@@ -1622,7 +1627,7 @@ $(document).ready(function () {
                     submitBtn.prop('disabled', false).html(originalText);
                 }
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 let err = xhr.responseJSON ? xhr.responseJSON.message : 'Server error occurred.';
                 showToast(err, 'error');
                 submitBtn.prop('disabled', false).html(originalText);
@@ -1631,11 +1636,11 @@ $(document).ready(function () {
     });
 
     // ===== PAYPAL UPLOAD ZONE HANDLERS =====
-    $(document).on('click', '#paypal-upload-idle', function() {
+    $(document).on('click', '#paypal-upload-idle', function () {
         $('#paypal_proof_file').trigger('click');
     });
 
-    $(document).on('change', '#paypal_proof_file', function() {
+    $(document).on('change', '#paypal_proof_file', function () {
         let file = this.files[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) {
@@ -1644,7 +1649,7 @@ $(document).ready(function () {
                 return;
             }
             let reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = function (evt) {
                 $('#paypal-img-preview').attr('src', evt.target.result);
                 $('#paypal-file-name').text(file.name);
                 $('#paypal-upload-idle').hide();
@@ -1654,7 +1659,7 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#btn-remove-paypal-receipt', function(e) {
+    $(document).on('click', '#btn-remove-paypal-receipt', function (e) {
         e.stopPropagation();
         $('#paypal_proof_file').val('');
         $('#paypal-img-preview').attr('src', '');
@@ -1662,13 +1667,13 @@ $(document).ready(function () {
         $('#paypal-upload-idle').show();
     });
 
-    $(document).on('dragover dragenter', '#paypal-upload-zone', function(e) {
+    $(document).on('dragover dragenter', '#paypal-upload-zone', function (e) {
         e.preventDefault();
         e.stopPropagation();
         $(this).addClass('drag-active');
     });
 
-    $(document).on('dragleave drop', '#paypal-upload-zone', function(e) {
+    $(document).on('dragleave drop', '#paypal-upload-zone', function (e) {
         e.preventDefault();
         e.stopPropagation();
         $(this).removeClass('drag-active');
@@ -1680,14 +1685,14 @@ $(document).ready(function () {
     });
 
     // Copy PayPal Email to Clipboard
-    $(document).on('click', '#btn-copy-paypal-email', function(e) {
+    $(document).on('click', '#btn-copy-paypal-email', function (e) {
         e.preventDefault();
         e.stopPropagation();
         let emailText = $('#paypal-email-display').text().trim();
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(emailText).then(function() {
+            navigator.clipboard.writeText(emailText).then(function () {
                 showToast('PayPal email copied to clipboard!', 'success');
-            }).catch(function() {
+            }).catch(function () {
                 fallbackCopy(emailText, 'PayPal email');
             });
         } else {
@@ -1696,14 +1701,14 @@ $(document).ready(function () {
     });
 
     // Copy PayPal ID to Clipboard
-    $(document).on('click', '#btn-copy-paypal-id', function(e) {
+    $(document).on('click', '#btn-copy-paypal-id', function (e) {
         e.preventDefault();
         e.stopPropagation();
         let idText = $('#paypal-id-display').text().trim();
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(idText).then(function() {
+            navigator.clipboard.writeText(idText).then(function () {
                 showToast('PayPal ID copied to clipboard!', 'success');
-            }).catch(function() {
+            }).catch(function () {
                 fallbackCopy(idText, 'PayPal ID');
             });
         } else {
@@ -1750,7 +1755,7 @@ $(document).ready(function () {
         } else if (testMobile.startsWith('07')) {
             testMobile = '+44' + testMobile.substring(1);
         }
-        
+
         let mobileRegex = /^\+447\d{9}$/;
         if (!mobileRegex.test(testMobile)) {
             showToast('Please enter a valid UK mobile number starting with 7 (e.g. 7700 900888).', 'error');
@@ -1839,7 +1844,7 @@ $(document).ready(function () {
                     if (res.settings.csrf_token) {
                         $('#csrf_token').val(res.settings.csrf_token);
                     }
-                    
+
                     // PayPal details
                     if (res.settings.paypal_id) {
                         $('#paypal-id-display').text(res.settings.paypal_id);
@@ -1850,7 +1855,7 @@ $(document).ready(function () {
                     if (res.settings.paypal_account_name) {
                         $('#paypal-acc-name-display').text(res.settings.paypal_account_name);
                     }
-                    
+
                     // Bank details
                     if (res.settings.bank_account_name) {
                         $('#bank-acc-name-display').text(res.settings.bank_account_name);
@@ -1864,7 +1869,7 @@ $(document).ready(function () {
                     if (res.settings.bank_account_number) {
                         $('#bank-num-display').text(res.settings.bank_account_number);
                     }
-                    
+
                     // Helpline Phone
                     if (res.settings.support_phone) {
                         $('#header-phone-text').text(res.settings.support_phone);
@@ -1872,7 +1877,7 @@ $(document).ready(function () {
                         $('#header-phone-link').attr('href', 'tel:' + cleanPhone);
                         $('#footer-phone-link').text(res.settings.support_phone).attr('href', 'tel:' + cleanPhone);
                     }
-                    
+
                     // Product Name
                     if (res.settings.product_name) {
                         $('#bm-product-name-display').text(res.settings.product_name);
@@ -1910,11 +1915,11 @@ $(document).ready(function () {
 
     // Booking Form Validation Helper
     function validateBookingForm() {
-        let name     = $('#customer_name').val() ? $('#customer_name').val().trim() : '';
-        let mobile   = $('#mobile').val() ? $('#mobile').val().trim() : '';
-        let email    = $('#email').val() ? $('#email').val().trim() : '';
-        let addr1    = $('#address_line_1').val() ? $('#address_line_1').val().trim() : '';
-        let city     = $('#city').val() ? $('#city').val().trim() : '';
+        let name = $('#customer_name').val() ? $('#customer_name').val().trim() : '';
+        let mobile = $('#mobile').val() ? $('#mobile').val().trim() : '';
+        let email = $('#email').val() ? $('#email').val().trim() : '';
+        let addr1 = $('#address_line_1').val() ? $('#address_line_1').val().trim() : '';
+        let city = $('#city').val() ? $('#city').val().trim() : '';
         let postcode = $('#postcode').val() ? $('#postcode').val().trim() : '';
 
         if (!name || name.length < 2) {
@@ -1988,7 +1993,7 @@ window.switchProductImage = function (src, el) {
 
     function updateParallax() {
         if (!activeCard) return;
-        
+
         // Smooth linear interpolation (lerp) for ultra-fluid movement
         currentX += (targetX - currentX) * 0.12;
         currentY += (targetY - currentY) * 0.12;
@@ -2001,9 +2006,9 @@ window.switchProductImage = function (src, el) {
         animationFrameId = requestAnimationFrame(updateParallax);
     }
 
-    document.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function (e) {
         let container = e.target.closest(PARALLAX_SELECTORS);
-        
+
         if (container) {
             if (activeCard !== container) {
                 // Reset previous card if switched quickly
@@ -2052,7 +2057,7 @@ window.switchProductImage = function (src, el) {
         }
     }, { passive: true });
 
-    document.addEventListener('mouseleave', function() {
+    document.addEventListener('mouseleave', function () {
         if (activeCard) {
             let prevImg = activeCard.querySelector('img') || activeCard;
             if (prevImg) {
@@ -2135,7 +2140,7 @@ function setActiveMobileNav(btnId) {
     $(`#${btnId}`).addClass('active');
 }
 
-$(document).on('click', '#mnav-back', function() {
+$(document).on('click', '#mnav-back', function () {
     setActiveMobileNav('mnav-back');
     if ($('#catalog-step-products').is(':visible')) {
         $('#btn-back-to-categories').trigger('click');
@@ -2146,7 +2151,7 @@ $(document).on('click', '#mnav-back', function() {
     }
 });
 
-$(document).on('click', '#mnav-home', function() {
+$(document).on('click', '#mnav-home', function () {
     setActiveMobileNav('mnav-home');
     if ($('#catalog-step-products').is(':visible')) {
         $('#btn-back-to-categories').trigger('click');
@@ -2154,12 +2159,12 @@ $(document).on('click', '#mnav-home', function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-$(document).on('click', '#mnav-cart', function() {
+$(document).on('click', '#mnav-cart', function () {
     setActiveMobileNav('mnav-cart');
     $('#cart-drawer-overlay').addClass('active');
 });
 
-$(document).on('click', '#mnav-profile', function() {
+$(document).on('click', '#mnav-profile', function () {
     setActiveMobileNav('mnav-profile');
     $('#track-modal-overlay').addClass('active');
 });

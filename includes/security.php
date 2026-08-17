@@ -70,6 +70,11 @@ function is_admin_logged_in() {
  */
 function verify_admin_password($passcode) {
     $stored_pass = function_exists('get_setting') ? get_setting('admin_password', 'admin123') : 'admin123';
+    if (empty($stored_pass)) return false;
+
+    if (str_starts_with($stored_pass, '$2y$') || str_starts_with($stored_pass, '$2a$') || str_starts_with($stored_pass, '$2b$')) {
+        return password_verify($passcode, $stored_pass);
+    }
     return $passcode === $stored_pass;
 }
 
