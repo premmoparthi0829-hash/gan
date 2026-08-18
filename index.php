@@ -267,9 +267,8 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                         $accent = '#4A0B17';
                     }
                     ?>
-                    <div class="myntra-swiper-container cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>" style="display:none;">
-                        <div class="swiper myntra-prod-swiper" id="swiper-pane-<?php echo $cat['id']; ?>">
-                            <div class="swiper-wrapper">
+                    <div class="cat-products-pane" id="products-pane-<?php echo $cat['id']; ?>" style="display:none;">
+                        <div class="products-grid-3col">
                                 <?php foreach ($cat_products as $prod): 
                                     $photos = [];
                                     if (!empty($prod['gallery_images'])) {
@@ -298,7 +297,7 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                     $addons_json_attr = htmlspecialchars(json_encode($prod_addons), ENT_QUOTES, 'UTF-8');
                                     $reusable_addons_json_attr = htmlspecialchars(json_encode($reusable_addons), ENT_QUOTES, 'UTF-8');
                                 ?>
-                                    <div class="swiper-slide product-card-item"
+                                    <div class="product-card-item"
                                         data-id="<?php echo $prod['id']; ?>"
                                         data-name="<?php echo escape_output($prod['name']); ?>"
                                         data-price="<?php echo $prod['price']; ?>"
@@ -343,10 +342,6 @@ $bank_acc_num = escape_output($settings['bank_account_number'] ?? '83920144');
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
-                            </div>
-                            <!-- Swiper Navigation Arrows -->
-                            <div class="swiper-button-next myntra-arrow-next"></div>
-                            <div class="swiper-button-prev myntra-arrow-prev"></div>
                         </div>
                     </div>
                 <?php endforeach; ?>

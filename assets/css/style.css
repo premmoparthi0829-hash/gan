@@ -5941,6 +5941,60 @@ textarea {
   padding: 10px 0 20px 0;
 }
 
+/* ── Vertical 3x3 Grid for Products ── */
+.products-grid-3col {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 28px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 16px 0 36px 0 !important;
+}
+
+.products-grid-3col .product-card-item {
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 18px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #F1F5F9 !important;
+  overflow: hidden !important;
+}
+
+.products-grid-3col .product-card-item .prod-img-wrap {
+  position: relative !important;
+  width: 100% !important;
+  padding-top: 100% !important; /* 1:1 Aspect Ratio square */
+  background: #F8FAFC !important;
+  overflow: hidden !important;
+  border-top-left-radius: 18px !important;
+  border-top-right-radius: 18px !important;
+}
+
+.products-grid-3col .product-card-item:hover {
+  transform: translateY(-6px) scale(1.015) !important;
+  box-shadow: 0 20px 36px rgba(74, 11, 23, 0.14) !important;
+  border-color: rgba(212, 175, 55, 0.4) !important;
+  z-index: 10;
+}
+
+@media (max-width: 992px) {
+  .products-grid-3col {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .products-grid-3col {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+}
+
 .myntra-prod-swiper {
   width: 100%;
   padding: 16px 6px 36px 6px !important;

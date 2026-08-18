@@ -728,7 +728,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                     dots_html = f'<div class="card-slide-dots">{dots}</div>'
 
                 prod_cards += f'''
-                                    <div class="swiper-slide product-card-item"
+                                    <div class="product-card-item"
                                         data-id="{prod['id']}"
                                         data-name="{htmlspecialchars(prod['name'])}"
                                         data-price="{prod['price']}"
@@ -738,7 +738,7 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                                         data-addons="{addons_json_attr}"
                                         data-reusable-addons="{reusable_json_attr}"
                                         data-cat="{htmlspecialchars(cat['name'])}">
-                                        <div class="prod-img-wrap" style="position:relative; cursor:pointer;" title="Click to view enlarged details">
+                                        <div class="prod-img-wrap" style="position:relative; cursor:pointer;">
                                             <div class="card-track-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden;">
                                                 <div class="card-slider-track" data-count="{photo_count}" data-active="0" style="display:flex; width:100%; height:100%; transition:transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); will-change:transform;">
                                                     {slides_html}
@@ -762,13 +762,9 @@ class VKRequestHandler(http.server.SimpleHTTPRequestHandler):
                                     </div>'''
 
             cat_panes_html += f'''
-                    <div class="myntra-swiper-container cat-products-pane" id="products-pane-{cat['id']}" style="display:none;">
-                        <div class="swiper myntra-prod-swiper" id="swiper-pane-{cat['id']}">
-                            <div class="swiper-wrapper">
-                                {prod_cards}
-                            </div>
-                            <div class="swiper-button-next myntra-arrow-next"></div>
-                            <div class="swiper-button-prev myntra-arrow-prev"></div>
+                    <div class="cat-products-pane" id="products-pane-{cat['id']}" style="display:none;">
+                        <div class="products-grid-3col">
+                            {prod_cards}
                         </div>
                     </div>'''
 
